@@ -1,36 +1,34 @@
 "use client";
-import { useSession, signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 export default function ProfilePage() {
-  const { data: session, status, update } = useSession();
   const router = useRouter();
-
-  const [name, setName]         = useState("");
-  const [avatar, setAvatar]     = useState<string | null>(null);
-  const [nameSaved, setNameSaved]   = useState(false);
-  const [pwSaved, setPwSaved]       = useState(false);
-  const [pwError, setPwError]       = useState("");
-  const [currentPw, setCurrentPw]   = useState("");
-  const [newPw, setNewPw]           = useState("");
-  const [confirmPw, setConfirmPw]   = useState("");
+  const [user, setUser]           = useState<User | null>(null);
+  const [loading, setLoading]     = useState(true);
+  const [name, setName]           = useState("");
+  const [avatar, setAvatar]       = useState<string | null>(null);
+  const [nameSaved, setNameSaved] = useState(false);
+  const [pwSaved, setPwSaved]     = useState(false);
+  const [pwError, setPwError]     = useState("");
+  const [newPw, setNewPw]         = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-  }, [status, router]);
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) { router.push("/login"); return; }
+      setUser(data.user);
+      setName(data.user.user_metadata?.full_name ?? "");
+      setAvatar(localStorage.getItem("sp_avatar") || data.user.user_metadata?.avatar_url || null);
+      setLoading(false);
+    });
+  }, [router]);
 
-  useEffect(() => {
-    if (session?.user) {
-      setName(session.user.name ?? "");
-      const stored = localStorage.getItem("sp_avatar");
-      setAvatar(stored || session.user.image || null);
-    }
-  }, [session]);
-
-  if (status === "loading" || !session?.user) return null;
+  if (loading || !user) return null;
 
   function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -40,28 +38,33 @@ export default function ProfilePage() {
       const b64 = reader.result as string;
       setAvatar(b64);
       localStorage.setItem("sp_avatar", b64);
-      update({ image: b64 });
     };
     reader.readAsDataURL(file);
   }
 
   async function saveName() {
-    await update({ name });
+    await supabase.auth.updateUser({ data: { full_name: name } });
     setNameSaved(true);
     setTimeout(() => setNameSaved(false), 2000);
   }
 
-  function savePassword() {
+  async function savePassword() {
     setPwError("");
-    if (!currentPw) return setPwError("Enter your current password.");
-    if (newPw.length < 6) return setPwError("New password must be at least 6 characters.");
+    if (newPw.length < 6) return setPwError("Password must be at least 6 characters.");
     if (newPw !== confirmPw) return setPwError("Passwords do not match.");
-    setCurrentPw(""); setNewPw(""); setConfirmPw("");
+    const { error } = await supabase.auth.updateUser({ password: newPw });
+    if (error) return setPwError(error.message);
+    setNewPw(""); setConfirmPw("");
     setPwSaved(true);
     setTimeout(() => setPwSaved(false), 2500);
   }
 
-  const initials = name?.[0]?.toUpperCase() ?? "?";
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/home");
+  }
+
+  const initials = (name || user.email || "?")[0].toUpperCase();
 
   return (
     <div className="section-sm">
@@ -92,8 +95,7 @@ export default function ProfilePage() {
                   Change Photo
                 </button>
                 <p className="text-xs text-gray-400 mt-1.5">JPG, PNG or WebP — max 2 MB</p>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden"
-                  onChange={handleAvatarChange} />
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
             </div>
           </div>
@@ -108,18 +110,13 @@ export default function ProfilePage() {
                 {nameSaved ? "Saved ✓" : "Save"}
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-2">{session.user.email}</p>
+            <p className="text-xs text-gray-400 mt-2">{user.email}</p>
           </div>
 
           {/* Change Password */}
           <div className="card-flat">
             <h2 className="text-base font-semibold text-primary mb-4">Change Password</h2>
             <div className="space-y-3">
-              <div>
-                <label className="form-label">Current Password</label>
-                <input type="password" className="form-input" placeholder="••••••••"
-                  value={currentPw} onChange={e => setCurrentPw(e.target.value)} />
-              </div>
               <div>
                 <label className="form-label">New Password</label>
                 <input type="password" className="form-input" placeholder="••••••••"
@@ -138,9 +135,7 @@ export default function ProfilePage() {
 
           {/* Sign out */}
           <div className="flex justify-end pt-2">
-            <button onClick={() => signOut({ callbackUrl: "/home" })} className="btn-danger btn-sm">
-              Sign Out
-            </button>
+            <button onClick={handleSignOut} className="btn-danger btn-sm">Sign Out</button>
           </div>
         </div>
       </div>

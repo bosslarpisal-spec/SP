@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 export default function SignUpPage() {
   const [name, setName]         = useState("");
@@ -19,11 +19,29 @@ export default function SignUpPage() {
     if (!name.trim()) return setError("Please enter your name.");
     if (password.length < 6) return setError("Password must be at least 6 characters.");
     if (password !== confirm) return setError("Passwords do not match.");
+
     setLoading(true);
-    const res = await signIn("credentials", { email, password, redirect: false });
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name }, // saves name to Supabase user metadata
+      },
+    });
+
     setLoading(false);
-    if (res?.error) setError("Could not create account. Please try again.");
+    if (error) setError(error.message);
     else router.push("/home");
+  }
+
+  async function handleGoogleSignup() {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
   }
 
   return (
@@ -79,7 +97,7 @@ export default function SignUpPage() {
         <div className="divider my-6">or</div>
 
         <button
-          onClick={() => signIn("google", { callbackUrl: "/home" })}
+          onClick={handleGoogleSignup}
           className="btn-ghost w-full justify-center gap-3">
           <GoogleIcon />
           Sign up with Google

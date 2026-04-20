@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { STATS, BRAND } from "@/lib/data";
+import { STATS } from "@/lib/data";
 
 export const metadata = { title: "About Us" };
 
@@ -38,10 +38,10 @@ export default function AboutPage() {
             <span className="badge-pill">Our Story</span>
             <h2 className="mb-5">Built on Creativity, Trust &amp; 20 Years of Excellence</h2>
             <p className="text-gray-500 text-xl leading-relaxed mb-4">
-              "SP" (Siam Premium Product) was founded with a single mission: to help brands leave a lasting impression through thoughtfully crafted premium goods. What started as a small Bangkok-based sourcing firm has grown into a full-service premium merchandise company serving thousands of clients across Thailand and beyond.
+              &ldquo;SP&rdquo; (Siam Premium Product) was founded with a single mission: to help brands leave a lasting impression through thoughtfully crafted premium goods. What started as a small Bangkok-based sourcing firm has grown into a full-service premium merchandise company serving thousands of clients across Thailand and beyond.
             </p>
             <p className="text-gray-500 text-xl leading-relaxed mb-4">
-              "SP" เป็นผู้เชี่ยวชาญด้านกิจกรรมการตลาด และส่งเสริมการขาย ของที่ระลึก ของพรีเมียม ของแจก ของขวัญปีใหม่ให้ลูกค้า และสินค้าพรีเมียมสำหรับองค์กรชั้นนำ
+              &ldquo;SP&rdquo; เป็นผู้เชี่ยวชาญด้านกิจกรรมการตลาด และส่งเสริมการขาย ของที่ระลึก ของพรีเมียม ของแจก ของขวัญปีใหม่ให้ลูกค้า และสินค้าพรีเมียมสำหรับองค์กรชั้นนำ
             </p>
             <p className="text-gray-500 text-xl leading-relaxed">
               Today our in-house design team, manufacturing partners, and logistics network allow us to deliver end-to-end solutions — from the first sketch to doorstep delivery — with unmatched speed and quality.

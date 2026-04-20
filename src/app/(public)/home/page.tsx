@@ -16,7 +16,7 @@ export default function HomePage() {
             <p className="text-sm font-bold tracking-widest uppercase text-primary mb-4">Welcome to SP</p>
             <h2 className="text-5xl md:text-6xl mb-4 leading-tight" style={{fontFamily:"Georgia,serif"}}>
               The Expert In<br/>
-              <span className="text-primary">"Total Premiums &amp;<br/>Promotion Solution"</span>
+              <span className="text-primary">&ldquo;Total Premiums &amp;<br/>Promotion Solution&rdquo;</span>
             </h2>
             <p className="text-gray-500 text-xl mb-2">{BRAND.taglineTH}</p>
             <p className="text-gray-500 text-xl mb-8 leading-relaxed">
@@ -70,12 +70,12 @@ export default function HomePage() {
           </div>
           <div>
             <span className="badge-pill">Who We Are</span>
-            <h2 className="mb-5">Our Expert Team combine "Creativity with Innovation" to create "Solution"</h2>
+            <h2 className="mb-5">Our Expert Team combine &ldquo;Creativity with Innovation&rdquo; to create &ldquo;Solution&rdquo;</h2>
             <p className="text-gray-500 text-xl mb-4 leading-relaxed">
-              "SP" เป็นผู้เชี่ยวชาญด้านกิจกรรมการตลาด และส่งเสริมการขาย ของที่ระลึก ของพรีเมียม ของแจก ของขวัญปีใหม่ให้ลูกค้า สินค้าพรีเมียม จัดหา ผลิตและจำหน่ายสินค้าของขวัญ
+              &ldquo;SP&rdquo; เป็นผู้เชี่ยวชาญด้านกิจกรรมการตลาด และส่งเสริมการขาย ของที่ระลึก ของพรีเมียม ของแจก ของขวัญปีใหม่ให้ลูกค้า สินค้าพรีเมียม จัดหา ผลิตและจำหน่ายสินค้าของขวัญ
             </p>
             <p className="text-gray-500 text-xl mb-8 leading-relaxed">
-              "SP" is a specialist in marketing activities and sales promotion. We design and produce premium gifts, corporate souvenirs, and branded merchandise for leading companies.
+              &ldquo;SP&rdquo; is a specialist in marketing activities and sales promotion. We design and produce premium gifts, corporate souvenirs, and branded merchandise for leading companies.
             </p>
             {["20+ years delivering premium merchandise","Custom design team on every project","100% quality guarantee on all orders"].map((item,i) => (
               <div key={i} className="flex items-center gap-3 bg-blue-50 rounded-xl px-4 py-3.5 border-l-4 border-primary mb-3">

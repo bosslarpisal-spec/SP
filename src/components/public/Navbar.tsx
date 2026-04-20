@@ -1,16 +1,33 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
 import { NAV_LINKS, BRAND } from "@/lib/data";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 export default function Navbar() {
   const pathname     = usePathname();
-  const [menuOpen, setMenuOpen]       = useState(false);
+  const router       = useRouter();
+  const [menuOpen, setMenuOpen]         = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { data: session, status }     = useSession();
-  const isAuth = status === "authenticated";
+  const [user, setUser]                 = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const isAuth = !!user;
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    setUserMenuOpen(false);
+    router.push("/home");
+  }
 
   return (
     <header className="sticky top-0 z-50">
@@ -76,12 +93,12 @@ export default function Navbar() {
                 <button onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors">
                   <div className="w-8 h-8 rounded-full bg-secondary overflow-hidden flex items-center justify-center shrink-0">
-                    {session?.user?.image
-                      ? <img src={session.user.image} alt="avatar" className="w-full h-full object-cover"/>
-                      : <span className="text-white text-sm font-bold">{session?.user?.name?.[0]?.toUpperCase()}</span>
+                    {user?.user_metadata?.avatar_url
+                      ? <img src={user.user_metadata.avatar_url} alt="avatar" className="w-full h-full object-cover"/>
+                      : <span className="text-white text-sm font-bold">{(user?.user_metadata?.full_name ?? user?.email ?? "?")[0].toUpperCase()}</span>
                     }
                   </div>
-                  <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate">{session?.user?.name}</span>
+                  <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate">{user?.user_metadata?.full_name ?? user?.email}</span>
                   <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
                   </svg>
@@ -92,7 +109,7 @@ export default function Navbar() {
                       className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-accent transition-colors">
                       My Profile
                     </Link>
-                    <button onClick={() => signOut({ callbackUrl: "/home" })}
+                    <button onClick={handleSignOut}
                       className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
                       Sign Out
                     </button>
@@ -133,7 +150,7 @@ export default function Navbar() {
                   <Link href="/profile" onClick={() => setMenuOpen(false)} className="btn-outline w-full justify-center">
                     My Profile
                   </Link>
-                  <button onClick={() => signOut({ callbackUrl: "/home" })} className="btn-danger w-full justify-center">
+                  <button onClick={handleSignOut} className="btn-danger w-full justify-center">
                     Sign Out
                   </button>
                 </>

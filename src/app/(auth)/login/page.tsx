@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [email, setEmail]       = useState("");
@@ -15,10 +15,21 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const res = await signIn("credentials", { email, password, redirect: false });
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
     setLoading(false);
-    if (res?.error) setError("Invalid email or password. Password must be at least 6 characters.");
+    if (error) setError("Invalid email or password. Please try again.");
     else router.push("/home");
+  }
+
+  async function handleGoogleLogin() {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
   }
 
   return (
@@ -40,7 +51,7 @@ export default function LoginPage() {
         </h1>
         <p className="text-gray-500 text-sm mb-6">
           Sign in to your account &nbsp;·&nbsp;{" "}
-          <Link href="/signup" className="text-primary font-medium hover:underline">Create account</Link>
+          <Link href="/signup" className="text-secondary-dark font-medium hover:underline">Create account</Link>
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -50,7 +61,12 @@ export default function LoginPage() {
               value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
           <div>
-            <label className="form-label">Password</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="form-label !mb-0">Password</label>
+              <Link href="/forgot-password" className="text-xs text-secondary-dark font-semibold underline underline-offset-2 hover:text-secondary transition-colors">
+                Forgot password?
+              </Link>
+            </div>
             <input type="password" className="form-input" placeholder="••••••••"
               value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
@@ -63,14 +79,21 @@ export default function LoginPage() {
         <div className="divider my-6">or</div>
 
         <button
-          onClick={() => signIn("google", { callbackUrl: "/home" })}
+          onClick={handleGoogleLogin}
           className="btn-ghost w-full justify-center gap-3">
           <GoogleIcon />
           Continue with Google
         </button>
       </div>
 
-      <p className="text-center text-sm text-gray-500 mt-6">
+      <p className="text-center text-sm text-gray-500 mt-4">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="text-secondary-dark font-semibold underline underline-offset-2 hover:text-secondary transition-colors">
+          Sign up
+        </Link>
+      </p>
+
+      <p className="text-center text-sm text-gray-500 mt-3">
         <Link href="/home" className="text-primary hover:underline">← Back to home</Link>
       </p>
     </div>

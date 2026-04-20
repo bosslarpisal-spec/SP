@@ -43,13 +43,13 @@ export default function HomePage() {
       </section>
 
       {/* ── Stats bar ────────────────────────────────── */}
-      <section className="bg-[#1a1a2e] py-10">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4">
+      <section className="bg-secondary py-10">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 items-stretch">
           {STATS.map((s,i) => (
-            <div key={i} className={`text-center py-8 px-4 ${i<STATS.length-1?"border-r border-white/10":""}`}>
-              <div className="text-6xl font-bold text-accent mb-1.5" style={{fontFamily:"Georgia,serif"}}>{s.number}</div>
-              <div className="text-white/70 text-lg">{s.label}</div>
-              <div className="text-white/40 text-base mt-0.5">{s.labelTH}</div>
+            <div key={i} className={`text-center py-4 px-4 flex flex-col items-center justify-center min-h-[100px] ${i<STATS.length-1?"border-r-2 border-primary/30":""}`}>
+              <div className="text-4xl font-bold text-primary mb-0.5" style={{fontFamily:"Georgia,serif"}}>{s.number}</div>
+              <div className="text-primary/80 text-sm">{s.label}</div>
+              <div className="text-primary/60 text-xs">{s.labelTH}</div>
             </div>
           ))}
         </div>

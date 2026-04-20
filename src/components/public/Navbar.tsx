@@ -2,11 +2,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { NAV_LINKS, BRAND } from "@/lib/data";
 
 export default function Navbar() {
-  const pathname  = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname     = usePathname();
+  const [menuOpen, setMenuOpen]       = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const { data: session, status }     = useSession();
+  const isAuth = status === "authenticated";
 
   return (
     <header className="sticky top-0 z-50">
@@ -52,19 +56,54 @@ export default function Navbar() {
               <Link key={l.href} href={l.href}
                 className={`px-5 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-150 ${
                   pathname === l.href || pathname.startsWith(l.href+"/")
-                    ? "text-primary bg-blue-50"
-                    : "text-gray-600 hover:text-primary hover:bg-blue-50"
+                    ? "text-primary bg-accent"
+                    : "text-gray-600 hover:text-primary hover:bg-accent"
                 }`}>
                 {l.label}
               </Link>
             ))}
           </div>
 
-          {/* Right: Contact CTA + hamburger */}
+          {/* Right: CTA + auth + hamburger */}
           <div className="flex items-center gap-2">
             <Link href="/contact" className="hidden md:inline-flex btn-primary whitespace-nowrap ml-2">
               Get a Quote
             </Link>
+
+            {/* Auth */}
+            {isAuth ? (
+              <div className="relative hidden md:block ml-1">
+                <button onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-secondary overflow-hidden flex items-center justify-center shrink-0">
+                    {session?.user?.image
+                      ? <img src={session.user.image} alt="avatar" className="w-full h-full object-cover"/>
+                      : <span className="text-white text-sm font-bold">{session?.user?.name?.[0]?.toUpperCase()}</span>
+                    }
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate">{session?.user?.name}</span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
+                    <Link href="/profile" onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-accent transition-colors">
+                      My Profile
+                    </Link>
+                    <button onClick={() => signOut({ callbackUrl: "/home" })}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href="/login" className="hidden md:inline-flex btn-outline whitespace-nowrap ml-1">
+                Sign In
+              </Link>
+            )}
 
             {/* Mobile hamburger */}
             <button onClick={() => setMenuOpen(!menuOpen)}
@@ -82,11 +121,27 @@ export default function Navbar() {
             {NAV_LINKS.map(l => (
               <Link key={l.href} href={l.href} onClick={() => setMenuOpen(false)}
                 className={`block px-4 py-3 rounded-xl text-lg font-medium transition-colors ${
-                  pathname === l.href ? "text-primary bg-blue-50" : "text-gray-700 hover:bg-blue-50 hover:text-primary"
+                  pathname === l.href ? "text-primary bg-accent" : "text-gray-700 hover:bg-accent hover:text-primary"
                 }`}>{l.label}</Link>
             ))}
-            <div className="border-t border-gray-100 pt-3 mt-3">
-              <Link href="/contact" onClick={() => setMenuOpen(false)} className="btn-primary w-full justify-center">Get a Quote</Link>
+            <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
+              <Link href="/contact" onClick={() => setMenuOpen(false)} className="btn-primary w-full justify-center">
+                Get a Quote
+              </Link>
+              {isAuth ? (
+                <>
+                  <Link href="/profile" onClick={() => setMenuOpen(false)} className="btn-outline w-full justify-center">
+                    My Profile
+                  </Link>
+                  <button onClick={() => signOut({ callbackUrl: "/home" })} className="btn-danger w-full justify-center">
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <Link href="/login" onClick={() => setMenuOpen(false)} className="btn-outline w-full justify-center">
+                  Sign In
+                </Link>
+              )}
             </div>
           </div>
         )}

@@ -84,7 +84,7 @@ export default function ServicesPage() {
             <div className="space-y-5">
               {WHY.map((w,i) => (
                 <div key={i} className="flex gap-4 items-start">
-                  <div className="w-10 h-10 min-w-[2.5rem] bg-blue-50 text-primary rounded-xl flex items-center justify-center font-bold text-lg">{w.n}</div>
+                  <div className="w-10 h-10 min-w-[2.5rem] bg-accent text-primary rounded-xl flex items-center justify-center font-bold text-lg">{w.n}</div>
                   <div>
                     <div className="font-semibold text-lg mb-1">{w.title}</div>
                     <div className="text-gray-500 text-lg">{w.desc}</div>

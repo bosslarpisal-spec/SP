@@ -78,7 +78,7 @@ export default function CatalogPage() {
                 <div className="space-y-1">
                   {CATEGORIES.map(cat => (
                     <button key={cat} onClick={() => setCategory(cat)}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-lg transition-colors ${category === cat ? "bg-primary text-white font-semibold" : "text-gray-600 hover:bg-blue-50 hover:text-primary"}`}>
+                      className={`w-full text-left px-3 py-2 rounded-xl text-lg transition-colors ${category === cat ? "bg-primary text-white font-semibold" : "text-gray-600 hover:bg-accent hover:text-primary"}`}>
                       {cat}
                     </button>
                   ))}

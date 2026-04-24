@@ -80,7 +80,7 @@
   .form-input {
     @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-sm
            outline-none transition-all duration-200 bg-white
-           focus:border-primary focus:ring-4 focus:ring-blue-100
+           focus:border-primary focus:ring-4 focus:ring-secondary/20
            placeholder:text-gray-400;
     font-family: inherit;
     box-shadow: var(--shadow);

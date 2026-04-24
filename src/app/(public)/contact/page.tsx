@@ -42,7 +42,7 @@ export default function ContactPage() {
             <h2 className="mb-6">Let&apos;s Talk About Your Next Project</h2>
             {INFO.map((item,i) => (
               <div key={i} className="card-flat flex gap-4 items-start">
-                <div className="w-11 h-11 min-w-[2.75rem] bg-blue-50 rounded-xl flex items-center justify-center text-lg">{item.icon}</div>
+                <div className="w-11 h-11 min-w-[2.75rem] bg-accent rounded-xl flex items-center justify-center text-lg">{item.icon}</div>
                 <div>
                   <div className="text-base font-bold tracking-widest uppercase text-gray-400 mb-1">{item.label}</div>
                   {item.lines.map((l,j) => (

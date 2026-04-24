@@ -64,7 +64,7 @@ export default function HomePage() {
             <div className="absolute bottom-8 -left-5 bg-primary text-white rounded-2xl p-3.5 shadow-xl flex items-center gap-2.5">
               <IconTrophy className="w-7 h-7 shrink-0"/><span className="text-lg font-medium">20+ Years Experience</span>
             </div>
-            <div className="absolute top-8 -right-5 bg-[#1a1a2e] text-white rounded-2xl p-3.5 shadow-xl flex items-center gap-2.5">
+            <div className="absolute top-8 -right-5 bg-primary-dark text-white rounded-2xl p-3.5 shadow-xl flex items-center gap-2.5">
               <IconGlobe className="w-7 h-7 shrink-0"/><span className="text-lg font-medium">30+ Countries</span>
             </div>
           </div>
@@ -78,7 +78,7 @@ export default function HomePage() {
               &ldquo;SP&rdquo; is a specialist in marketing activities and sales promotion. We design and produce premium gifts, corporate souvenirs, and branded merchandise for leading companies.
             </p>
             {["20+ years delivering premium merchandise","Custom design team on every project","100% quality guarantee on all orders"].map((item,i) => (
-              <div key={i} className="flex items-center gap-3 bg-blue-50 rounded-xl px-4 py-3.5 border-l-4 border-primary mb-3">
+              <div key={i} className="flex items-center gap-3 bg-accent rounded-xl px-4 py-3.5 border-l-4 border-primary mb-3">
                 <IconCheck className="w-6 h-6 text-primary shrink-0"/>
                 <span className="text-xl font-medium text-gray-700">{item}</span>
               </div>

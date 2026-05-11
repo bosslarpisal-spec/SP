@@ -1,17 +1,22 @@
+// src/components/public/Navbar.tsx
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { NAV_LINKS, BRAND } from "@/lib/data";
 import { supabase } from "@/lib/supabase";
+import { useWishlist } from "@/hooks/useWishlist";
 import type { User } from "@supabase/supabase-js";
 
 export default function Navbar() {
   const pathname     = usePathname();
   const router       = useRouter();
-  const [menuOpen, setMenuOpen]         = useState(false);
+  const [menuOpen,     setMenuOpen]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [user, setUser]                 = useState<User | null>(null);
+  const [user,         setUser]         = useState<User | null>(null);
+
+  const { ids: wishlistIds } = useWishlist();
+  const wishCount = wishlistIds.size;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -35,12 +40,20 @@ export default function Navbar() {
       <div className="bg-primary text-white hidden md:block">
         <div className="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
           <div className="flex gap-5 items-center text-base">
-            <a href={`mailto:${BRAND.email}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <a href={`mailto:${BRAND.email}`}
+              className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
               {BRAND.email}
             </a>
-            <a href={`tel:${BRAND.phone1}`} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+            <a href={`tel:${BRAND.phone1}`}
+              className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+              </svg>
               {BRAND.phone1}
             </a>
             <span className="opacity-60">{BRAND.hours}</span>
@@ -60,9 +73,11 @@ export default function Navbar() {
 
           {/* Logo */}
           <Link href="/home" className="flex items-center gap-3 shrink-0 ml-2 mr-8">
-            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white font-bold text-2xl" style={{fontFamily:"Georgia,serif"}}>SP</div>
+            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white font-bold text-2xl"
+              style={{ fontFamily: "Georgia,serif" }}>SP</div>
             <div className="hidden sm:block">
-              <div className="text-primary font-bold text-xl leading-tight" style={{fontFamily:"Georgia,serif"}}>{BRAND.fullName}</div>
+              <div className="text-primary font-bold text-xl leading-tight"
+                style={{ fontFamily: "Georgia,serif" }}>{BRAND.fullName}</div>
               <div className="text-gray-400 text-base mt-0.5">Premiums &amp; Promotion Solution</div>
             </div>
           </Link>
@@ -72,7 +87,7 @@ export default function Navbar() {
             {NAV_LINKS.map(l => (
               <Link key={l.href} href={l.href}
                 className={`px-5 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-150 ${
-                  pathname === l.href || pathname.startsWith(l.href+"/")
+                  pathname === l.href || pathname.startsWith(l.href + "/")
                     ? "text-primary bg-accent"
                     : "text-gray-600 hover:text-primary hover:bg-accent"
                 }`}>
@@ -90,24 +105,50 @@ export default function Navbar() {
             {/* Auth */}
             {isAuth ? (
               <div className="relative hidden md:block ml-1">
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-secondary overflow-hidden flex items-center justify-center shrink-0">
-                    {user?.user_metadata?.avatar_url
-                      ? <img src={user.user_metadata.avatar_url} alt="avatar" className="w-full h-full object-cover"/>
-                      : <span className="text-white text-sm font-bold">{(user?.user_metadata?.full_name ?? user?.email ?? "?")[0].toUpperCase()}</span>
-                    }
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors"
+                >
+                  {/* Avatar */}
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full bg-secondary overflow-hidden flex items-center justify-center shrink-0">
+                      {user?.user_metadata?.avatar_url
+                        ? <img src={user.user_metadata.avatar_url} alt="avatar" className="w-full h-full object-cover"/>
+                        : <span className="text-white text-sm font-bold">
+                            {(user?.user_metadata?.full_name ?? user?.email ?? "?")[0].toUpperCase()}
+                          </span>
+                      }
+                    </div>
+                    {/* Wishlist count badge on avatar */}
+                    {wishCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                        {wishCount > 9 ? "9+" : wishCount}
+                      </span>
+                    )}
                   </div>
-                  <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate">{user?.user_metadata?.full_name ?? user?.email}</span>
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate">
+                    {user?.user_metadata?.full_name ?? user?.email}
+                  </span>
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                    strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
                   </svg>
                 </button>
+
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
+                  <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
                     <Link href="/profile" onClick={() => setUserMenuOpen(false)}
-                      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-accent transition-colors">
-                      My Profile
+                      className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-accent transition-colors">
+                      <span>My Profile</span>
+                      {wishCount > 0 && (
+                        <span className="flex items-center gap-1 text-xs text-red-500 font-semibold">
+                          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-red-500 stroke-red-500"
+                            strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                          </svg>
+                          {wishCount}
+                        </span>
+                      )}
                     </Link>
                     <button onClick={handleSignOut}
                       className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors">
@@ -125,9 +166,9 @@ export default function Navbar() {
             {/* Mobile hamburger */}
             <button onClick={() => setMenuOpen(!menuOpen)}
               className="lg:hidden ml-1 w-11 h-11 flex flex-col items-center justify-center gap-1.5 rounded-xl hover:bg-gray-100 transition-colors">
-              <span className={`block w-6 h-0.5 bg-gray-700 rounded transition-all ${menuOpen ? "rotate-45 translate-y-2":"" }`}/>
-              <span className={`block w-6 h-0.5 bg-gray-700 rounded transition-all ${menuOpen ? "opacity-0":""}`}/>
-              <span className={`block w-6 h-0.5 bg-gray-700 rounded transition-all ${menuOpen ? "-rotate-45 -translate-y-2":""}`}/>
+              <span className={`block w-6 h-0.5 bg-gray-700 rounded transition-all ${menuOpen ? "rotate-45 translate-y-2" : ""}`}/>
+              <span className={`block w-6 h-0.5 bg-gray-700 rounded transition-all ${menuOpen ? "opacity-0" : ""}`}/>
+              <span className={`block w-6 h-0.5 bg-gray-700 rounded transition-all ${menuOpen ? "-rotate-45 -translate-y-2" : ""}`}/>
             </button>
           </div>
         </div>
@@ -138,24 +179,40 @@ export default function Navbar() {
             {NAV_LINKS.map(l => (
               <Link key={l.href} href={l.href} onClick={() => setMenuOpen(false)}
                 className={`block px-4 py-3 rounded-xl text-lg font-medium transition-colors ${
-                  pathname === l.href ? "text-primary bg-accent" : "text-gray-700 hover:bg-accent hover:text-primary"
-                }`}>{l.label}</Link>
+                  pathname === l.href
+                    ? "text-primary bg-accent"
+                    : "text-gray-700 hover:bg-accent hover:text-primary"
+                }`}>
+                {l.label}
+              </Link>
             ))}
             <div className="border-t border-gray-100 pt-3 mt-3 space-y-2">
-              <Link href="/contact" onClick={() => setMenuOpen(false)} className="btn-primary w-full justify-center">
+              <Link href="/contact" onClick={() => setMenuOpen(false)}
+                className="btn-primary w-full justify-center">
                 Get a Quote
               </Link>
               {isAuth ? (
                 <>
-                  <Link href="/profile" onClick={() => setMenuOpen(false)} className="btn-outline w-full justify-center">
+                  <Link href="/profile" onClick={() => setMenuOpen(false)}
+                    className="btn-outline w-full justify-center flex items-center gap-2">
                     My Profile
+                    {wishCount > 0 && (
+                      <span className="flex items-center gap-1 text-xs text-red-500 font-semibold">
+                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-red-500 stroke-red-500"
+                          strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        {wishCount}
+                      </span>
+                    )}
                   </Link>
                   <button onClick={handleSignOut} className="btn-danger w-full justify-center">
                     Sign Out
                   </button>
                 </>
               ) : (
-                <Link href="/login" onClick={() => setMenuOpen(false)} className="btn-outline w-full justify-center">
+                <Link href="/login" onClick={() => setMenuOpen(false)}
+                  className="btn-outline w-full justify-center">
                   Sign In
                 </Link>
               )}

@@ -1,3 +1,4 @@
+// src/app/(auth)/login/page.tsx
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -16,11 +17,30 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    setLoading(false);
-    if (error) setError("Invalid email or password. Please try again.");
-    else router.push("/home");
+    if (error) {
+      setError("Invalid email or password. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    // Check if this user is an admin → send to /admin, otherwise /home
+    const userEmail = data.user?.email ?? "";
+    if (userEmail) {
+      const { data: adminRow } = await supabase
+        .from("admins")
+        .select("id")
+        .eq("email", userEmail)
+        .maybeSingle();
+
+      if (adminRow) {
+        router.push("/admin");
+        return;
+      }
+    }
+
+    router.push("/home");
   }
 
   async function handleGoogleLogin() {

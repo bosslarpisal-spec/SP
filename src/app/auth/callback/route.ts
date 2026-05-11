@@ -1,3 +1,4 @@
+// src/app/auth/callback/route.ts
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -23,8 +24,27 @@ export async function GET(request: Request) {
         },
       }
     )
+
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(`${origin}${next}`)
+
+    if (!error) {
+      // Check if the logged-in user is an admin
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user?.email) {
+        const { data: adminRow } = await supabase
+          .from('admins')
+          .select('id')
+          .eq('email', user.email)
+          .maybeSingle()
+
+        if (adminRow) {
+          return NextResponse.redirect(`${origin}/admin`)
+        }
+      }
+
+      return NextResponse.redirect(`${origin}${next}`)
+    }
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth_failed`)

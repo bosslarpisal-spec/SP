@@ -1,5 +1,6 @@
 // src/app/admin/layout.tsx
 import type { Metadata } from "next";
+import AdminSignOut from "./AdminSignOut";
 
 export const metadata: Metadata = {
   title: "SP Admin",
@@ -13,7 +14,6 @@ export default function AdminLayout({
 }) {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -25,30 +25,24 @@ export default function AdminLayout({
             </span>
           </div>
           <nav className="flex items-center gap-1">
-            <a
-              href="/admin"
-              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <a href="/admin"
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
               Dashboard
             </a>
-            <a
-              href="/admin/products"
-              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <a href="/admin/products"
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
               Products
             </a>
-            <a
-              href="/admin/profile"
-              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <a href="/admin/profile"
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
               Profile
             </a>
-            <a
-              href="/home"
-              className="px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <a href="/home"
+              className="px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
               ← Public site
             </a>
+            <div className="w-px h-4 bg-gray-200 mx-1" />
+            <AdminSignOut />
           </nav>
         </div>
       </header>

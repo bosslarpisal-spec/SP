@@ -14,19 +14,47 @@ export default function Navbar() {
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [user,         setUser]         = useState<User | null>(null);
+  const [isAdmin,      setIsAdmin]      = useState(false);
 
   const { ids: wishlistIds } = useWishlist();
   const wishCount = wishlistIds.size;
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session?.user ?? null);
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      const u = data.user;
+      setUser(u);
+      if (u) {
+        const { data: adminRow } = await supabase
+          .from("admins")
+          .select("id")
+          .eq("email", u.email ?? "")
+          .maybeSingle();
+        setIsAdmin(!!adminRow);
+      }
+    }
+    loadUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
+      const u = session?.user ?? null;
+      setUser(u);
+      if (u) {
+        const { data: adminRow } = await supabase
+          .from("admins")
+          .select("id")
+          .eq("email", u.email ?? "")
+          .maybeSingle();
+        setIsAdmin(!!adminRow);
+      } else {
+        setIsAdmin(false);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
 
-  const isAuth = !!user;
+  // If admin-only account, don't show as logged-in user in public nav
+  // They can still browse the public site but won't see the user dropdown
+  const showAsUser = !!user && !isAdmin;
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -102,14 +130,27 @@ export default function Navbar() {
               Get a Quote
             </Link>
 
-            {/* Auth */}
-            {isAuth ? (
+            {/* Admin badge — shown when admin is browsing public site */}
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity ml-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Admin
+              </Link>
+            )}
+
+            {/* Regular user dropdown — hidden for admin accounts */}
+            {showAsUser && (
               <div className="relative hidden md:block ml-1">
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-accent transition-colors"
                 >
-                  {/* Avatar */}
                   <div className="relative">
                     <div className="w-8 h-8 rounded-full bg-secondary overflow-hidden flex items-center justify-center shrink-0">
                       {user?.user_metadata?.avatar_url
@@ -119,7 +160,6 @@ export default function Navbar() {
                           </span>
                       }
                     </div>
-                    {/* Wishlist count badge on avatar */}
                     {wishCount > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
                         {wishCount > 9 ? "9+" : wishCount}
@@ -157,7 +197,10 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-            ) : (
+            )}
+
+            {/* Sign in button — shown when no one is logged in */}
+            {!user && (
               <Link href="/login" className="hidden md:inline-flex btn-outline whitespace-nowrap ml-1">
                 Sign In
               </Link>
@@ -191,7 +234,13 @@ export default function Navbar() {
                 className="btn-primary w-full justify-center">
                 Get a Quote
               </Link>
-              {isAuth ? (
+              {isAdmin && (
+                <Link href="/admin" onClick={() => setMenuOpen(false)}
+                  className="btn-primary w-full justify-center bg-primary">
+                  Admin Dashboard
+                </Link>
+              )}
+              {showAsUser ? (
                 <>
                   <Link href="/profile" onClick={() => setMenuOpen(false)}
                     className="btn-outline w-full justify-center flex items-center gap-2">
@@ -210,12 +259,12 @@ export default function Navbar() {
                     Sign Out
                   </button>
                 </>
-              ) : (
+              ) : !user ? (
                 <Link href="/login" onClick={() => setMenuOpen(false)}
                   className="btn-outline w-full justify-center">
                   Sign In
                 </Link>
-              )}
+              ) : null}
             </div>
           </div>
         )}

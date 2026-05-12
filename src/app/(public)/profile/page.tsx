@@ -11,20 +11,22 @@ import type { User } from "@supabase/supabase-js";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser]           = useState<User | null>(null);
-  const [loading, setLoading]     = useState(true);
-  const [name, setName]           = useState("");
-  const [avatar, setAvatar]       = useState<string | null>(null);
-  const [nameSaved, setNameSaved] = useState(false);
-  const [pwSaved, setPwSaved]     = useState(false);
-  const [pwError, setPwError]     = useState("");
-  const [newPw, setNewPw]         = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
+  const [user, setUser]             = useState<User | null>(null);
+  const [loading, setLoading]       = useState(true);
+  const [name, setName]             = useState("");
+  const [avatar, setAvatar]         = useState<string | null>(null);
+  const [nameSaved, setNameSaved]   = useState(false);
+  const [pwSaved, setPwSaved]       = useState(false);
+  const [pwError, setPwError]       = useState("");
+  const [newPw, setNewPw]           = useState("");
+  const [confirmPw, setConfirmPw]   = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Track which product IDs are currently active in Supabase
+  const [activeIds, setActiveIds] = useState<Set<string>>(new Set());
 
   const { ids: wishlistIds, isWished, toggle } = useWishlist();
 
-  // Products in the wishlist, in the order they were added (we sort by id desc as proxy)
   const wishedProducts = PRODUCTS.filter(p => wishlistIds.has(p.id));
 
   useEffect(() => {
@@ -36,6 +38,18 @@ export default function ProfilePage() {
       setLoading(false);
     });
   }, [router]);
+
+  // Fetch active product IDs from Supabase so we know which wishlist
+  // items have been hidden by the admin
+  useEffect(() => {
+    supabase
+      .from("products")
+      .select("id")
+      .eq("is_active", true)
+      .then(({ data }) => {
+        if (data) setActiveIds(new Set(data.map(p => String(p.id))));
+      });
+  }, []);
 
   if (loading || !user) return null;
 
@@ -94,7 +108,6 @@ export default function ProfilePage() {
           <div className="card-flat">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-primary flex items-center gap-2">
-                {/* Heart icon */}
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-red-500 stroke-red-500" strokeWidth={2}
                   strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -129,37 +142,71 @@ export default function ProfilePage() {
             ) : (
               /* Wishlist grid */
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {wishedProducts.map(p => (
-                  <div key={p.id} className="relative group rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-all">
-                    {/* Image */}
-                    <Link href={`/catalog/${p.id}`}>
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </Link>
-                    {/* Remove heart — top-right */}
-                    <div className="absolute top-2 right-2">
-                      <WishlistButton
-                        productId={p.id}
-                        wished={isWished(p.id)}
-                        onToggle={toggle}
-                        size="sm"
-                      />
+                {wishedProducts.map(p => {
+                  const unavailable = !activeIds.has(String(p.id));
+
+                  return (
+                    <div
+                      key={p.id}
+                      className={`relative group rounded-xl border overflow-hidden transition-all ${
+                        unavailable
+                          ? "border-gray-100 opacity-60 grayscale"
+                          : "border-gray-100 hover:shadow-md"
+                      }`}
+                    >
+                      {/* Image — not linked when unavailable */}
+                      {unavailable ? (
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className="w-full h-28 object-cover"
+                        />
+                      ) : (
+                        <Link href={`/catalog/${p.id}`}>
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            className="w-full h-28 object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        </Link>
+                      )}
+
+                      {/* Remove heart — top-right */}
+                      <div className="absolute top-2 right-2">
+                        <WishlistButton
+                          productId={p.id}
+                          wished={isWished(p.id)}
+                          onToggle={toggle}
+                          size="sm"
+                        />
+                      </div>
+
+                      {/* Info */}
+                      <div className="p-2.5">
+                        {unavailable ? (
+                          <>
+                            <p className="text-xs font-semibold leading-snug text-gray-400 line-clamp-2">
+                              {p.name}
+                            </p>
+                            <span className="inline-block mt-1 text-xs text-red-400 font-medium">
+                              Currently unavailable
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <Link
+                              href={`/catalog/${p.id}`}
+                              className="block text-xs font-semibold leading-snug hover:text-primary transition-colors line-clamp-2"
+                            >
+                              {p.name}
+                            </Link>
+                            <span className="text-xs text-gray-400">{p.category}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    {/* Info */}
-                    <div className="p-2.5">
-                      <Link
-                        href={`/catalog/${p.id}`}
-                        className="block text-xs font-semibold leading-snug hover:text-primary transition-colors line-clamp-2"
-                      >
-                        {p.name}
-                      </Link>
-                      <span className="text-xs text-gray-400">{p.category}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

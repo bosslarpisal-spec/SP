@@ -18,6 +18,10 @@ type Product = {
   tags: string[];
 };
 
+async function revalidatePublic() {
+  await fetch("/api/revalidate", { method: "POST" });
+}
+
 export default function AdminProductsClient({
   products: initial,
 }: {
@@ -40,17 +44,13 @@ export default function AdminProductsClient({
           p.id === product.id ? { ...p, is_active: !p.is_active } : p
         )
       );
+      await revalidatePublic();
     }
     setLoadingId(null);
   }
 
   async function deleteProduct(product: Product) {
-    if (
-      !confirm(
-        `Delete "${product.name}"? This cannot be undone.`
-      )
-    )
-      return;
+    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
 
     setLoadingId(product.id);
     const { error } = await supabase
@@ -60,6 +60,7 @@ export default function AdminProductsClient({
 
     if (!error) {
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      await revalidatePublic();
     }
     setLoadingId(null);
   }
@@ -83,44 +84,23 @@ export default function AdminProductsClient({
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="text-left px-4 py-3 font-semibold text-gray-600 w-16">
-              Image
-            </th>
-            <th className="text-left px-4 py-3 font-semibold text-gray-600">
-              Name
-            </th>
-            <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden sm:table-cell">
-              Category
-            </th>
-            <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden md:table-cell">
-              Tags
-            </th>
-            <th className="text-center px-4 py-3 font-semibold text-gray-600">
-              Status
-            </th>
-            <th className="text-right px-4 py-3 font-semibold text-gray-600">
-              Actions
-            </th>
+            <th className="text-left px-4 py-3 font-semibold text-gray-600 w-16">Image</th>
+            <th className="text-left px-4 py-3 font-semibold text-gray-600">Name</th>
+            <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden sm:table-cell">Category</th>
+            <th className="text-left px-4 py-3 font-semibold text-gray-600 hidden md:table-cell">Tags</th>
+            <th className="text-center px-4 py-3 font-semibold text-gray-600">Status</th>
+            <th className="text-right px-4 py-3 font-semibold text-gray-600">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {products.map((p) => (
             <tr
               key={p.id}
-              className={`hover:bg-gray-50 transition-colors ${
-                !p.is_active ? "opacity-50" : ""
-              }`}
+              className={`hover:bg-gray-50 transition-colors ${!p.is_active ? "opacity-50" : ""}`}
             >
-              {/* Image */}
               <td className="px-4 py-3">
-                <img
-                  src={p.image_url}
-                  alt={p.name}
-                  className="w-12 h-12 object-cover rounded-lg"
-                />
+                <img src={p.image_url} alt={p.name} className="w-12 h-12 object-cover rounded-lg" />
               </td>
-
-              {/* Name */}
               <td className="px-4 py-3">
                 <p className="font-medium text-gray-900">{p.name}</p>
                 <p className="text-gray-400 text-xs">{p.name_th}</p>
@@ -130,29 +110,20 @@ export default function AdminProductsClient({
                   </span>
                 )}
               </td>
-
-              {/* Category */}
               <td className="px-4 py-3 hidden sm:table-cell">
                 <span className="bg-accent text-primary text-xs font-medium px-2 py-1 rounded-full">
                   {p.category}
                 </span>
               </td>
-
-              {/* Tags */}
               <td className="px-4 py-3 hidden md:table-cell">
                 <div className="flex flex-wrap gap-1">
                   {p.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded"
-                    >
+                    <span key={t} className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
                       {t}
                     </span>
                   ))}
                 </div>
               </td>
-
-              {/* Status toggle */}
               <td className="px-4 py-3 text-center">
                 <button
                   onClick={() => toggleActive(p)}
@@ -172,8 +143,6 @@ export default function AdminProductsClient({
                   {p.is_active ? "Visible" : "Hidden"}
                 </p>
               </td>
-
-              {/* Actions */}
               <td className="px-4 py-3 text-right">
                 <div className="flex items-center justify-end gap-2">
                   <Link

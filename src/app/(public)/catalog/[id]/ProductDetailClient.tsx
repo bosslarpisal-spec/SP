@@ -1,18 +1,28 @@
 // src/app/(public)/catalog/[id]/ProductDetailClient.tsx
 "use client";
 import Link from "next/link";
-import { PRODUCTS } from "@/lib/data";
 import { useWishlist } from "@/hooks/useWishlist";
 import WishlistButton from "@/components/public/WishlistButton";
 
-type Product = typeof PRODUCTS[0];
+// DB-shaped product (matches what page.tsx passes)
+type Product = {
+  id: number;
+  name: string;
+  nameTH: string;
+  category: string;
+  desc: string;
+  descTH: string;
+  image: string;
+  isNew?: boolean;
+  tags: string[];
+};
 
 interface Props {
   product: Product;
-  related: Product[];
+  related?: Product[]; // optional — safe if not passed
 }
 
-export default function ProductDetailClient({ product, related }: Props) {
+export default function ProductDetailClient({ product, related = [] }: Props) {
   const { isWished, toggle } = useWishlist();
 
   return (
@@ -21,7 +31,7 @@ export default function ProductDetailClient({ product, related }: Props) {
       <div className="bg-accent border-b border-gray-200">
         <div className="container py-3">
           <nav className="flex items-center gap-2 text-xs text-gray-500">
-            <Link href="/home"    className="hover:text-primary">Home</Link>
+            <Link href="/home" className="hover:text-primary">Home</Link>
             <span>/</span>
             <Link href="/catalog" className="hover:text-primary">Catalog</Link>
             <span>/</span>
@@ -52,45 +62,37 @@ export default function ProductDetailClient({ product, related }: Props) {
               {product.name}
             </h1>
             <p className="text-primary text-sm mb-6">{product.nameTH}</p>
-
             <p className="text-gray-600 text-lg leading-relaxed mb-2">{product.desc}</p>
             <p className="text-gray-400 leading-relaxed mb-8">{product.descTH}</p>
 
             {/* Tags */}
             <div className="flex gap-2 mb-8 flex-wrap">
-              {product.tags.map(tag => (
+              {(product.tags ?? []).map(tag => (
                 <span key={tag} className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
                   #{tag}
                 </span>
               ))}
             </div>
 
-            {/* CTA row — Enquire + Wishlist + Back */}
+            {/* CTA row */}
             <div className="flex gap-3 flex-wrap items-center">
-              <Link
-                href="/contact"
-                className="btn-primary btn-lg flex-1 min-w-[160px] justify-center"
-              >
+              <Link href="/contact" className="btn-primary btn-lg flex-1 min-w-[160px] justify-center">
                 Enquire About This Product →
               </Link>
-
-              {/* ── Wishlist heart (large) ── */}
               <WishlistButton
                 productId={product.id}
                 wished={isWished(product.id)}
                 onToggle={toggle}
                 size="lg"
               />
-
               <Link href="/catalog" className="btn-ghost btn-lg">
                 ← Back to Catalog
               </Link>
             </div>
 
-            {/* Wishlist hint for guests */}
             <p className="text-xs text-gray-400 mt-3">
-              ♡&nbsp; Tap the heart to save this product to your wishlist.
-              {" "}<Link href="/login" className="underline hover:text-primary transition-colors">
+              ♡&nbsp; Tap the heart to save this product to your wishlist.{" "}
+              <Link href="/login" className="underline hover:text-primary transition-colors">
                 Sign in
               </Link>{" "}
               to save across devices.
@@ -99,7 +101,7 @@ export default function ProductDetailClient({ product, related }: Props) {
         </div>
       </section>
 
-      {/* Related products */}
+      {/* Related products — only shown if there are any */}
       {related.length > 0 && (
         <section className="section-sm bg-accent">
           <div className="container">
@@ -112,8 +114,7 @@ export default function ProductDetailClient({ product, related }: Props) {
                   className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all"
                 >
                   <div className="relative">
-                    <img src={p.image} alt={p.name} className="w-full h-36 object-cover"/>
-                    {/* Mini heart on related cards */}
+                    <img src={p.image} alt={p.name} className="w-full h-36 object-cover" />
                     <div className="absolute top-2 right-2">
                       <WishlistButton
                         productId={p.id}

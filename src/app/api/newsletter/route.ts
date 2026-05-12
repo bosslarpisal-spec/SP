@@ -1,3 +1,4 @@
+// src/app/api/newsletter/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 // In production: save to email marketing service (Mailchimp, etc.)

@@ -1,6 +1,6 @@
 // src/app/admin/layout.tsx
 import type { Metadata } from "next";
-import AdminSignOut from "./AdminSignOut";
+import AdminSignOut from "./AdminSignout";
 
 export const metadata: Metadata = {
   title: "SP Admin",

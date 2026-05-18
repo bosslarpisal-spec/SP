@@ -6,10 +6,11 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError]           = useState("");
+  const [loading, setLoading]       = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -77,20 +78,58 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="form-label">Email</label>
-            <input type="email" className="form-input" placeholder="you@example.com"
-              value={email} onChange={e => setEmail(e.target.value)} required />
+            <input
+              type="email"
+              className="form-input"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+            />
           </div>
+
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="form-label !mb-0">Password</label>
-              <Link href="/forgot-password" className="text-xs text-secondary-dark font-semibold underline underline-offset-2 hover:text-secondary transition-colors">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-secondary-dark font-semibold underline underline-offset-2 hover:text-secondary transition-colors"
+              >
                 Forgot password?
               </Link>
             </div>
-            <input type="password" className="form-input" placeholder="••••••••"
-              value={password} onChange={e => setPassword(e.target.value)} required />
+
+            {/* Password field with eye toggle */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                className="form-input pr-10"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="
+                  absolute inset-y-0 right-0
+                  flex items-center justify-center
+                  w-10
+                  text-primary opacity-40
+                  hover:opacity-70
+                  focus:outline-none focus:opacity-70
+                  transition-opacity duration-150
+                "
+              >
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
           </div>
+
           {error && <p className="form-error">{error}</p>}
+
           <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
             {loading ? "Signing in…" : "Sign In"}
           </button>
@@ -100,7 +139,8 @@ export default function LoginPage() {
 
         <button
           onClick={handleGoogleLogin}
-          className="btn-ghost w-full justify-center gap-3">
+          className="btn-ghost w-full justify-center gap-3"
+        >
           <GoogleIcon />
           Continue with Google
         </button>
@@ -117,6 +157,45 @@ export default function LoginPage() {
         <Link href="/home" className="text-primary hover:underline">← Back to home</Link>
       </p>
     </div>
+  );
+}
+
+/** Eye open — password visible */
+function EyeIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+/** Eye with slash — password hidden */
+function EyeOffIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a18.49 18.49 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
   );
 }
 

@@ -330,7 +330,7 @@ export default function AdminProfileClient({
       <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center justify-between">
         <div>
           <p className="font-semibold text-gray-800">Sign Out</p>
-          <p className="text-sm text-gray-500">You'll be sent back to the login page.</p>
+          <p className="text-sm text-gray-500">You&apos;ll be sent back to the login page.</p>
         </div>
         <button
           onClick={handleSignOut}

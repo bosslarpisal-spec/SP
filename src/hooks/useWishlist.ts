@@ -1,6 +1,6 @@
 // src/hooks/useWishlist.ts
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -13,6 +13,8 @@ import { supabase } from "@/lib/supabase";
 export function useWishlist() {
   const router = useRouter();
   const [ids,     setIds]     = useState<Set<number>>(new Set());
+  const idsRef = useRef(ids);
+  idsRef.current = ids;
   const [userId,  setUserId]  = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +23,8 @@ export function useWishlist() {
     let active = true;
 
     async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       if (!active) return;
 
       if (!user) {
@@ -63,15 +66,13 @@ export function useWishlist() {
 
   // ── 2. Toggle a product in/out of wishlist ──────────────────
   const toggle = useCallback(async (productId: number) => {
-    // Not signed in → redirect to login
     if (!userId) {
       router.push(`/login?next=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
 
-    const isWished = ids.has(productId);
+    const isWished = idsRef.current.has(productId);
 
-    // Optimistic update
     setIds(prev => {
       const next = new Set(prev);
       isWished ? next.delete(productId) : next.add(productId);
@@ -84,18 +85,14 @@ export function useWishlist() {
         .delete()
         .eq("user_id", userId)
         .eq("product_id", productId);
-
-      // Roll back on error
       if (error) setIds(prev => { const n = new Set(prev); n.add(productId); return n; });
     } else {
       const { error } = await supabase
         .from("wishlists")
         .insert({ user_id: userId, product_id: productId });
-
-      // Roll back on error
       if (error) setIds(prev => { const n = new Set(prev); n.delete(productId); return n; });
     }
-  }, [userId, ids, router]);
+  }, [userId, router]);
 
   const isWished = useCallback((productId: number) => ids.has(productId), [ids]);
 

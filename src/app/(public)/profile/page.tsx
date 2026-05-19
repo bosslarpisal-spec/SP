@@ -1,6 +1,6 @@
 // src/app/(public)/profile/page.tsx
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -14,13 +14,12 @@ export default function ProfilePage() {
   const [user, setUser]             = useState<User | null>(null);
   const [loading, setLoading]       = useState(true);
   const [name, setName]             = useState("");
-  const [avatar, setAvatar]         = useState<string | null>(null);
   const [nameSaved, setNameSaved]   = useState(false);
   const [pwSaved, setPwSaved]       = useState(false);
   const [pwError, setPwError]       = useState("");
+  const [pwSaving, setPwSaving]     = useState(false);
   const [newPw, setNewPw]           = useState("");
   const [confirmPw, setConfirmPw]   = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
 
   // Track which product IDs are currently active in Supabase
   const [activeIds, setActiveIds] = useState<Set<string>>(new Set());
@@ -34,7 +33,6 @@ export default function ProfilePage() {
       if (!data.user) { router.push("/login"); return; }
       setUser(data.user);
       setName(data.user.user_metadata?.full_name ?? "");
-      setAvatar(localStorage.getItem("sp_avatar") || data.user.user_metadata?.avatar_url || null);
       setLoading(false);
     });
   }, [router]);
@@ -53,18 +51,6 @@ export default function ProfilePage() {
 
   if (loading || !user) return null;
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const b64 = reader.result as string;
-      setAvatar(b64);
-      localStorage.setItem("sp_avatar", b64);
-    };
-    reader.readAsDataURL(file);
-  }
-
   async function saveName() {
     await supabase.auth.updateUser({ data: { full_name: name } });
     setNameSaved(true);
@@ -75,7 +61,9 @@ export default function ProfilePage() {
     setPwError("");
     if (newPw.length < 6) return setPwError("Password must be at least 6 characters.");
     if (newPw !== confirmPw) return setPwError("Passwords do not match.");
+    setPwSaving(true);
     const { error } = await supabase.auth.updateUser({ password: newPw });
+    setPwSaving(false);
     if (error) return setPwError(error.message);
     setNewPw(""); setConfirmPw("");
     setPwSaved(true);
@@ -211,26 +199,6 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* ── Profile Image ──────────────────────────────────── */}
-          <div className="card-flat">
-            <h2 className="text-base font-semibold text-primary mb-4">Profile Image</h2>
-            <div className="flex items-center gap-5">
-              <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0">
-                {avatar
-                  ? <img src={avatar} alt="avatar" className="w-full h-full object-cover"/>
-                  : <span className="text-2xl font-bold text-white">{initials}</span>
-                }
-              </div>
-              <div>
-                <button onClick={() => fileRef.current?.click()} className="btn-outline btn-sm">
-                  Change Photo
-                </button>
-                <p className="text-xs text-gray-400 mt-1.5">JPG, PNG or WebP — max 2 MB</p>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange}/>
-              </div>
-            </div>
-          </div>
-
           {/* ── Username ───────────────────────────────────────── */}
           <div className="card-flat">
             <h2 className="text-base font-semibold text-primary mb-4">Username</h2>
@@ -274,7 +242,9 @@ export default function ProfilePage() {
               </div>
               {pwError  && <p className="form-error">{pwError}</p>}
               {pwSaved  && <p className="text-xs text-green-600 font-medium">Password updated successfully.</p>}
-              <button onClick={savePassword} className="btn-primary">Update Password</button>
+              <button onClick={savePassword} disabled={pwSaving} className="btn-primary disabled:opacity-50">
+                {pwSaving ? "Saving…" : "Update Password"}
+              </button>
             </div>
           </div>
 

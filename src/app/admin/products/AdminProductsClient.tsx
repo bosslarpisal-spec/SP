@@ -30,15 +30,19 @@ export default function AdminProductsClient({
   const router = useRouter();
   const [products, setProducts] = useState(initial);
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function toggleActive(product: Product) {
     setLoadingId(product.id);
+    setActionError(null);
     const { error } = await supabase
       .from("products")
       .update({ is_active: !product.is_active })
       .eq("id", product.id);
 
-    if (!error) {
+    if (error) {
+      setActionError(`Failed to update "${product.name}": ${error.message}`);
+    } else {
       setProducts((prev) =>
         prev.map((p) =>
           p.id === product.id ? { ...p, is_active: !p.is_active } : p
@@ -53,12 +57,15 @@ export default function AdminProductsClient({
     if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
 
     setLoadingId(product.id);
+    setActionError(null);
     const { error } = await supabase
       .from("products")
       .delete()
       .eq("id", product.id);
 
-    if (!error) {
+    if (error) {
+      setActionError(`Failed to delete "${product.name}": ${error.message}`);
+    } else {
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
       await revalidatePublic();
     }
@@ -80,6 +87,12 @@ export default function AdminProductsClient({
   }
 
   return (
+    <div className="space-y-3">
+    {actionError && (
+      <div className="px-4 py-2.5 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+        {actionError}
+      </div>
+    )}
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       <table className="w-full text-sm">
         <thead>
@@ -164,6 +177,7 @@ export default function AdminProductsClient({
           ))}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }

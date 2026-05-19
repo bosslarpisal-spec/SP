@@ -48,7 +48,7 @@ function NewsletterStrip() {
 
   return (
     <div>
-      <p className="text-[11px] text-[#5A4E44] mb-2">Get new product launches, promotions, and SP news.</p>
+      <p className="text-[13px] text-[#5A4E44] mb-2">Get new product launches, promotions, and SP news.</p>
       {status === "ok" ? (
         <div className="flex items-center gap-2 text-secondary text-sm font-medium">
           <IconSparkles className="w-4 h-4 shrink-0"/>{msg}
@@ -58,13 +58,13 @@ function NewsletterStrip() {
           <form onSubmit={handleSubmit} className="flex gap-1.5">
             <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="flex-1 bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-[11px] text-[#C8B99A] outline-none focus:border-secondary/40 placeholder:text-[#5A4E44]" />
+              className="flex-1 bg-white/5 border border-white/10 rounded px-2.5 py-1.5 text-[13px] text-[#C8B99A] outline-none focus:border-secondary/40 placeholder:text-[#5A4E44]" />
             <button type="submit" disabled={status==="loading"}
-              className="bg-secondary text-primary text-[10px] font-semibold px-3 py-1.5 rounded whitespace-nowrap hover:bg-secondary-dark transition-colors">
+              className="bg-secondary text-primary text-[13px] font-semibold px-3 py-1.5 rounded whitespace-nowrap hover:bg-secondary-dark transition-colors">
               {status==="loading" ? "…" : "Subscribe"}
             </button>
           </form>
-          {status === "err" && <p className="text-red-400 text-[10px]">{msg}</p>}
+          {status === "err" && <p className="text-red-400 text-[13px]">{msg}</p>}
         </div>
       )}
     </div>
@@ -83,11 +83,11 @@ export default function Footer() {
               <div className="w-8 h-8 bg-primary-light rounded-lg flex items-center justify-center text-secondary font-bold text-xs"
                 style={{ fontFamily: "Georgia,serif" }}>SP</div>
               <div>
-                <div className="font-medium text-[13px] text-[#D4C9B8] leading-tight">{BRAND.fullName}</div>
-                <div className="text-[9px] text-[#5A4E44] mt-0.5">Premiums &amp; Promotion Solution</div>
+                <div className="font-medium text-[14px] text-[#D4C9B8] leading-tight">{BRAND.fullName}</div>
+                <div className="text-[13px] text-[#5A4E44] mt-0.5">Premiums &amp; Promotion Solution</div>
               </div>
             </Link>
-            <p className="text-[11px] text-[#7A6B5C] leading-relaxed mb-3 max-w-xs">
+            <p className="text-[13px] text-[#7A6B5C] leading-relaxed mb-3 max-w-xs">
               Specialist in premium gifts, corporate souvenirs, and branded merchandise for leading brands across Thailand and beyond.
               <br/><span className="text-[#4A3A2C]">{BRAND.taglineTH}</span>
             </p>
@@ -104,11 +104,11 @@ export default function Footer() {
 
           {/* Quick links */}
           <div>
-            <h4 className="text-[11px] font-medium text-[#C8B99A] mb-3 tracking-wide">Quick Links</h4>
+            <h4 className="text-[14px] font-medium text-[#C8B99A] mb-3 tracking-wide">Quick Links</h4>
             <ul className="space-y-2">
               {[...NAV_LINKS, {label:"Sign In", href:"/login"}, {label:"My Account", href:"/profile"}].map(l => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-[11px] text-[#7A6B5C] hover:text-[#A09080] transition-colors">{l.label}</Link>
+                  <Link href={l.href} className="text-[13px] text-[#7A6B5C] hover:text-[#A09080] transition-colors">{l.label}</Link>
                 </li>
               ))}
             </ul>
@@ -116,17 +116,17 @@ export default function Footer() {
 
           {/* Services */}
           <div>
-            <h4 className="text-[11px] font-medium text-[#C8B99A] mb-3 tracking-wide">Services</h4>
+            <h4 className="text-[14px] font-medium text-[#C8B99A] mb-3 tracking-wide">Services</h4>
             <ul className="space-y-2">
               {["Premium Gifts","Corporate Souvenirs","New Year Packages","Custom Branding","OEM Manufacturing","Logistics & Delivery"].map(s => (
-                <li key={s}><span className="text-[11px] text-[#7A6B5C] cursor-pointer hover:text-[#A09080] transition-colors">{s}</span></li>
+                <li key={s}><span className="text-[13px] text-[#7A6B5C] cursor-pointer hover:text-[#A09080] transition-colors">{s}</span></li>
               ))}
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="text-[11px] font-medium text-[#C8B99A] mb-3 tracking-wide">Contact Us</h4>
+            <h4 className="text-[14px] font-medium text-[#C8B99A] mb-3 tracking-wide">Contact Us</h4>
             <ul className="space-y-2">
               {([
                 { icon: <IconPhone className="w-3.5 h-3.5 shrink-0 mt-0.5 text-secondary"/>, text: BRAND.phone1 },
@@ -138,15 +138,15 @@ export default function Footer() {
                 <li key={i} className="flex items-start gap-2">
                   {item.icon}
                   {"href" in item
-                    ? <a href={item.href} className="text-[11px] text-[#7A6B5C] hover:text-[#A09080] transition-colors leading-relaxed">{item.text}</a>
-                    : <span className="text-[11px] text-[#7A6B5C] leading-relaxed">{item.text}</span>}
+                    ? <a href={item.href} className="text-[13px] text-[#7A6B5C] hover:text-[#A09080] transition-colors leading-relaxed">{item.text}</a>
+                    : <span className="text-[13px] text-[#7A6B5C] leading-relaxed">{item.text}</span>}
                 </li>
               ))}
               <li className="flex items-start gap-2 pt-0.5">
                 <IconMapPin className="w-3.5 h-3.5 shrink-0 mt-0.5 text-secondary"/>
                 <div>
-                  <div className="text-[11px] text-[#7A6B5C] leading-relaxed">{BRAND.address}</div>
-                  <div className="text-[10px] text-[#4A3A2C] mt-0.5">{BRAND.addressTH}</div>
+                  <div className="text-[13px] text-[#7A6B5C] leading-relaxed">{BRAND.address}</div>
+                  <div className="text-[13px] text-[#4A3A2C] mt-0.5">{BRAND.addressTH}</div>
                 </div>
               </li>
             </ul>
@@ -157,10 +157,10 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/5">
         <div className="max-w-6xl mx-auto px-6 py-3.5 flex flex-wrap justify-between items-center gap-2">
-          <span className="text-[10px] text-[#3A3028]">© 2025 {BRAND.fullName} Co., Ltd. All rights reserved.</span>
+          <span className="text-[13px] text-[#3A3028]">© 2025 {BRAND.fullName} Co., Ltd. All rights reserved.</span>
           <div className="flex gap-4">
-            <Link href="/contact" className="text-[10px] text-[#3A3028] hover:text-[#5A4E44] transition-colors">Privacy Policy</Link>
-            <Link href="/contact" className="text-[10px] text-[#3A3028] hover:text-[#5A4E44] transition-colors">Terms of Service</Link>
+            <Link href="/contact" className="text-[13px] text-[#3A3028] hover:text-[#5A4E44] transition-colors">Privacy Policy</Link>
+            <Link href="/contact" className="text-[13px] text-[#3A3028] hover:text-[#5A4E44] transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

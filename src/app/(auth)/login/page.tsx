@@ -21,7 +21,9 @@ export default function LoginPage() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError("Invalid email or password. Please try again.");
+      setError(
+        'Invalid email or password. If you signed up with Google, use "Continue with Google" below, or click "Forgot password?" to set an email password.'
+      );
       setLoading(false);
       return;
     }

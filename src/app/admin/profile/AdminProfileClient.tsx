@@ -27,6 +27,10 @@ export default function AdminProfileClient({
   const [addError, setAddError] = useState<string | null>(null);
   const [addSuccess, setAddSuccess] = useState<string | null>(null);
 
+  // ── Remove admin ───────────────────────────────────────────
+  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
+
   // ── Change own email ───────────────────────────────────────
   const [newAuthEmail, setNewAuthEmail] = useState("");
   const [changingEmail, setChangingEmail] = useState(false);
@@ -78,14 +82,20 @@ export default function AdminProfileClient({
     }
     if (!confirm(`Remove ${admin.email} from admins?`)) return;
 
+    setRemovingId(admin.id);
+    setRemoveError(null);
+
     const { error } = await supabase
       .from("admins")
       .delete()
       .eq("id", admin.id);
 
-    if (!error) {
+    if (error) {
+      setRemoveError(`Failed to remove ${admin.email}: ${error.message}`);
+    } else {
       setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
     }
+    setRemovingId(null);
   }
 
   async function handleChangeEmail(e: React.FormEvent) {
@@ -196,7 +206,7 @@ export default function AdminProfileClient({
               </div>
               <button
                 onClick={() => handleRemoveAdmin(a)}
-                disabled={a.email === currentUserEmail}
+                disabled={a.email === currentUserEmail || removingId === a.id}
                 className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 title={
                   a.email === currentUserEmail
@@ -204,11 +214,17 @@ export default function AdminProfileClient({
                     : "Remove admin"
                 }
               >
-                Remove
+                {removingId === a.id ? "Removing…" : "Remove"}
               </button>
             </div>
           ))}
         </div>
+
+        {removeError && (
+          <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+            {removeError}
+          </p>
+        )}
 
         {/* Add new admin */}
         <form onSubmit={handleAddAdmin} className="flex gap-2">

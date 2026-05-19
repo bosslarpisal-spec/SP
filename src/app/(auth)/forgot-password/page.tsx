@@ -4,17 +4,23 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail]   = useState("");
-  const [sent, setSent]     = useState(false);
+  const [email, setEmail]     = useState("");
+  const [sent, setSent]       = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/profile`,
+    setError("");
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
     });
     setLoading(false);
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
     setSent(true);
   }
 
@@ -55,6 +61,7 @@ export default function ForgotPasswordPage() {
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && <p className="text-red-500 text-sm">{error}</p>}
               <div>
                 <label className="form-label">Email</label>
                 <input type="email" className="form-input" placeholder="you@example.com"

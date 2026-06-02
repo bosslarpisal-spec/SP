@@ -16,10 +16,12 @@ const LanguageContext = createContext<LangContextType>({
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("th");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("sp-lang") as Lang;
     if (saved === "th" || saved === "en") setLang(saved);
+    setMounted(true);
   }, []);
 
   function toggleLang() {
@@ -34,8 +36,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return lang === "th" ? th : en;
   }
 
+  // Use default "th" until mounted to match SSR output and avoid hydration mismatch
+  const value = mounted ? { lang, toggleLang, t } : { lang: "th" as Lang, toggleLang, t: (th: string) => th };
+
   return (
-    <LanguageContext.Provider value={{ lang, toggleLang, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

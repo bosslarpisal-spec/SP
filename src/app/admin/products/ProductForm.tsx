@@ -3,6 +3,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { CATEGORIES } from "@/lib/data";
 
@@ -283,7 +284,7 @@ export default function ProductForm({ mode, productId, initial }: Props) {
               <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
                 {url ? (
                   <div className="group w-full h-full cursor-pointer" onClick={() => handleSlotClick(i)}>
-                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <Image src={url} alt="" fill style={{ objectFit: "cover" }} />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button
                         type="button"

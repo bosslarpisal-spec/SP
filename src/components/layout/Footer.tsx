@@ -20,8 +20,8 @@ function Newsletter() {
     e.preventDefault();
     setStatus("loading");
     const res  = await fetch("/api/newsletter", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
-    const data = await res.json();
-    if (res.ok) { setStatus("ok"); setMsg("You&apos;re subscribed!"); setEmail(""); }
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) { setStatus("ok"); setMsg("You're subscribed!"); setEmail(""); }
     else        { setStatus("err"); setMsg(data.error ?? "Something went wrong."); }
   }
 

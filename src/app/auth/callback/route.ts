@@ -25,26 +25,38 @@ export async function GET(request: Request) {
       }
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    let exchangeError: unknown;
+    try {
+      const { error } = await supabase.auth.exchangeCodeForSession(code)
+      exchangeError = error;
+    } catch (err) {
+      console.error("[auth/callback] exchangeCodeForSession threw:", err)
+      return NextResponse.redirect(`${origin}/login?error=auth_failed`)
+    }
 
-    if (!error) {
+    if (!exchangeError) {
       // Check if the logged-in user is an admin
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user?.email) {
-        const { data: adminRow } = await supabase
+        const { data: adminRow, error: adminErr } = await supabase
           .from('admins')
           .select('id')
           .eq('email', user.email)
           .maybeSingle()
 
-        if (adminRow) {
+        if (adminErr) {
+          console.error("[auth/callback] admin lookup failed:", adminErr)
+          // Fall through to regular user redirect rather than failing silently
+        } else if (adminRow) {
           return NextResponse.redirect(`${origin}/admin`)
         }
       }
 
       return NextResponse.redirect(`${origin}${next}`)
     }
+
+    console.error("[auth/callback] exchangeCodeForSession error:", exchangeError)
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth_failed`)

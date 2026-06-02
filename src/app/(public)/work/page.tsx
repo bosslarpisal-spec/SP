@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 export const metadata = { title: "Our Work" };
+export const revalidate = 86400;
 
 const PROJECTS = [
   { title:"P&G Annual Gift Set 2024",       category:"Premium Sets",  client:"Procter & Gamble Thailand", img:"https://images.unsplash.com/photo-1513201099705-a9746e1e201f?w=600&q=80", qty:"5,000 sets",  desc:"Curated gift hampers with branded skincare products and custom packaging for P&G's year-end corporate gifting." },
@@ -32,7 +34,7 @@ export default function WorkPage() {
             {PROJECTS.map((p,i) => (
               <div key={i} className="card !p-0 overflow-hidden group">
                 <div className="relative overflow-hidden h-52">
-                  <img src={p.img} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                  <Image src={p.img} alt={p.title} fill style={{ objectFit: "cover" }} className="group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute top-3 left-3">
                     <span className="badge-cat">{p.category}</span>
                   </div>

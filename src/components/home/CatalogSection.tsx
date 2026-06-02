@@ -2,6 +2,7 @@
 "use client";
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLang } from "@/contexts/LanguageContext";
 
 interface Product {
@@ -264,7 +265,7 @@ function GridCard({ p, setSelected }: { p: Product; setSelected: (p: Product) =>
     >
       <div style={{ background: "#1C2951", height: "120px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
         {p.image_url ? (
-          <img src={p.image_url} alt={p.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <Image src={p.image_url} alt={p.name} fill style={{ objectFit: "cover" }} />
         ) : (
           <i className={`ti ${icon}`} style={{ fontSize: "32px", color: "#E8D5A3", opacity: 0.5 }} />
         )}
@@ -322,7 +323,7 @@ function ListCard({ p, setSelected }: { p: Product; setSelected: (p: Product) =>
     >
       <div style={{ background: "#1C2951", width: "110px", height: "80px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
         {p.image_url ? (
-          <img src={p.image_url} alt={p.name} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          <Image src={p.image_url} alt={p.name} fill style={{ objectFit: "cover" }} />
         ) : (
           <i className={`ti ${icon}`} style={{ fontSize: "28px", color: "#E8D5A3", opacity: 0.5 }} />
         )}
@@ -375,6 +376,7 @@ function SideSection({ title, open, onToggle, children }: { title: string; open:
 export default function CatalogSection({ products }: Props) {
   const { t } = useLang();
   const [searchQuery,      setSearchQuery]      = useState("");
+  const [debouncedSearch,  setDebouncedSearch]  = useState("");
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
   const [activeTags,       setActiveTags]       = useState<string[]>([]);
   const [activeBranding,   setActiveBranding]   = useState<string[]>([]);
@@ -383,6 +385,11 @@ export default function CatalogSection({ products }: Props) {
   const [currentPage,      setCurrentPage]      = useState(1);
   const [openSections,     setOpenSections]     = useState({ category: true, branding: true, tags: true });
   const [selected,         setSelected]         = useState<Product | null>(null);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!selected) return;
@@ -401,20 +408,20 @@ export default function CatalogSection({ products }: Props) {
   const filtered = useMemo(() => {
     return products
       .filter(p => {
-        const q           = searchQuery.toLowerCase();
+        const q           = debouncedSearch.toLowerCase();
         const matchSearch = !q || p.name.toLowerCase().includes(q) || (p.description ?? "").toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q);
         const matchCat    = activeCategories.length === 0 || activeCategories.includes(p.category);
         const matchTag    = activeTags.length === 0 || activeTags.some(t => p.tags?.includes(t));
         return matchSearch && matchCat && matchTag;
       })
       .sort((a, b) => sortBy === "az" ? a.name.localeCompare(b.name) : 0);
-  }, [products, searchQuery, activeCategories, activeTags, sortBy]);
+  }, [products, debouncedSearch, activeCategories, activeTags, sortBy]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated  = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const isFiltered = searchQuery !== "" || activeCategories.length > 0 || activeTags.length > 0 || activeBranding.length > 0;
+  const isFiltered = debouncedSearch !== "" || activeCategories.length > 0 || activeTags.length > 0 || activeBranding.length > 0;
 
-  const filterKey = JSON.stringify({ searchQuery, activeCategories, activeTags, activeBranding, sortBy });
+  const filterKey = JSON.stringify({ debouncedSearch, activeCategories, activeTags, activeBranding, sortBy });
   useEffect(() => { setCurrentPage(1); }, [filterKey]);
 
   function toggleCategory(cat: string) { setActiveCategories(p => p.includes(cat) ? p.filter(c => c !== cat) : [...p, cat]); }

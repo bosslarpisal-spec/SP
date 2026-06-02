@@ -35,7 +35,7 @@ export default async function HomePage() {
     const supabase = createSupabaseServiceClient();
     const { data } = await supabase
       .from("products")
-      .select("*")
+      .select("id,name,name_th,category,image_url,images,is_new,is_active,display_order,tags")
       .eq("is_active", true)
       .order("display_order");
     if (data) {
@@ -51,8 +51,8 @@ export default async function HomePage() {
         images:      p.images ?? [],
       }));
     }
-  } catch {
-    // empty array — HomeClient handles empty state
+  } catch (err) {
+    console.error("[home] product fetch failed:", err);
   }
 
   return <HomeClient products={products} />;

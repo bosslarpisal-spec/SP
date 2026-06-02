@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { PRODUCTS } from "@/lib/data";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -65,7 +66,8 @@ export default function ProfilePage() {
       .from("products")
       .select("id")
       .eq("is_active", true)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.error("wishlist query failed", error); return; }
         if (data) setActiveIds(new Set(data.map(p => String(p.id))));
       });
   }, []);
@@ -250,10 +252,10 @@ export default function ProfilePage() {
                         filter: unavailable ? "grayscale(1)" : "none",
                       }}>
                         {unavailable ? (
-                          <img src={p.image} alt={p.name} style={{ width: "100%", height: "80px", objectFit: "cover", borderRadius: "8px", display: "block", marginBottom: "8px" }} />
+                          <div style={{ position: "relative", width: "100%", height: "80px", borderRadius: "8px", overflow: "hidden", marginBottom: "8px" }}><Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }} /></div>
                         ) : (
                           <Link href={`/catalog/${p.id}`}>
-                            <img src={p.image} alt={p.name} style={{ width: "100%", height: "80px", objectFit: "cover", borderRadius: "8px", display: "block", marginBottom: "8px" }} />
+                            <div style={{ position: "relative", width: "100%", height: "80px", borderRadius: "8px", overflow: "hidden", marginBottom: "8px" }}><Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }} /></div>
                           </Link>
                         )}
                         <div style={{ position: "absolute", top: "8px", right: "8px" }}>

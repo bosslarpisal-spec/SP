@@ -63,15 +63,27 @@ function GoldLine({ width = 24 }: { width?: number }) {
 // ── Page ────────────────────────────────────────────────────
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", interest: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "loading" | "ok">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
 
   function update(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("loading");
-    await new Promise(r => setTimeout(r, 1000));
-    setStatus("ok");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setStatus("ok");
+      } else {
+        setStatus("err");
+      }
+    } catch {
+      setStatus("err");
+    }
   }
 
   const INFO = [
@@ -344,6 +356,12 @@ export default function ContactPage() {
                     >
                       {status === "loading" ? "Sending…" : "Send Message →"}
                     </button>
+
+                    {status === "err" && (
+                      <p style={{ fontSize: "13px", color: "#DC2626", textAlign: "center", margin: "0" }}>
+                        Something went wrong. Please try again or email us directly.
+                      </p>
+                    )}
 
                     {/* Confidential note */}
                     <div className="flex items-center justify-center gap-1.5">

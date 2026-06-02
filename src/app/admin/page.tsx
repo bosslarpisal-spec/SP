@@ -63,7 +63,7 @@ export default async function AdminDashboard() {
             + Add new product
           </Link>
           <Link
-            href="/catalog"
+            href="/home"
             target="_blank"
             className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
           >

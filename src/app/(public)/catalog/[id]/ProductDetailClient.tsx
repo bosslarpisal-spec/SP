@@ -1,6 +1,7 @@
 // src/app/(public)/catalog/[id]/ProductDetailClient.tsx
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useWishlist } from "@/hooks/useWishlist";
 import WishlistButton from "@/components/public/WishlistButton";
 
@@ -113,8 +114,8 @@ export default function ProductDetailClient({ product, related = [] }: Props) {
                   href={`/catalog/${p.id}`}
                   className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all"
                 >
-                  <div className="relative">
-                    <img src={p.image} alt={p.name} className="w-full h-36 object-cover" />
+                  <div className="relative h-36">
+                    <Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }} />
                     <div className="absolute top-2 right-2">
                       <WishlistButton
                         productId={p.id}

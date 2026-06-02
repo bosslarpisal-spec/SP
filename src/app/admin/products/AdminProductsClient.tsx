@@ -4,7 +4,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import Image from "next/image";
+import { toggleProductActive, deleteProduct as deleteProductAction } from "./actions";
 
 type Product = {
   id: number;
@@ -17,10 +18,6 @@ type Product = {
   display_order: number;
   tags: string[];
 };
-
-async function revalidatePublic() {
-  await fetch("/api/revalidate", { method: "POST" });
-}
 
 export default function AdminProductsClient({
   products: initial,
@@ -35,39 +32,31 @@ export default function AdminProductsClient({
   async function toggleActive(product: Product) {
     setLoadingId(product.id);
     setActionError(null);
-    const { error } = await supabase
-      .from("products")
-      .update({ is_active: !product.is_active })
-      .eq("id", product.id);
-
-    if (error) {
-      setActionError(`Failed to update "${product.name}": ${error.message}`);
-    } else {
+    try {
+      await toggleProductActive(product.id, product.is_active);
       setProducts((prev) =>
         prev.map((p) =>
           p.id === product.id ? { ...p, is_active: !p.is_active } : p
         )
       );
-      await revalidatePublic();
+      router.refresh();
+    } catch (err) {
+      setActionError(`Failed to update "${product.name}": ${err instanceof Error ? err.message : "Unknown error"}`);
     }
     setLoadingId(null);
   }
 
-  async function deleteProduct(product: Product) {
+  async function handleDelete(product: Product) {
     if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
 
     setLoadingId(product.id);
     setActionError(null);
-    const { error } = await supabase
-      .from("products")
-      .delete()
-      .eq("id", product.id);
-
-    if (error) {
-      setActionError(`Failed to delete "${product.name}": ${error.message}`);
-    } else {
+    try {
+      await deleteProductAction(product.id);
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
-      await revalidatePublic();
+      router.refresh();
+    } catch (err) {
+      setActionError(`Failed to delete "${product.name}": ${err instanceof Error ? err.message : "Unknown error"}`);
     }
     setLoadingId(null);
   }
@@ -112,7 +101,9 @@ export default function AdminProductsClient({
               className={`hover:bg-gray-50 transition-colors ${!p.is_active ? "opacity-50" : ""}`}
             >
               <td className="px-4 py-3">
-                <img src={p.image_url} alt={p.name} className="w-12 h-12 object-cover rounded-lg" />
+                <div className="relative w-12 h-12 rounded-lg overflow-hidden">
+                  <Image src={p.image_url} alt={p.name} fill style={{ objectFit: "cover" }} />
+                </div>
               </td>
               <td className="px-4 py-3">
                 <p className="font-medium text-gray-900">{p.name}</p>
@@ -165,7 +156,7 @@ export default function AdminProductsClient({
                     Edit
                   </Link>
                   <button
-                    onClick={() => deleteProduct(p)}
+                    onClick={() => handleDelete(p)}
                     disabled={loadingId === p.id}
                     className="px-3 py-1.5 text-xs font-medium bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
                   >

@@ -3,8 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import ProductDetailClient from "./ProductDetailClient";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 3600;
 
 export default async function ProductDetailPage({
   params,
@@ -32,7 +31,7 @@ export default async function ProductDetailPage({
       <div className="section-sm">
         <div className="container max-w-2xl">
           <div className="mb-6">
-            <a href="/catalog" className="text-sm text-gray-500 hover:text-primary transition-colors">
+            <a href="/home" className="text-sm text-gray-500 hover:text-primary transition-colors">
               ← Back to Catalog
             </a>
           </div>
@@ -60,7 +59,7 @@ export default async function ProductDetailPage({
               temporarily removed or is out of stock. Please check back later or
               explore our other products.
             </p>
-            <a href="/catalog" className="btn-primary">
+            <a href="/home" className="btn-primary">
               Browse Catalog
             </a>
           </div>

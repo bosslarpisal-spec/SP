@@ -2,6 +2,7 @@ import Link from "next/link";
 import SectionLabel from "@/components/ui/SectionLabel";
 
 export const metadata = { title: "Our Services" };
+export const revalidate = 86400;
 
 const SERVICES = [
   { n: "01", feat: true,  icon: "ti-gift",    title: "Premium Gifts",        th: "ของพรีเมียม",         desc: "Custom premium gifts from concept to delivery. We handle design, production, and packaging." },

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { CATEGORIES } from "@/lib/data";
 
-// Remove "All" from category dropdown — products need a real category
 const PRODUCT_CATEGORIES = CATEGORIES.filter((c) => c !== "All");
 
 type FormData = {
@@ -19,18 +18,19 @@ type FormData = {
   is_new: boolean;
   is_active: boolean;
   display_order: number;
-  tags: string; // comma-separated string in the form, parsed to array on save
+  tags: string;
 };
 
 type Props = {
   mode: "new" | "edit";
   productId?: number;
-  initial?: Partial<FormData & { tags: string[] }>;
+  initial?: Partial<FormData & { tags: string[]; images: string[] }>;
 };
 
 export default function ProductForm({ mode, productId, initial }: Props) {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const slotInputRef = useRef<HTMLInputElement>(null);
+  const pendingSlotRef = useRef<number>(0);
 
   const [form, setForm] = useState<FormData>({
     name: initial?.name ?? "",
@@ -45,32 +45,36 @@ export default function ProductForm({ mode, productId, initial }: Props) {
     tags: Array.isArray(initial?.tags) ? initial.tags.join(", ") : (initial?.tags ?? ""),
   });
 
-  const [uploading, setUploading] = useState(false);
+  // allImages[0] = image_url (main), allImages[1-9] = images[]
+  const [allImages, setAllImages] = useState<string[]>(
+    [initial?.image_url ?? "", ...(initial?.images ?? [])]
+  );
+  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>(initial?.image_url ?? "");
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
+  async function uploadImage(file: File, slotIndex: number): Promise<void> {
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be under 5MB");
+      return;
+    }
+    setUploadingSlot(slotIndex);
     setError(null);
 
     const ext = file.name.split(".").pop();
-    const fileName = `product-${Date.now()}.${ext}`;
+    const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { data, error: uploadError } = await supabase.storage
       .from("product-images")
-      .upload(fileName, file, { upsert: true });
+      .upload(path, file, { upsert: true });
 
     if (uploadError) {
       setError(`Image upload failed: ${uploadError.message}`);
-      setUploading(false);
+      setUploadingSlot(null);
       return;
     }
 
@@ -78,9 +82,37 @@ export default function ProductForm({ mode, productId, initial }: Props) {
       .from("product-images")
       .getPublicUrl(data.path);
 
-    set("image_url", urlData.publicUrl);
-    setImagePreview(urlData.publicUrl);
-    setUploading(false);
+    setAllImages(prev => {
+      const next = [...prev];
+      next[slotIndex] = urlData.publicUrl;
+      return next;
+    });
+
+    if (slotIndex === 0) {
+      set("image_url", urlData.publicUrl);
+    }
+
+    setUploadingSlot(null);
+  }
+
+  function handleSlotClick(slotIndex: number) {
+    pendingSlotRef.current = slotIndex;
+    slotInputRef.current?.click();
+  }
+
+  function handleSlotFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadImage(file, pendingSlotRef.current);
+    e.target.value = "";
+  }
+
+  function removeSlot(slotIndex: number) {
+    setAllImages(prev => {
+      const next = [...prev];
+      next.splice(slotIndex, 1);
+      return next;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -99,7 +131,8 @@ export default function ProductForm({ mode, productId, initial }: Props) {
       category: form.category,
       description: form.description.trim(),
       description_th: form.description_th.trim(),
-      image_url: form.image_url.trim(),
+      image_url: allImages[0] ?? "",
+      images: allImages.slice(1).filter(Boolean),
       is_new: form.is_new,
       is_active: form.is_active,
       display_order: Number(form.display_order),
@@ -226,54 +259,65 @@ export default function ProductForm({ mode, productId, initial }: Props) {
         </div>
       </div>
 
-      {/* Image */}
+      {/* Product Images — 5×2 grid */}
       <div>
-        <label className={labelClass}>Product Image</label>
-        <div className="flex items-start gap-4">
-          {/* Preview */}
-          <div className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 overflow-hidden flex items-center justify-center bg-gray-50 shrink-0">
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="preview"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-gray-300 text-3xl">🖼</span>
-            )}
-          </div>
-
-          <div className="flex-1 space-y-2">
-            {/* Upload button */}
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              {uploading ? "Uploading…" : "Upload image"}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
-
-            {/* OR paste URL */}
-            <p className="text-xs text-gray-400">or paste an image URL below</p>
-            <input
-              type="url"
-              value={form.image_url}
-              onChange={(e) => {
-                set("image_url", e.target.value);
-                setImagePreview(e.target.value);
-              }}
-              className={inputClass}
-              placeholder="https://..."
-            />
-          </div>
+        <label style={{ fontSize: "11px", fontWeight: 600, textTransform: "uppercase",
+          letterSpacing: "0.1em", color: "#C09A5B", display: "block", marginBottom: "4px" }}>
+          Product Images
+        </label>
+        <p className="text-xs text-gray-400 mb-3">
+          Upload up to 10 images total. First image is the main display image.
+        </p>
+        <input
+          ref={slotInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleSlotFileChange}
+        />
+        <div className="grid grid-cols-5 gap-2">
+          {Array.from({ length: 10 }).map((_, i) => {
+            const url = allImages[i];
+            const isUploading = uploadingSlot === i;
+            return (
+              <div key={i} className="relative aspect-square rounded-xl overflow-hidden">
+                {url ? (
+                  <div className="group w-full h-full cursor-pointer" onClick={() => handleSlotClick(i)}>
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={e => { e.stopPropagation(); removeSlot(i); }}
+                        className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+                      >
+                        <i className="ti ti-trash" style={{ fontSize: "14px" }} />
+                      </button>
+                    </div>
+                    {i === 0 && (
+                      <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
+                        style={{ background: "#C09A5B", color: "#2C1E14" }}>
+                        Main
+                      </span>
+                    )}
+                  </div>
+                ) : isUploading ? (
+                  <div className="w-full h-full border-2 border-dashed rounded-xl flex items-center justify-center"
+                    style={{ borderColor: "rgba(192,154,91,0.3)", background: "#F7F5F2" }}>
+                    <i className="ti ti-loader-2 animate-spin" style={{ fontSize: "20px", color: "#C09A5B" }} />
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => handleSlotClick(i)}
+                    className="w-full h-full border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors"
+                    style={{ borderColor: "rgba(192,154,91,0.3)", background: "#F7F5F2" }}
+                  >
+                    <i className="ti ti-plus" style={{ fontSize: "18px", color: "#C09A5B" }} />
+                    <span className="text-xs" style={{ color: "#C09A5B" }}>Add</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -323,7 +367,7 @@ export default function ProductForm({ mode, productId, initial }: Props) {
       <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
         <button
           type="submit"
-          disabled={saving || uploading}
+          disabled={saving || uploadingSlot !== null}
           className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
         >
           {saving

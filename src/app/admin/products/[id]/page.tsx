@@ -49,6 +49,7 @@ export default async function EditProductPage({
             is_active: product.is_active,
             display_order: product.display_order,
             tags: product.tags,
+            images: product.images ?? [],
           }}
         />
       </div>

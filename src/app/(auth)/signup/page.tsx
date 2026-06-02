@@ -4,13 +4,46 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+const inputBase: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(232,213,163,0.25)",
+  borderRadius: "8px",
+  padding: "12px 16px",
+  fontSize: "14px",
+  color: "#FFFFFF",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: "11px",
+  textTransform: "uppercase",
+  letterSpacing: "0.12em",
+  color: "rgba(255,255,255,0.7)",
+  fontWeight: 500,
+  marginBottom: "6px",
+};
+
+function onFocus(e: React.FocusEvent<HTMLInputElement>) {
+  e.currentTarget.style.borderColor = "#E8D5A3";
+  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(232,213,163,0.1)";
+}
+function onBlur(e: React.FocusEvent<HTMLInputElement>) {
+  e.currentTarget.style.borderColor = "rgba(232,213,163,0.25)";
+  e.currentTarget.style.boxShadow = "none";
+}
+
 export default function SignUpPage() {
-  const [name, setName]         = useState("");
-  const [email, setEmail]       = useState("");
+  const [name,     setName    ] = useState("");
+  const [email,    setEmail   ] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm]   = useState("");
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
+  const [confirm,  setConfirm ] = useState("");
+  const [error,    setError   ] = useState("");
+  const [loading,  setLoading ] = useState(false);
+  const [googleHover, setGoogleHover] = useState(false);
+  const [backHover,   setBackHover  ] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -26,7 +59,7 @@ export default function SignUpPage() {
       email,
       password,
       options: {
-        data: { full_name: name }, // saves name to Supabase user metadata
+        data: { full_name: name },
       },
     });
 
@@ -45,75 +78,219 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="w-full max-w-md">
-      {/* Logo */}
-      <div className="text-center mb-8">
-        <Link href="/home" className="inline-flex items-center gap-3">
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl"
-            style={{ fontFamily: "Georgia,serif" }}>SP</div>
-          <span className="text-primary font-bold text-xl" style={{ fontFamily: "Georgia,serif" }}>
-            Siam Premium
-          </span>
-        </Link>
-      </div>
+    <div style={{
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      minHeight: "100vh", padding: "40px 16px",
+      background: "#FFFFFF",
+    }}>
 
-      <div className="card-flat p-8">
-        <h1 className="text-2xl font-bold text-primary mb-1" style={{ fontFamily: "Georgia,serif" }}>
+      {/* Logo */}
+      <Link href="/home" style={{
+        display: "flex", alignItems: "center", gap: "10px",
+        textDecoration: "none", marginBottom: "20px",
+      }}>
+        <div style={{
+          width: "52px", height: "52px", borderRadius: "50%",
+          overflow: "hidden",
+          border: "1.5px solid rgba(28,41,81,0.25)",
+          outline: "1px solid rgba(28,41,81,0.08)",
+          outlineOffset: "3px",
+          flexShrink: 0,
+          background: "#FFFFFF",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <img src="/F2.png" alt="Siam Premium logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span style={{
+            fontSize: "15px", fontWeight: 700, color: "#1C2951",
+            fontFamily: "Georgia, serif", letterSpacing: "0.05em", lineHeight: 1.1,
+          }}>SP</span>
+          <span style={{
+            fontSize: "10px", color: "rgba(28,41,81,0.55)",
+            letterSpacing: "0.15em", textTransform: "uppercase", lineHeight: 1,
+          }}>Siam Premium</span>
+        </div>
+      </Link>
+
+      {/* Card */}
+      <div style={{
+        background: "#1C2951",
+        border: "1px solid rgba(232,213,163,0.2)",
+        borderRadius: "16px",
+        boxShadow: "0 8px 40px rgba(28,41,81,0.2)",
+        width: "100%",
+        maxWidth: "620px",
+        padding: "44px 72px",
+      }}>
+        <h1 style={{
+          fontSize: "24px", fontWeight: 700, color: "#FFFFFF",
+          fontFamily: "Georgia, serif", margin: "0 0 6px",
+        }}>
           Create account
         </h1>
-        <p className="text-gray-500 text-sm mb-6">
+        <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 24px" }}>
           Already have an account?{" "}
-          <Link href="/login" className="text-primary font-medium hover:underline">Sign in</Link>
+          <Link href="/login" style={{ color: "#E8D5A3", fontWeight: 600, textDecoration: "none" }}>
+            Sign in
+          </Link>
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+          {/* Full Name */}
           <div>
-            <label className="form-label">Full Name</label>
-            <input type="text" className="form-input" placeholder="Your name"
-              value={name} onChange={e => setName(e.target.value)} required />
+            <label style={labelStyle}>Full Name</label>
+            <input
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              required
+              style={inputBase}
+            />
           </div>
+
+          {/* Email */}
           <div>
-            <label className="form-label">Email</label>
-            <input type="email" className="form-input" placeholder="you@example.com"
-              value={email} onChange={e => setEmail(e.target.value)} required />
+            <label style={labelStyle}>Email</label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              required
+              style={inputBase}
+            />
           </div>
+
+          {/* Password */}
           <div>
-            <label className="form-label">Password</label>
-            <input type="password" className="form-input" placeholder="••••••••"
-              value={password} onChange={e => setPassword(e.target.value)} required />
-            <p className="form-hint">At least 6 characters</p>
+            <label style={labelStyle}>Password</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              required
+              style={inputBase}
+            />
+            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "5px 0 0" }}>
+              At least 6 characters
+            </p>
           </div>
+
+          {/* Confirm Password */}
           <div>
-            <label className="form-label">Confirm Password</label>
-            <input type="password" className="form-input" placeholder="••••••••"
-              value={confirm} onChange={e => setConfirm(e.target.value)} required />
+            <label style={labelStyle}>Confirm Password</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              onFocus={onFocus}
+              onBlur={onBlur}
+              required
+              style={inputBase}
+            />
           </div>
-          {error && <p className="form-error">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
+
+          {error && (
+            <p style={{
+              fontSize: "12px", color: "rgba(255,120,120,0.9)",
+              background: "rgba(255,80,80,0.08)",
+              border: "1px solid rgba(255,80,80,0.2)",
+              borderRadius: "6px", padding: "8px 12px", margin: 0,
+            }}>
+              {error}
+            </p>
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%", padding: "13px",
+              background: "#E8D5A3", color: "#1C2951",
+              fontSize: "15px", fontWeight: 700,
+              borderRadius: "8px", border: "none",
+              marginTop: "8px",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.7 : 1,
+              transition: "opacity 0.15s",
+            }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = "0.85"; }}
+            onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = "1"; }}
+          >
             {loading ? "Creating account…" : "Create Account"}
           </button>
         </form>
 
-        <div className="divider my-6">or</div>
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "20px 0 12px" }}>
+          <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em" }}>or</span>
+          <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+        </div>
 
+        {/* Google */}
         <button
           onClick={handleGoogleSignup}
-          className="btn-ghost w-full justify-center gap-3">
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            padding: "12px",
+            background: googleHover ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: "8px", cursor: "pointer",
+            fontSize: "14px", color: "#FFFFFF",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={() => setGoogleHover(true)}
+          onMouseLeave={() => setGoogleHover(false)}
+        >
           <GoogleIcon />
           Sign up with Google
         </button>
       </div>
 
-      <p className="text-center text-sm text-gray-500 mt-6">
-        <Link href="/home" className="text-primary hover:underline">← Back to home</Link>
-      </p>
+      {/* Below-card links */}
+      <div style={{ textAlign: "center", marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+        <p style={{ fontSize: "13px", color: "rgba(28,41,81,0.6)", margin: 0 }}>
+          Already have an account?{" "}
+          <Link href="/login" style={{ color: "#1C2951", fontWeight: 600, textDecoration: "none" }}>
+            Sign in
+          </Link>
+        </p>
+        <Link
+          href="/home"
+          style={{
+            fontSize: "13px",
+            color: backHover ? "#1C2951" : "rgba(28,41,81,0.5)",
+            textDecoration: "none",
+            transition: "color 0.15s",
+          }}
+          onMouseEnter={() => setBackHover(true)}
+          onMouseLeave={() => setBackHover(false)}
+        >
+          ← Back to home
+        </Link>
+      </div>
+
     </div>
   );
 }
 
 function GoogleIcon() {
   return (
-    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+    <svg style={{ width: "18px", height: "18px", flexShrink: 0 }} viewBox="0 0 24 24">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>

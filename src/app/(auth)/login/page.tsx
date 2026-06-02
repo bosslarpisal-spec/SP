@@ -5,12 +5,35 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
+const inputBase: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(232,213,163,0.25)",
+  borderRadius: "8px",
+  padding: "10px 16px",
+  fontSize: "14px",
+  color: "#FFFFFF",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+function onFocus(e: React.FocusEvent<HTMLInputElement>) {
+  e.currentTarget.style.borderColor = "#E8D5A3";
+  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(232,213,163,0.1)";
+}
+function onBlur(e: React.FocusEvent<HTMLInputElement>) {
+  e.currentTarget.style.borderColor = "rgba(232,213,163,0.25)";
+  e.currentTarget.style.boxShadow = "none";
+}
+
 export default function LoginPage() {
-  const [email, setEmail]           = useState("");
-  const [password, setPassword]     = useState("");
+  const [email, setEmail]               = useState("");
+  const [password, setPassword]         = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError]           = useState("");
-  const [loading, setLoading]       = useState(false);
+  const [error, setError]               = useState("");
+  const [loading, setLoading]           = useState(false);
+  const [googleHover, setGoogleHover]   = useState(false);
+  const [backHover, setBackHover]       = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -28,7 +51,6 @@ export default function LoginPage() {
       return;
     }
 
-    // Check if this user is an admin → send to /admin, otherwise /home
     const userEmail = data.user?.email ?? "";
     if (userEmail) {
       const { data: adminRow } = await supabase
@@ -56,144 +78,207 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-md">
-      {/* Logo */}
-      <div className="text-center mb-8">
-        <Link href="/home" className="inline-flex items-center gap-3">
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl"
-            style={{ fontFamily: "Georgia,serif" }}>SP</div>
-          <span className="text-primary font-bold text-xl" style={{ fontFamily: "Georgia,serif" }}>
-            Siam Premium
-          </span>
-        </Link>
-      </div>
+    <div style={{
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      minHeight: "100vh", padding: "40px 16px",
+      background: "#FFFFFF",
+    }}>
 
-      <div className="card-flat p-8">
-        <h1 className="text-2xl font-bold text-primary mb-1" style={{ fontFamily: "Georgia,serif" }}>
+      {/* Logo */}
+      <Link href="/home" style={{
+        display: "flex", alignItems: "center", gap: "10px",
+        textDecoration: "none", marginBottom: "20px",
+      }}>
+        <div style={{
+          width: "52px", height: "52px", borderRadius: "50%",
+          overflow: "hidden",
+          border: "1.5px solid rgba(28,41,81,0.25)",
+          outline: "1px solid rgba(28,41,81,0.08)",
+          outlineOffset: "3px",
+          flexShrink: 0,
+          background: "#FFFFFF",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <img src="/F2.png" alt="Siam Premium logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span style={{
+            fontSize: "15px", fontWeight: 700, color: "#1C2951",
+            fontFamily: "Georgia, serif", letterSpacing: "0.05em", lineHeight: 1.1,
+          }}>SP</span>
+          <span style={{
+            fontSize: "10px", color: "rgba(28,41,81,0.55)",
+            letterSpacing: "0.15em", textTransform: "uppercase", lineHeight: 1,
+          }}>Siam Premium</span>
+        </div>
+      </Link>
+
+      {/* Card */}
+      <div style={{
+        background: "#1C2951",
+        border: "1px solid rgba(232,213,163,0.2)",
+        borderRadius: "16px",
+        boxShadow: "0 8px 40px rgba(28,41,81,0.2)",
+        padding: "36px",
+        width: "100%",
+        maxWidth: "390px",
+      }}>
+        <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#FFFFFF", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>
           Welcome back
         </h1>
-        <p className="text-gray-500 text-sm mb-6">
+        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", margin: "0 0 20px" }}>
           Sign in to your account &nbsp;·&nbsp;{" "}
-          <Link href="/signup" className="text-secondary-dark font-medium hover:underline">Create account</Link>
+          <Link href="/signup" style={{ color: "#E8D5A3", fontWeight: 500, textDecoration: "none" }}>Create account</Link>
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+          {/* Email */}
           <div>
-            <label className="form-label">Email</label>
+            <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.7)", marginBottom: "6px" }}>
+              Email
+            </label>
             <input
               type="email"
-              className="form-input"
               placeholder="you@example.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              onFocus={onFocus}
+              onBlur={onBlur}
               required
+              style={inputBase}
             />
           </div>
 
+          {/* Password */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="form-label !mb-0">Password</label>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-secondary-dark font-semibold underline underline-offset-2 hover:text-secondary transition-colors"
-              >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+              <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.7)" }}>
+                Password
+              </label>
+              <Link href="/forgot-password" style={{ fontSize: "11px", color: "#E8D5A3", textDecoration: "none", fontWeight: 500 }}>
                 Forgot password?
               </Link>
             </div>
-
-            {/* Password field with eye toggle */}
-            <div className="relative">
+            <div style={{ position: "relative" }}>
               <input
                 type={showPassword ? "text" : "password"}
-                className="form-input pr-10"
                 placeholder="••••••••"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                onFocus={onFocus}
+                onBlur={onBlur}
                 required
+                style={{ ...inputBase, paddingRight: "42px" }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(prev => !prev)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="
-                  absolute inset-y-0 right-0
-                  flex items-center justify-center
-                  w-10
-                  text-primary opacity-40
-                  hover:opacity-70
-                  focus:outline-none focus:opacity-70
-                  transition-opacity duration-150
-                "
+                style={{
+                  position: "absolute", inset: "0 0 0 auto",
+                  width: "40px", display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "rgba(232,213,163,0.5)", transition: "color 0.15s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = "#E8D5A3")}
+                onMouseLeave={e => (e.currentTarget.style.color = "rgba(232,213,163,0.5)")}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
           </div>
 
-          {error && <p className="form-error">{error}</p>}
+          {error && (
+            <p style={{ fontSize: "12px", color: "rgba(255,120,120,0.9)", background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.2)", borderRadius: "6px", padding: "8px 12px", margin: 0 }}>
+              {error}
+            </p>
+          )}
 
-          <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
+          {/* Sign In button */}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: "100%", padding: "12px",
+              background: "#E8D5A3", color: "#1C2951",
+              fontSize: "14px", fontWeight: 700,
+              borderRadius: "8px", border: "none",
+              cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.7 : 1,
+              transition: "opacity 0.15s",
+            }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = "0.85"; }}
+            onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = "1"; }}
+          >
             {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
 
-        <div className="divider my-6">or</div>
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "16px 0" }}>
+          <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em" }}>or</span>
+          <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+        </div>
 
+        {/* Google button */}
         <button
           onClick={handleGoogleLogin}
-          className="btn-ghost w-full justify-center gap-3"
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+            padding: "11px 16px",
+            background: googleHover ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: "8px", cursor: "pointer",
+            fontSize: "14px", color: "#FFFFFF",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={() => setGoogleHover(true)}
+          onMouseLeave={() => setGoogleHover(false)}
         >
           <GoogleIcon />
           Continue with Google
         </button>
       </div>
 
-      <p className="text-center text-sm text-gray-500 mt-4">
+      {/* Below-card links */}
+      <p style={{ textAlign: "center", fontSize: "12px", color: "rgba(28,41,81,0.6)", marginTop: "14px" }}>
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-secondary-dark font-semibold underline underline-offset-2 hover:text-secondary transition-colors">
+        <Link href="/signup" style={{ color: "#1C2951", fontWeight: 600, textDecoration: "none" }}>
           Sign up
         </Link>
       </p>
 
-      <p className="text-center text-sm text-gray-500 mt-3">
-        <Link href="/home" className="text-primary hover:underline">← Back to home</Link>
+      <p style={{ textAlign: "center", fontSize: "12px", marginTop: "8px" }}>
+        <Link
+          href="/home"
+          style={{ color: backHover ? "#1C2951" : "rgba(28,41,81,0.5)", textDecoration: "none", transition: "color 0.15s" }}
+          onMouseEnter={() => setBackHover(true)}
+          onMouseLeave={() => setBackHover(false)}
+        >
+          ← Back to home
+        </Link>
       </p>
     </div>
   );
 }
 
-/** Eye open — password visible */
 function EyeIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" style={{ width: "18px", height: "18px" }} fill="none"
+      viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
       <circle cx="12" cy="12" r="3" />
     </svg>
   );
 }
 
-/** Eye with slash — password hidden */
 function EyeOffIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" style={{ width: "18px", height: "18px" }} fill="none"
+      viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
       <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a18.49 18.49 0 0 1 5.06-5.94" />
       <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
       <line x1="1" y1="1" x2="23" y2="23" />
@@ -203,7 +288,7 @@ function EyeOffIcon() {
 
 function GoogleIcon() {
   return (
-    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+    <svg style={{ width: "18px", height: "18px", flexShrink: 0 }} viewBox="0 0 24 24">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
       <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>

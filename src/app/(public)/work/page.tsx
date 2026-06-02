@@ -57,7 +57,7 @@ export default function WorkPage() {
           <h2 className="text-white mb-4">Want to Be Our Next Success Story?</h2>
           <p className="text-white/80 text-xl mb-8">Tell us about your project and we&apos;ll make it happen.</p>
           <div className="flex gap-4 justify-center">
-            <Link href="/catalog" className="btn-white btn-lg">Browse Products</Link>
+            <Link href="/home" className="btn-white btn-lg">Browse Products</Link>
             <Link href="/contact" className="px-8 py-4 border-2 border-white/60 text-white rounded-full text-xl font-medium hover:bg-white/10 transition-all">Get a Quote</Link>
           </div>
         </div>

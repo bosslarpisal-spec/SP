@@ -6,18 +6,18 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#2C2419",
-          dark:    "#1E1810",
-          light:   "#4A3C2C",
+          DEFAULT: "#1C2951",
+          dark:    "#0D1E3D",
+          light:   "#243160",
         },
         secondary: {
-          DEFAULT: "#C09A5B",
-          dark:    "#A08040",
-          light:   "#E8D5B0",
+          DEFAULT: "#E8D5A3",
+          dark:    "#C4B07A",
+          light:   "#F5EDD8",
         },
         accent: {
-          DEFAULT: "#F7F4EE",
-          dark:    "#EDE8DF",
+          DEFAULT: "#F8F6F1",
+          dark:    "#E8E4DA",
         },
       },
       fontFamily: {

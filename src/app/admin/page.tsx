@@ -29,17 +29,17 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1">SP Admin Panel — manage products shown to customers.</p>
+      <div className="mb-5">
+        <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 text-sm mt-0.5">SP Admin Panel — manage products shown to customers.</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         {stats.map((s) => (
-          <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-sm text-gray-500 mb-1">{s.label}</p>
-            <p className={`text-3xl font-bold ${s.color} inline-block px-3 py-1 rounded-lg`}>
+          <div key={s.label} className="bg-white rounded-lg border border-gray-200 p-4">
+            <p className="text-xs text-gray-500 mb-1">{s.label}</p>
+            <p className={`text-2xl font-bold ${s.color} inline-block px-2 py-0.5 rounded-lg`}>
               {s.value}
             </p>
           </div>
@@ -47,8 +47,8 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Quick actions */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="font-semibold text-gray-800 mb-4">Quick Actions</h2>
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <h2 className="font-semibold text-sm text-gray-800 mb-3">Quick Actions</h2>
         <div className="flex flex-wrap gap-3">
           <Link
             href="/admin/products"

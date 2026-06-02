@@ -33,7 +33,7 @@ export default function ProductDetailClient({ product, related = [] }: Props) {
           <nav className="flex items-center gap-2 text-xs text-gray-500">
             <Link href="/home" className="hover:text-primary">Home</Link>
             <span>/</span>
-            <Link href="/catalog" className="hover:text-primary">Catalog</Link>
+            <Link href="/home" className="hover:text-primary">Catalog</Link>
             <span>/</span>
             <span className="text-gray-700 font-medium">{product.name}</span>
           </nav>
@@ -85,7 +85,7 @@ export default function ProductDetailClient({ product, related = [] }: Props) {
                 onToggle={toggle}
                 size="lg"
               />
-              <Link href="/catalog" className="btn-ghost btn-lg">
+              <Link href="/home" className="btn-ghost btn-lg">
                 ← Back to Catalog
               </Link>
             </div>

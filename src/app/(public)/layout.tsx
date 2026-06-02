@@ -1,12 +1,31 @@
-import Navbar from "@/components/public/Navbar";
-import Footer  from "@/components/public/Footer";
+//src/app/(public)/layout.tsx
+import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
+import { LanguageProvider } from '@/contexts/LanguageContext'
+import LangToggle from '@/components/layout/LangToggle'
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default function PublicLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1">{children}</main>
-      <Footer />
-    </div>
-  );
+    <LanguageProvider>
+      <div style={{
+        width: '100%',
+        minWidth: 0,
+        overflowX: 'hidden',
+      }}>
+        <Navbar />
+        <main style={{
+          width: '100%',
+          minWidth: 0,
+        }}>
+          {children}
+        </main>
+        <Footer />
+      </div>
+      <LangToggle />
+    </LanguageProvider>
+  )
 }

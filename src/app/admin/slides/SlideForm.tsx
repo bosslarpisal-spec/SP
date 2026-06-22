@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
+import { StyleOverride, type BlockStyles } from "@/app/admin/components/StyleOverride";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -63,6 +64,7 @@ function Field({
   multiline,
   placeholder,
   caption,
+  maxChars,
 }: {
   label: string;
   value: string;
@@ -70,10 +72,24 @@ function Field({
   multiline?: boolean;
   placeholder?: string;
   caption?: string;
+  maxChars?: number;
 }) {
+  const len = value.length;
+  const isOver = maxChars !== undefined && len > maxChars;
+  const isNear = maxChars !== undefined && !isOver && len >= Math.floor(maxChars * 0.8);
+  const counterColor = isOver ? "#C0392B" : isNear ? "#D97706" : "#bbb";
+  const borderOverride = isOver ? { borderColor: "#C0392B" } : {};
+
   return (
     <div>
-      <label style={labelSt}>{label}</label>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: caption ? 2 : 5 }}>
+        <label style={{ ...labelSt, marginBottom: 0 }}>{label}</label>
+        {maxChars !== undefined && (
+          <span style={{ fontSize: 10, color: counterColor, fontVariantNumeric: "tabular-nums", flexShrink: 0, marginLeft: 8 }}>
+            {len} / {maxChars}
+          </span>
+        )}
+      </div>
       {caption && (
         <p style={{ fontSize: 10, color: "#bbb", margin: "0 0 5px", lineHeight: 1.3 }}>
           Renders as: {caption}
@@ -85,7 +101,8 @@ function Field({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={3}
-          style={{ ...inputSt, resize: "vertical" }}
+          maxLength={maxChars}
+          style={{ ...inputSt, resize: "vertical", ...borderOverride }}
         />
       ) : (
         <input
@@ -93,12 +110,38 @@ function Field({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          style={inputSt}
+          maxLength={maxChars}
+          style={{ ...inputSt, ...borderOverride }}
         />
       )}
     </div>
   );
 }
+
+// ── Style override constants ──────────────────────────────────────────────────
+
+const BLOCK_DEFAULTS: Record<string, BlockStyles> = {
+  badge:       { color: "#E8D5A3", fontSize: "10px" },
+  heading:     { color: "#FFFFFF", fontSize: "clamp(36px,5vw,58px)", fontFamily: "Georgia, serif" },
+  subheadline: { color: "#E8D5A3", fontSize: "clamp(28px,4vw,48px)", fontFamily: "Georgia, serif" },
+  subtext:     { color: "rgba(255,255,255,0.7)", fontSize: "13px" },
+  description: { color: "rgba(255,255,255,0.6)", fontSize: "14px" },
+  btn1:        { background: "#E8D5A3", color: "#1C2951", fontSize: "14px" },
+  btn2:        { color: "#FFFFFF", fontSize: "14px" },
+  badgeLine:   { background: "#E8D5A3" },
+};
+
+const FONT_SIZE_RANGES: Record<string, { min: number; max: number }> = {
+  badge:       { min: 8,  max: 16 },
+  heading:     { min: 24, max: 72 },
+  subheadline: { min: 20, max: 64 },
+  subtext:     { min: 11, max: 18 },
+  description: { min: 11, max: 20 },
+  btn1:        { min: 11, max: 18 },
+  btn2:        { min: 11, max: 18 },
+};
+
+// ── Payload factory ───────────────────────────────────────────────────────────
 
 function makePayload(initial: HeroSlide | undefined, nextDisplayOrder: number): SlidePayload {
   return {
@@ -115,6 +158,7 @@ function makePayload(initial: HeroSlide | undefined, nextDisplayOrder: number): 
     bg_image_url:  initial?.bg_image_url  ?? "",
     bg_color:      initial?.bg_color      ?? "#0D1E3D",
     is_active:     initial?.is_active     ?? true,
+    styles:        (initial?.styles as Record<string, Record<string, string>>) ?? {},
   };
 }
 
@@ -132,6 +176,24 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
     setForm((prev) => ({ ...prev, [key]: value }));
     setDirty(true);
   }
+
+  // Style override: pass null to remove the whole block key from the JSON
+  function setStyle(blockKey: string, overrides: Record<string, string> | null) {
+    setForm((prev) => {
+      const next = { ...(prev.styles ?? {}) };
+      if (overrides === null) {
+        delete next[blockKey];
+      } else {
+        next[blockKey] = overrides;
+      }
+      return { ...prev, styles: next };
+    });
+    setDirty(true);
+  }
+
+  // Temporary scope guard: style override UI is only shown on slide 1 for
+  // this first pass. Remove this condition once the pattern is approved.
+  const showStyleOverrides = true;
 
   function handleDiscard() {
     setForm(makePayload(initial, nextDisplayOrder));
@@ -207,43 +269,118 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
           <Card label="Slide Content">
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <Field
-                  label="Badge / Eyebrow"
-                  value={form.badge}
-                  onChange={(v) => set("badge", v)}
-                  placeholder="WELCOME TO SP"
-                  caption="#E8D5A3, 10px"
-                />
-                <Field
-                  label="Heading"
-                  value={form.heading}
-                  onChange={(v) => set("heading", v)}
-                  placeholder="The Expert In"
-                  caption="#FFFFFF, 36–58px (responsive), Georgia serif"
-                />
+                <div>
+                  <Field
+                    label="Badge / Eyebrow"
+                    value={form.badge}
+                    onChange={(v) => set("badge", v)}
+                    placeholder="WELCOME TO SP"
+                    maxChars={40}
+                  />
+                  {showStyleOverrides && (
+                    <StyleOverride
+                      blockKey="badge"
+                      label="Badge"
+                      allStyles={form.styles}
+                      onChange={setStyle}
+                      defaults={BLOCK_DEFAULTS.badge}
+                      fontSizeRange={FONT_SIZE_RANGES.badge}
+                    />
+                  )}
+                  {showStyleOverrides && (
+                    <StyleOverride
+                      blockKey="badgeLine"
+                      label="Badge accent line"
+                      allStyles={form.styles}
+                      onChange={setStyle}
+                      defaults={BLOCK_DEFAULTS.badgeLine}
+                      withBackground
+                      withTextColor={false}
+                      withFontSize={false}
+                      backgroundLabel="Line color"
+                    />
+                  )}
+                </div>
+                <div>
+                  <Field
+                    label="Heading"
+                    value={form.heading}
+                    onChange={(v) => set("heading", v)}
+                    placeholder="The Expert In"
+                    maxChars={35}
+                  />
+                  {showStyleOverrides && (
+                    <StyleOverride
+                      blockKey="heading"
+                      label="Heading"
+                      allStyles={form.styles}
+                      onChange={setStyle}
+                      defaults={BLOCK_DEFAULTS.heading}
+                      fontSizeRange={FONT_SIZE_RANGES.heading}
+                      withFontFamily
+                    />
+                  )}
+                </div>
               </div>
-              <Field
-                label="Gold Italic Subheadline"
-                value={form.subheadline}
-                onChange={(v) => set("subheadline", v)}
-                placeholder='"Total Premiums & Promotion Solution"'
-                caption="#E8D5A3, 28–48px (responsive), Georgia serif italic"
-              />
-              <Field
-                label="Thai Subtext"
-                value={form.subtext}
-                onChange={(v) => set("subtext", v)}
-                placeholder="ผู้เชี่ยวชาญด้านของพรีเมียม..."
-                caption="white 70% opacity, 13px"
-              />
-              <Field
-                label="Description"
-                value={form.description}
-                onChange={(v) => set("description", v)}
-                multiline
-                placeholder="Supporting description text..."
-                caption="white 60% opacity, 14px"
-              />
+              <div>
+                <Field
+                  label="Gold Italic Subheadline"
+                  value={form.subheadline}
+                  onChange={(v) => set("subheadline", v)}
+                  placeholder='"Total Premiums & Promotion Solution"'
+                  maxChars={55}
+                />
+                {showStyleOverrides && (
+                  <StyleOverride
+                    blockKey="subheadline"
+                    label="Subheadline"
+                    allStyles={form.styles}
+                    onChange={setStyle}
+                    defaults={BLOCK_DEFAULTS.subheadline}
+                    fontSizeRange={FONT_SIZE_RANGES.subheadline}
+                    withFontFamily
+                  />
+                )}
+              </div>
+              <div>
+                <Field
+                  label="Thai Subtext"
+                  value={form.subtext}
+                  onChange={(v) => set("subtext", v)}
+                  placeholder="ผู้เชี่ยวชาญด้านของพรีเมียม..."
+                  maxChars={80}
+                />
+                {showStyleOverrides && (
+                  <StyleOverride
+                    blockKey="subtext"
+                    label="Thai subtext"
+                    allStyles={form.styles}
+                    onChange={setStyle}
+                    defaults={BLOCK_DEFAULTS.subtext}
+                    fontSizeRange={FONT_SIZE_RANGES.subtext}
+                  />
+                )}
+              </div>
+              <div>
+                <Field
+                  label="Description"
+                  value={form.description}
+                  onChange={(v) => set("description", v)}
+                  multiline
+                  placeholder="Supporting description text..."
+                  maxChars={160}
+                />
+                {showStyleOverrides && (
+                  <StyleOverride
+                    blockKey="description"
+                    label="Description"
+                    allStyles={form.styles}
+                    onChange={setStyle}
+                    defaults={BLOCK_DEFAULTS.description}
+                    fontSizeRange={FONT_SIZE_RANGES.description}
+                  />
+                )}
+              </div>
             </div>
           </Card>
 
@@ -254,13 +391,26 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                   Primary Button (Gold fill)
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <Field
-                    label="Label"
-                    value={form.btn1_text}
-                    onChange={(v) => set("btn1_text", v)}
-                    placeholder="Browse Our Work"
-                    caption="#1C2951 text, 14px, semi-bold"
-                  />
+                  <div>
+                    <Field
+                      label="Label"
+                      value={form.btn1_text}
+                      onChange={(v) => set("btn1_text", v)}
+                      placeholder="Browse Our Work"
+                      maxChars={30}
+                    />
+                    {showStyleOverrides && (
+                      <StyleOverride
+                        blockKey="btn1"
+                        label="Primary button"
+                        allStyles={form.styles}
+                        onChange={setStyle}
+                        defaults={BLOCK_DEFAULTS.btn1}
+                        fontSizeRange={FONT_SIZE_RANGES.btn1}
+                        withBackground
+                      />
+                    )}
+                  </div>
                   <Field
                     label="Link"
                     value={form.btn1_link}
@@ -274,13 +424,25 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                   Secondary Button (Outline)
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <Field
-                    label="Label"
-                    value={form.btn2_text}
-                    onChange={(v) => set("btn2_text", v)}
-                    placeholder="Get a Quote"
-                    caption="#FFFFFF, 14px"
-                  />
+                  <div>
+                    <Field
+                      label="Label"
+                      value={form.btn2_text}
+                      onChange={(v) => set("btn2_text", v)}
+                      placeholder="Get a Quote"
+                      maxChars={30}
+                    />
+                    {showStyleOverrides && (
+                      <StyleOverride
+                        blockKey="btn2"
+                        label="Secondary button"
+                        allStyles={form.styles}
+                        onChange={setStyle}
+                        defaults={BLOCK_DEFAULTS.btn2}
+                        fontSizeRange={FONT_SIZE_RANGES.btn2}
+                      />
+                    )}
+                  </div>
                   <Field
                     label="Link"
                     value={form.btn2_link}

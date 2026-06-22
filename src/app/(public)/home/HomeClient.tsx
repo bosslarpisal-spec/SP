@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useLang } from "@/contexts/LanguageContext";
 import CatalogSection from "@/components/home/CatalogSection";
 import SectionLabel from "@/components/ui/SectionLabel";
@@ -52,6 +52,7 @@ export default function HomeClient({
     subheadline: s.subheadline,
     subtext:     s.subtext,
     description: s.description,
+    styles:      (s.styles ?? {}) as Record<string, Record<string, string>>,
     ctas: [
       { label: s.btn1_text, href: s.btn1_link, primary: true },
       { label: s.btn2_text, href: s.btn2_link, primary: false },
@@ -88,7 +89,7 @@ export default function HomeClient({
       });
     }, HERO_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [isHeroPaused, activeSlide, heroSlides.length]);
+  }, [isHeroPaused, heroSlides.length]);
 
   const stat1Num   = c("stats", "stat1_number", "3,000+");
   const stat1Label = c("stats", "stat1_label",  "CLIENTS");
@@ -107,6 +108,18 @@ export default function HomeClient({
   const catalogQuote       = c("catalog", "quote",       '"Quality is not an act, it is a habit. Every product we deliver carries our promise."');
   const catalogBtn1Text    = c("catalog", "btn1_text",   "Browse All");
   const catalogBtn2Text    = c("catalog", "btn2_text",   "Filter");
+  const catalogStyles: Record<string, Record<string, string>> = (() => {
+    try { return JSON.parse(c("catalog", "_styles", "{}")); } catch { return {}; }
+  })();
+  const statsStyles: Record<string, Record<string, string>> = (() => {
+    try { return JSON.parse(c("stats", "_styles", "{}")); } catch { return {}; }
+  })();
+  const processStyles: Record<string, Record<string, string>> = (() => {
+    try { return JSON.parse(c("process", "_styles", "{}")); } catch { return {}; }
+  })();
+  const marqueeStyles: Record<string, Record<string, string>> = (() => {
+    try { return JSON.parse(c("marquee", "_styles", "{}")); } catch { return {}; }
+  })();
 
   const processHeading    = c("process", "heading",    "Our Process");
   const processSubheading = c("process", "subheading", "From brief to delivery — every step crafted with care");
@@ -131,7 +144,7 @@ export default function HomeClient({
             position: 'relative',
             overflow: 'hidden',
             marginTop: '-72px',
-            paddingTop: '188px',
+            paddingTop: '260px',
             paddingBottom: '80px',
             minHeight: '580px',
             display: 'flex',
@@ -147,7 +160,7 @@ export default function HomeClient({
               const isExiting = prevSlide !== null && i === prevSlide;
               const tx = isActive ? 'translateX(0%)' : isExiting ? 'translateX(-100%)' : 'translateX(100%)';
               const tr = (isActive && prevSlide !== null) || isExiting
-                ? 'transform 0.9s cubic-bezier(0.4, 0, 0.2, 1)'
+                ? 'transform 0.65s cubic-bezier(0.4, 0, 0.2, 1)'
                 : 'none';
               return (
                 <div key={i} style={{
@@ -169,7 +182,7 @@ export default function HomeClient({
             backgroundSize: '28px 28px',
             pointerEvents: 'none',
           }} />
-          <div style={{ maxWidth: '680px', width: '100%', textAlign: 'left', marginLeft: '0', marginRight: 'auto', position: 'relative', zIndex: 2, textShadow: '0 2px 12px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.7)' }}>
+          <div style={{ maxWidth: '680px', width: '100%', textAlign: 'left', marginLeft: '0', marginRight: 'auto', position: 'relative', zIndex: 2 }}>
             {/* Slide stage */}
             <div style={{ position: 'relative', minHeight: '360px', clipPath: 'inset(0)' }}>
               {heroSlides.map((slide, i) => {
@@ -177,7 +190,7 @@ export default function HomeClient({
                 const isExiting = prevSlide !== null && i === prevSlide;
                 const tx = isActive ? 'translateX(0%)' : isExiting ? 'translateX(-100%)' : 'translateX(100%)';
                 const tr = (isActive && prevSlide !== null) || isExiting
-                  ? 'transform 0.9s cubic-bezier(0.4, 0, 0.2, 1)'
+                  ? 'transform 0.65s cubic-bezier(0.4, 0, 0.2, 1)'
                   : 'none';
                 return (
                 <div
@@ -192,17 +205,19 @@ export default function HomeClient({
                   }}
                 >
                   {/* Badge */}
+                  {slide.badge.trim() && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-                    <div style={{ width: '24px', height: '1.5px', background: '#E8D5A3', flexShrink: 0 }} />
-                    <span style={{ fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#E8D5A3' }}>
+                    <div style={{ width: '24px', height: '1.5px', background: '#E8D5A3', flexShrink: 0, ...(slide.styles.badgeLine as React.CSSProperties) }} />
+                    <span style={{ fontSize: '10px', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#E8D5A3', ...(slide.styles.badge as React.CSSProperties) }}>
                       {slide.badge}
                     </span>
                   </div>
+                  )}
 
                   {/* Headline */}
                   <h1 style={{ margin: '0 0 0 0' }}>
                     <span style={{ position: 'relative', display: 'inline-block', marginBottom: 0 }}>
-                      <span style={{ fontSize: 'clamp(36px, 5vw, 58px)', fontWeight: 400, color: '#FFFFFF', fontFamily: 'Georgia, serif', lineHeight: 1.05, display: 'block' }}>
+                      <span style={{ fontSize: 'clamp(36px, 5vw, 58px)', fontWeight: 400, color: '#FFFFFF', fontFamily: 'Georgia, serif', lineHeight: 1.05, display: 'block', ...(slide.styles.heading as React.CSSProperties) }}>
                         {slide.headline}
                       </span>
                       <span style={{ position: 'absolute', bottom: '-4px', left: 0, height: '2px', width: '100%', background: 'linear-gradient(to right, #E8D5A3, transparent)', display: 'block' }} />
@@ -210,24 +225,31 @@ export default function HomeClient({
                   </h1>
 
                   {/* Gold italic subheadline */}
-                  <div style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontStyle: 'italic', color: '#E8D5A3', fontFamily: 'Georgia, serif', lineHeight: 1.15, marginTop: '10px', marginBottom: '12px' }}>
+                  {slide.subheadline.trim() && (
+                  <div style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontStyle: 'italic', color: '#E8D5A3', fontFamily: 'Georgia, serif', lineHeight: 1.15, marginTop: '10px', marginBottom: '12px', ...(slide.styles.subheadline as React.CSSProperties) }}>
                     {slide.subheadline}
                   </div>
+                  )}
 
                   {/* Thai subtext */}
+                  {slide.subtext.trim() && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                     <span style={{ width: '16px', height: '1px', background: '#E8D5A3', opacity: 0.4, flexShrink: 0, display: 'block' }} />
-                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>{slide.subtext}</span>
+                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', ...(slide.styles.subtext as React.CSSProperties) }}>{slide.subtext}</span>
                   </div>
+                  )}
 
                   {/* English description */}
-                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, maxWidth: '580px', margin: '0 0 20px' }}>
+                  {slide.description.trim() && (
+                  <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, maxWidth: '580px', margin: '0 0 20px', ...(slide.styles.description as React.CSSProperties) }}>
                     {slide.description}
                   </p>
+                  )}
 
                   {/* CTAs */}
+                  {slide.ctas.some(c => c.label.trim()) && (
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {slide.ctas.map((cta, ci) => (
+                    {slide.ctas.filter(c => c.label.trim()).map((cta, ci) => (
                       cta.primary ? (
                         <a key={ci} href={cta.href} style={{
                           background: '#E8D5A3', color: '#1C2951',
@@ -235,22 +257,25 @@ export default function HomeClient({
                           padding: '13px 28px', borderRadius: '6px',
                           display: 'flex', alignItems: 'center', gap: '6px',
                           textDecoration: 'none', textShadow: 'none',
+                          ...(slide.styles.btn1 as React.CSSProperties),
                         }}>
                           {cta.label}
                           <i className="ti ti-arrow-right" style={{ fontSize: '14px' }} aria-hidden="true" />
                         </a>
                       ) : (
                         <a key={ci} href={cta.href} style={{
-                          border: '0.5px solid rgba(255,255,255,0.25)',
+                          border: '1px solid rgba(255,255,255,0.35)',
                           color: '#FFFFFF', fontSize: '14px',
                           padding: '13px 24px', borderRadius: '6px',
                           textDecoration: 'none',
+                          ...(slide.styles.btn2 as React.CSSProperties),
                         }}>
                           {cta.label}
                         </a>
                       )
                     ))}
                   </div>
+                  )}
                 </div>
                 );
               })}
@@ -264,15 +289,16 @@ export default function HomeClient({
                   onClick={() => goToSlide(i)}
                   aria-label={`Go to slide ${i + 1}`}
                   style={{
-                    width: i === activeSlide ? '10px' : '7px',
-                    height: i === activeSlide ? '10px' : '7px',
+                    width: '10px',
+                    height: '10px',
                     borderRadius: '50%',
                     border: '1px solid #E8D5A3',
                     background: i === activeSlide ? '#E8D5A3' : 'transparent',
                     opacity: i === activeSlide ? 1 : 0.6,
                     padding: 0,
                     cursor: 'pointer',
-                    transition: 'all 300ms ease',
+                    transform: i === activeSlide ? 'scale(1)' : 'scale(0.7)',
+                    transition: 'transform 300ms ease, opacity 300ms ease, background-color 300ms ease',
                   }}
                 />
               ))}
@@ -287,10 +313,10 @@ export default function HomeClient({
                   { num: stat3Num, label: stat3Label },
                 ].map((stat, i) => (
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 700, color: '#E8D5A3', fontFamily: 'Georgia, serif', lineHeight: 1 }}>
+                    <span style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 700, color: '#E8D5A3', fontFamily: 'Georgia, serif', lineHeight: 1, ...(statsStyles.statNumber as React.CSSProperties) }}>
                       {stat.num}
                     </span>
-                    <span style={{ fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
+                    <span style={{ fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', fontWeight: 500, ...(statsStyles.statLabel as React.CSSProperties) }}>
                       {stat.label}
                     </span>
                   </div>
@@ -311,8 +337,8 @@ export default function HomeClient({
             <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '80px', zIndex: 2, background: 'linear-gradient(to left, #E8D5A3, transparent)' }} />
             <div className="marquee-track" style={{ display: 'flex', width: 'max-content' }}>
               {[...marqueeItems, ...marqueeItems].map((item, i) => (
-                <span key={i} style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500, color: '#0D1E3D' }}>
-                  {item} <span style={{ color: '#0D1E3D', margin: '0 8px' }}>◆</span>
+                <span key={i} style={{ padding: '0 24px', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500, color: '#0D1E3D', ...(marqueeStyles.item as React.CSSProperties) }}>
+                  {item} <span style={{ color: '#0D1E3D', margin: '0 8px', ...(marqueeStyles.diamond as React.CSSProperties) }}>◆</span>
                 </span>
               ))}
             </div>
@@ -335,6 +361,7 @@ export default function HomeClient({
             quote={catalogQuote}
             btn1Text={catalogBtn1Text}
             btn2Text={catalogBtn2Text}
+            styles={catalogStyles}
           />
           <GoldDivider />
         </>
@@ -348,24 +375,24 @@ export default function HomeClient({
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' }}>
                 <div>
                   <SectionLabel text={t("วิธีการทำงานของเรา", "HOW WE WORK")} />
-                  <h2 style={{ fontSize: '18px', fontWeight: 400, color: '#0D1E3D', letterSpacing: '-0.02em', marginTop: '4px' }}>
+                  <h2 style={{ fontSize: '18px', fontWeight: 400, color: '#0D1E3D', letterSpacing: '-0.02em', marginTop: '4px', ...(processStyles.heading as React.CSSProperties) }}>
                     {processHeading}
                   </h2>
                 </div>
-                <p style={{ fontSize: '10px', color: '#4A5568' }}>
+                <p style={{ fontSize: '10px', color: '#4A5568', ...(processStyles.subheading as React.CSSProperties) }}>
                   {processSubheading}
                 </p>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '20px', left: '10%', right: '10%', height: '1px', pointerEvents: 'none', background: 'rgba(28,41,81,0.1)' }} />
+                <div style={{ position: 'absolute', top: '20px', left: '10%', right: '10%', height: '1px', pointerEvents: 'none', background: processStyles.stepAccent?.background ?? 'rgba(28,41,81,0.1)' }} />
                 {PROCESS_STEPS.map(step => (
                   <div key={step.n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0 8px' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '6px', position: 'relative', zIndex: 10, background: step.active ? '#1C2951' : 'rgba(28,41,81,0.08)', border: step.active ? 'none' : '0.5px solid rgba(28,41,81,0.15)' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '6px', position: 'relative', zIndex: 10, background: step.active ? (processStyles.stepAccent?.background ?? '#1C2951') : 'rgba(28,41,81,0.08)', border: step.active ? 'none' : '0.5px solid rgba(28,41,81,0.15)' }}>
                       <span style={{ fontSize: '11px', fontWeight: 500, color: step.active ? '#FFFFFF' : '#1C2951' }}>{step.n}</span>
                     </div>
-                    <span style={{ fontSize: '11px', fontWeight: 500, color: '#0D1E3D', marginBottom: '2px' }}>{step.label}</span>
-                    <span style={{ fontSize: '10px', color: '#4A5568', lineHeight: 1.5 }}>{step.sub}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 500, color: '#0D1E3D', marginBottom: '2px', ...(processStyles.stepTitle as React.CSSProperties) }}>{step.label}</span>
+                    <span style={{ fontSize: '10px', color: '#4A5568', lineHeight: 1.5, ...(processStyles.stepDesc as React.CSSProperties) }}>{step.sub}</span>
                   </div>
                 ))}
               </div>

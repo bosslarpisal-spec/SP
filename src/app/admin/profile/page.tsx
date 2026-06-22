@@ -1,5 +1,5 @@
 // src/app/admin/profile/page.tsx
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import AdminProfileClient from "./AdminProfileClient";
 import { redirect } from "next/navigation";
 
@@ -14,8 +14,11 @@ export default async function AdminProfilePage() {
 
   if (!user) redirect("/login");
 
-  // Get all admins
-  const { data: admins } = await supabase
+  // Use service role to bypass RLS — the admins table SELECT policy
+  // restricts each user to their own row only, so the session client
+  // would silently return only 1 row.
+  const service = createSupabaseServiceClient();
+  const { data: admins } = await service
     .from("admins")
     .select("*")
     .order("created_at", { ascending: true });

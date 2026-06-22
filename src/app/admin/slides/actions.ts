@@ -18,6 +18,7 @@ export type SlidePayload = {
   bg_image_url: string;
   bg_color: string;
   is_active: boolean;
+  styles: Record<string, Record<string, string>>;
 };
 
 function revalidate() {

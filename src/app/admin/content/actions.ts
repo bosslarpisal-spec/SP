@@ -19,7 +19,11 @@ export async function saveContentField(
       { onConflict: "page,section,key" }
     );
   if (error) throw new Error(error.message);
-  revalidatePath("/home");
+  revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/services");
+  revalidatePath("/our-work");
+  revalidatePath("/contact");
   revalidatePath("/admin/content");
   return { success: true };
 }

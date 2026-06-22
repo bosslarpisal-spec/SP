@@ -3,42 +3,45 @@
 import { useRef, useState, useEffect } from "react";
 import GoldDivider from "@/components/ui/GoldDivider";
 
-/* ── DATA ───────────────────────────────────────────────── */
-const MILESTONES = [
+/* ── DB content helpers ─────────────────────────────────── */
+type ContentRow = { section: string; key: string; value: string };
+function gv(rows: ContentRow[], section: string, key: string, fallback: string): string {
+  return rows.find(r => r.section === section && r.key === key)?.value ?? fallback;
+}
+function ga<T>(rows: ContentRow[], section: string, key: string, fallback: T[]): T[] {
+  const raw = rows.find(r => r.section === section && r.key === key)?.value;
+  if (!raw) return fallback;
+  try { return JSON.parse(raw) as T[]; } catch { return fallback; }
+}
+
+/* ── DEFAULT DATA (used when no DB rows present) ─────────── */
+const DEFAULT_MILESTONES = [
   { yr: "03", year: "2003", text: "Founded in Bangkok with a vision to redefine corporate gifting in Thailand.", active: false },
   { yr: "08", year: "2008", text: "Expanded OEM manufacturing capabilities and opened first dedicated production facility.", active: false },
   { yr: "12", year: "2012", text: "Surpassed 1,000+ clients across FMCG, finance, and technology sectors.", active: false },
   { yr: "18", year: "2018", text: "Launched Eco-Premium line — sustainable materials with zero compromise on quality.", active: true },
   { yr: "24", year: "2024", text: "3,000+ clients in 30+ countries. Celebrating 20+ years of premium excellence.", active: true },
 ];
-
-const CHECKLIST = [
+const DEFAULT_CHECKLIST = [
   "20+ years delivering premium merchandise",
   "Custom design team on every project",
   "100% quality guarantee on all orders",
   "Nationwide & international shipping",
 ];
-
-const STATS = [
-  { value: 25,    suffix: "+", label: "Years",     bg: "25+" },
-  { value: 3000,  suffix: "+", label: "Clients",   bg: "3K+" },
-  { value: 50000, suffix: "+", label: "Projects",  bg: "50K" },
-  { value: 30,    suffix: "+", label: "Countries", bg: "30+" },
+const DEFAULT_STATS = [
+  { value: "25",    suffix: "+", label: "Years",     bg: "25+" },
+  { value: "3000",  suffix: "+", label: "Clients",   bg: "3K+" },
+  { value: "50000", suffix: "+", label: "Projects",  bg: "50K" },
+  { value: "30",    suffix: "+", label: "Countries", bg: "30+" },
 ];
 
 const PARTICLES = [
-  { top: "12%", left: "7%",  dur: "7s",  del: "0s"   },
-  { top: "28%", left: "19%", dur: "9s",  del: "1.2s" },
-  { top: "8%",  left: "42%", dur: "11s", del: "0.5s" },
-  { top: "5%",  left: "67%", dur: "8s",  del: "2s"   },
+  { top: "8%",  left: "7%",  dur: "7s",  del: "0s"   },
+  { top: "5%",  left: "42%", dur: "11s", del: "0.5s" },
   { top: "35%", left: "82%", dur: "12s", del: "0.8s" },
-  { top: "55%", left: "91%", dur: "7s",  del: "1.5s" },
   { top: "72%", left: "74%", dur: "10s", del: "0.3s" },
-  { top: "80%", left: "55%", dur: "9s",  del: "2.5s" },
   { top: "65%", left: "33%", dur: "11s", del: "1s"   },
-  { top: "78%", left: "14%", dur: "8s",  del: "1.8s" },
   { top: "45%", left: "4%",  dur: "12s", del: "0.6s" },
-  { top: "42%", left: "50%", dur: "6s",  del: "2.2s" },
 ];
 
 /* ── HOOKS ──────────────────────────────────────────────── */
@@ -63,11 +66,15 @@ function useCountUp(target: number, inView: boolean, duration = 2000) {
   useEffect(() => {
     if (!inView) return;
     let startTime: number | null = null;
+    let lastUpdate = 0;
     let rafId: number;
     const tick = (now: number) => {
       if (!startTime) startTime = now;
       const progress = Math.min((now - startTime) / duration, 1);
-      setCount(Math.floor(target * progress));
+      if (now - lastUpdate >= 50 || progress >= 1) {
+        lastUpdate = now;
+        setCount(Math.floor(target * progress));
+      }
       if (progress < 1) { rafId = requestAnimationFrame(tick); }
       else { setCount(target); }
     };
@@ -97,13 +104,38 @@ function StatCard({ value, suffix, label, bg, inView }: {
 }
 
 /* ── MAIN COMPONENT ─────────────────────────────────────── */
-export default function AboutContent() {
+export default function AboutContent({ rows = [] }: { rows?: ContentRow[] }) {
   const { ref: statsRef,  inView: statsInView  } = useInView(0.3);
   const { ref: storyRef,  inView: storyInView  } = useInView(0.15);
   const { ref: quoteRef,  inView: quoteInView  } = useInView(0.3);
 
-  const storyPhoto = null; // replace with "/photos/team.jpg" later
-  const timelinePhoto = null; // replace with "/photos/office.jpg" later
+  const storyPhoto = null;
+  const timelinePhoto = null;
+
+  /* resolve content from DB rows, falling back to defaults */
+  const heroBadge          = gv(rows, "hero",       "badge",           "Our Story");
+  const heroHeading        = gv(rows, "hero",       "heading",         "Crafting Moments That");
+  const heroHeadingItalic  = gv(rows, "hero",       "heading_italic",  "Last a Lifetime");
+  const heroSubtextTh      = gv(rows, "hero",       "subtext_th",      "ผู้เชี่ยวชาญด้านของพรีเมียมและโปรโมชันครบวงจร");
+  const heroDescription    = gv(rows, "hero",       "description",     "Since 2003, SP has partnered with leading brands across Thailand and beyond — designing, producing, and delivering premium gifts that carry meaning far beyond their moment of giving.");
+  const storyBadge         = gv(rows, "story",      "badge",           "About SP");
+  const storyHeading       = gv(rows, "story",      "heading",         "Thailand’s Trusted Partner in");
+  const storyHeadingItalic = gv(rows, "story",      "heading_italic",  "Premium Merchandise");
+  const storyPara1         = gv(rows, "story",      "para1",           "Founded in Bangkok in 2003, SP began as a small creative studio with one goal: to make branded gifting feel personal. Two decades later, we operate as a full-service premium goods partner — from concept and design through OEM manufacturing and global logistics.");
+  const storyPara2         = gv(rows, "story",      "para2",           "We work directly with procurement and marketing teams at companies like P&G, Acer, Oral-B, and SCB Bank — delivering products that reflect each brand’s identity at every touchpoint.");
+  const storyChecklistLabel= gv(rows, "story",      "checklist_label", "Why clients choose SP");
+  const quoteLabel         = gv(rows, "quote",      "label",           "Our Philosophy");
+  const quoteText          = gv(rows, "quote",      "text",            "Every gift we create carries a brand’s promise. Our job is to make sure that promise is felt — not just seen.");
+  const quoteAttribution   = gv(rows, "quote",      "attribution",     "SP Creative & Production Team");
+
+  const checklistRaw = ga<string | {text:string}>(rows, "story", "checklist", DEFAULT_CHECKLIST as unknown as (string | {text:string})[]);
+  const CHECKLIST: string[] = checklistRaw.map(i => typeof i === "string" ? i : String((i as {text:string}).text ?? ""));
+
+  type StatRow = { value: string; suffix: string; label: string; bg: string };
+  const STATS = ga<StatRow>(rows, "stats", "items", DEFAULT_STATS);
+
+  type MilestoneRow = { yr: string; year: string; text: string; active: boolean };
+  const MILESTONES = ga<MilestoneRow>(rows, "milestones", "items", DEFAULT_MILESTONES);
 
   return (
     <>
@@ -174,22 +206,22 @@ export default function AboutContent() {
         <div className="hero-content" style={{ maxWidth: "700px", textAlign: "center", padding: "0 40px", position: "relative", zIndex: 2 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "12px" }}>
             <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
-            <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#E8D5A3" }}>Our Story</span>
+            <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#E8D5A3" }}>{heroBadge}</span>
           </div>
           <h1 style={{ fontSize: "40px", fontWeight: 400, color: "#FFFFFF", lineHeight: 1.05, letterSpacing: "-0.02em", margin: "0 0 18px 0", fontFamily: "Georgia, serif" }}>
             <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
-              Crafting Moments That
+              {heroHeading}
               <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
             </span>
             <br />
-            <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>Last a Lifetime</em>
+            <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>{heroHeadingItalic}</em>
           </h1>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", margin: "0 auto 28px" }}>
             <span style={{ width: "16px", height: "1px", background: "#E8D5A3", opacity: 0.4, flexShrink: 0, display: "block" }} />
-            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>ผู้เชี่ยวชาญด้านของพรีเมียมและโปรโมชันครบวงจร</span>
+            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>{heroSubtextTh}</span>
           </div>
           <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.90)", lineHeight: 1.8, maxWidth: "520px", margin: "0 auto" }}>
-            Since 2003, SP has partnered with leading brands across Thailand and beyond — designing, producing, and delivering premium gifts that carry meaning far beyond their moment of giving.
+            {heroDescription}
           </p>
         </div>
       </section>
@@ -204,7 +236,7 @@ export default function AboutContent() {
         >
           {STATS.map((s, i) => (
             <div key={s.label} style={{ flex: 1, borderRight: i < STATS.length - 1 ? "0.5px solid rgba(28,41,81,0.07)" : "none" }}>
-              <StatCard {...s} inView={statsInView} />
+              <StatCard value={Number(s.value)} suffix={s.suffix} label={s.label} bg={s.bg} inView={statsInView} />
             </div>
           ))}
         </div>
@@ -244,23 +276,23 @@ export default function AboutContent() {
               <div aria-hidden="true" style={{ position: "absolute", top: "-0.5rem", left: "-1rem", fontSize: "6rem", fontWeight: 700, color: "#E8D5A3", opacity: 0.15, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>01</div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
                 <span style={{ display: "block", width: "20px", height: "1px", background: "#C4B07A", flexShrink: 0 }} />
-                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.16em", color: "#8A6E00" }}>About SP</span>
+                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.16em", color: "#8A6E00" }}>{storyBadge}</span>
               </div>
               <h2 style={{ fontSize: "22px", fontWeight: 400, color: "#0D1E3D", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: "20px", fontFamily: "Georgia, serif" }}>
-                Thailand&rsquo;s Trusted Partner in<br />
-                <em style={{ fontStyle: "italic", color: "#8A6E00" }}>Premium Merchandise</em>
+                {storyHeading}<br />
+                <em style={{ fontStyle: "italic", color: "#8A6E00" }}>{storyHeadingItalic}</em>
               </h2>
               <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.8, marginBottom: "14px" }}>
-                Founded in Bangkok in 2003, SP began as a small creative studio with one goal: to make branded gifting feel personal. Two decades later, we operate as a full-service premium goods partner — from concept and design through OEM manufacturing and global logistics.
+                {storyPara1}
               </p>
               <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.8 }}>
-                We work directly with procurement and marketing teams at companies like P&G, Acer, Oral-B, and SCB Bank — delivering products that reflect each brand&rsquo;s identity at every touchpoint.
+                {storyPara2}
               </p>
             </div>
 
             {/* Right — checklist */}
             <div style={{ paddingTop: "12px" }}>
-              <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A5568", marginBottom: "20px" }}>Why clients choose SP</p>
+              <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A5568", marginBottom: "20px" }}>{storyChecklistLabel}</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                 {CHECKLIST.map((item) => (
                   <div key={item} className="checklist-item" style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "6px" }}>
@@ -290,17 +322,17 @@ export default function AboutContent() {
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "32px" }}>
             <div style={{ width: "36px", height: "1px", background: "#E8D5A3", flexShrink: 0 }} />
-            <span style={{ fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#F0DC9A" }}>Our Philosophy</span>
+            <span style={{ fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#F0DC9A" }}>{quoteLabel}</span>
             <div style={{ width: "36px", height: "1px", background: "#E8D5A3", flexShrink: 0 }} />
           </div>
           <blockquote style={{ margin: 0 }}>
             <p style={{ fontSize: "clamp(1.4rem, 2vw, 1.75rem)", fontWeight: 400, color: "#FFFFFF", lineHeight: 1.55, letterSpacing: "-0.01em", fontFamily: "Georgia, serif", fontStyle: "italic" }}>
-              &ldquo;Every gift we create carries a brand&rsquo;s promise. Our job is to make sure that promise is felt — not just seen.&rdquo;
+              &ldquo;{quoteText}&rdquo;
             </p>
           </blockquote>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginTop: "28px" }}>
             <div style={{ width: "24px", height: "0.5px", background: "rgba(232,213,163,0.4)" }} />
-            <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.14em", color: "rgba(255,255,255,0.75)", margin: 0 }}>SP Creative &amp; Production Team</p>
+            <p style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.14em", color: "rgba(255,255,255,0.75)", margin: 0 }}>{quoteAttribution}</p>
             <div style={{ width: "24px", height: "0.5px", background: "rgba(232,213,163,0.4)" }} />
           </div>
         </div>

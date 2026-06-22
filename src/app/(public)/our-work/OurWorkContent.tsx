@@ -5,89 +5,52 @@ import Link from "next/link";
 import SectionLabel from "@/components/ui/SectionLabel";
 import GoldDivider from "@/components/ui/GoldDivider";
 
-/* ── DATA ─────────────────────────────────────────────────── */
-const STATS = [
-  { n: "3,000+", label: "Clients Served" },
-  { n: "50k+",   label: "Projects Done" },
-  { n: "30+",    label: "Countries" },
-];
+/* ── DB content helpers ─────────────────────────────────────── */
+type ContentRow = { section: string; key: string; value: string };
+function gv(rows: ContentRow[], section: string, key: string, fallback: string): string {
+  return rows.find(r => r.section === section && r.key === key)?.value ?? fallback;
+}
+function ga<T>(rows: ContentRow[], section: string, key: string, fallback: T[]): T[] {
+  const raw = rows.find(r => r.section === section && r.key === key)?.value;
+  if (!raw) return fallback;
+  try { return JSON.parse(raw) as T[]; } catch { return fallback; }
+}
 
-const CLIENT_TAGS = [
-  "All Work", "P&G", "Acer", "Oral-B", "Ambipur",
-  "VSTECS", "Absolute You", "SCB Bank", "LINE MAN",
-];
-
+/* ── DEFAULT DATA ─────────────────────────────────────────── */
 interface Project {
   n: string; client: string; title: string;
   th?: string; desc?: string;
-  tags: string[]; metrics: { n: string; label: string }[];
+  tags: string | string[];
+  metrics: string | { n: string; label: string }[];
   icon: string; category: string;
   aspect: "tall" | "wide" | "square";
 }
 
-const ALL_PROJECTS: Project[] = [
-  {
-    n: "01", client: "P&G",
-    title: "Premium New Year Gift Sets",
-    th: "ชุดของขวัญปีใหม่พรีเมียม",
-    desc: "Designed and produced 12,000 curated gift sets for P&G Thailand's New Year campaign. Each set featured custom packaging, branded ribbon, and a personalised card — delivered across 5 provinces in under 10 days.",
-    tags: ["Gift Sets", "Custom Packaging", "Logistics"],
-    metrics: [
-      { n: "12,000", label: "Units Produced" },
-      { n: "5",      label: "Provinces Covered" },
-      { n: "10",     label: "Days to Delivery" },
-    ],
-    icon: "ti-gift", category: "Gift Sets", aspect: "tall",
-  },
-  {
-    n: "02", client: "Acer",
-    title: "Branded Corporate Merchandise",
-    th: "สินค้าองค์กรแบรนด์ครบเซ็ต",
-    desc: "A full suite of branded merchandise for Acer's distributor conference — including custom tote bags, tech accessories, and premium notebooks. OEM production with laser-engraved logo and full-colour print.",
-    tags: ["OEM Manufacturing", "Custom Branding", "Screen Print"],
-    metrics: [
-      { n: "8,500", label: "Items Delivered" },
-      { n: "3",     label: "Product Types" },
-      { n: "100%",  label: "On-time Rate" },
-    ],
-    icon: "ti-award", category: "OEM", aspect: "wide",
-  },
-  {
-    n: "03", client: "Oral-B",
-    title: "Toothbrush Gift Packs",
-    tags: ["Gift Sets"], metrics: [],
-    icon: "ti-package", category: "Gift Sets", aspect: "square",
-  },
-  {
-    n: "04", client: "Ambipur",
-    title: "Scented Promo Kits",
-    tags: ["Custom Branding"], metrics: [],
-    icon: "ti-certificate", category: "Custom Branding", aspect: "wide",
-  },
-  {
-    n: "05", client: "VSTECS",
-    title: "Tech Distributor Gifts",
-    tags: ["OEM"], metrics: [],
-    icon: "ti-cpu", category: "OEM", aspect: "square",
-  },
-  {
-    n: "06", client: "Absolute You",
-    title: "Wellness Premium Sets",
-    tags: ["Premium Gifts"], metrics: [],
-    icon: "ti-heart", category: "Premium Gifts", aspect: "tall",
-  },
-  {
-    n: "07", client: "SCB Bank",
-    title: "VIP Client Gift Collection",
-    tags: ["Luxury Gifts"], metrics: [],
-    icon: "ti-diamond", category: "Luxury Gifts", aspect: "wide",
-  },
-  {
-    n: "08", client: "LINE MAN",
-    title: "Rider Appreciation Kits",
-    tags: ["Corporate"], metrics: [],
-    icon: "ti-bike", category: "Corporate", aspect: "square",
-  },
+function normTags(tags: string | string[]): string[] {
+  if (Array.isArray(tags)) return tags;
+  return tags ? tags.split(",").map(t => t.trim()).filter(Boolean) : [];
+}
+function normMetrics(m: string | { n: string; label: string }[]): { n: string; label: string }[] {
+  if (Array.isArray(m)) return m;
+  if (!m) return [];
+  try { return JSON.parse(m) as { n: string; label: string }[]; } catch { return []; }
+}
+
+const DEFAULT_STATS = [
+  { n: "3,000+", label: "Clients Served" },
+  { n: "50k+",   label: "Projects Done" },
+  { n: "30+",    label: "Countries" },
+];
+const DEFAULT_CLIENT_TAGS = "All Work,P&G,Acer,Oral-B,Ambipur,VSTECS,Absolute You,SCB Bank,LINE MAN";
+const DEFAULT_PROJECTS: Project[] = [
+  { n:"01", client:"P&G",          title:"Premium New Year Gift Sets",   th:"ชุดของขวัญปีใหม่พรีเมียม", desc:"Designed and produced 12,000 curated gift sets for P&G Thailand's New Year campaign.", tags:["Gift Sets","Custom Packaging","Logistics"], metrics:[{n:"12,000",label:"Units Produced"},{n:"5",label:"Provinces Covered"},{n:"10",label:"Days to Delivery"}], icon:"ti-gift",        category:"Gift Sets",       aspect:"tall"   },
+  { n:"02", client:"Acer",         title:"Branded Corporate Merchandise",th:"สินค้าองค์กรแบรนด์ครบเซ็ต", desc:"A full suite of branded merchandise for Acer's distributor conference.", tags:["OEM Manufacturing","Custom Branding","Screen Print"], metrics:[{n:"8,500",label:"Items Delivered"},{n:"3",label:"Product Types"},{n:"100%",label:"On-time Rate"}], icon:"ti-award",       category:"OEM",             aspect:"wide"   },
+  { n:"03", client:"Oral-B",       title:"Toothbrush Gift Packs",        th:"",                             desc:"", tags:["Gift Sets"],       metrics:[], icon:"ti-package",     category:"Gift Sets",       aspect:"square" },
+  { n:"04", client:"Ambipur",      title:"Scented Promo Kits",           th:"",                             desc:"", tags:["Custom Branding"], metrics:[], icon:"ti-certificate", category:"Custom Branding", aspect:"wide"   },
+  { n:"05", client:"VSTECS",       title:"Tech Distributor Gifts",       th:"",                             desc:"", tags:["OEM"],             metrics:[], icon:"ti-cpu",         category:"OEM",             aspect:"square" },
+  { n:"06", client:"Absolute You", title:"Wellness Premium Sets",        th:"",                             desc:"", tags:["Premium Gifts"],   metrics:[], icon:"ti-heart",       category:"Premium Gifts",   aspect:"tall"   },
+  { n:"07", client:"SCB Bank",     title:"VIP Client Gift Collection",   th:"",                             desc:"", tags:["Luxury Gifts"],    metrics:[], icon:"ti-diamond",     category:"Luxury Gifts",    aspect:"wide"   },
+  { n:"08", client:"LINE MAN",     title:"Rider Appreciation Kits",      th:"",                             desc:"", tags:["Corporate"],       metrics:[], icon:"ti-bike",        category:"Corporate",       aspect:"square" },
 ];
 
 /* ── HELPERS ──────────────────────────────────────────────── */
@@ -157,9 +120,9 @@ function ProjectOverlay({ project: p, visible, transKey, onClose, onPrev, onNext
             {p.desc ?? `A premium branded project delivered for ${p.client}, crafted with care and precision by the SP team.`}
           </p>
 
-          {p.metrics.length > 0 && (
+          {normMetrics(p.metrics).length > 0 && (
             <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
-              {p.metrics.map((m) => (
+              {normMetrics(p.metrics).map((m) => (
                 <div key={m.label} style={{ flex: 1, padding: "10px 12px", textAlign: "center", background: "#243160", borderRadius: "6px", border: "0.5px solid rgba(232,213,163,0.15)" }}>
                   <div style={{ fontSize: "14px", fontWeight: 500, color: "#FFFFFF", letterSpacing: "-0.02em" }}>{m.n}</div>
                   <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.75)", marginTop: "2px" }}>{m.label}</div>
@@ -169,7 +132,7 @@ function ProjectOverlay({ project: p, visible, transKey, onClose, onPrev, onNext
           )}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "24px" }}>
-            {p.tags.map(t => (
+            {normTags(p.tags).map(t => (
               <span key={t} style={{ fontSize: "10px", color: "rgba(255,255,255,0.75)", border: "0.5px solid rgba(232,213,163,0.2)", padding: "4px 10px", borderRadius: "4px" }}>{t}</span>
             ))}
           </div>
@@ -233,15 +196,25 @@ function ProjectOverlay({ project: p, visible, transKey, onClose, onPrev, onNext
 }
 
 /* ── MAIN ─────────────────────────────────────────────────── */
-export default function OurWorkContent() {
+export default function OurWorkContent({ rows = [] }: { rows?: ContentRow[] }) {
   const [activeTag,      setActiveTag     ] = useState("All Work");
   const [overlayN,       setOverlayN      ] = useState<string | null>(null);
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [transKey,       setTransKey      ] = useState(0);
 
-  const filteredProjects = activeTag === "All Work"
+  const heroBadge         = gv(rows, "hero",        "badge",          "PORTFOLIO");
+  const heroHeading       = gv(rows, "hero",        "heading",        "Our Work &");
+  const heroHeadingItalic = gv(rows, "hero",        "heading_italic", "Portfolio");
+  const STATS             = ga(rows, "stats",        "items",          DEFAULT_STATS);
+  const clientTagsRaw     = gv(rows, "client_tags", "items",          DEFAULT_CLIENT_TAGS);
+  const CLIENT_TAGS       = clientTagsRaw.split(",").map(t => t.trim()).filter(Boolean);
+  const ALL_PROJECTS: Project[] = ga(rows, "projects", "items", DEFAULT_PROJECTS);
+
+  const firstTag = CLIENT_TAGS[0] ?? "All Work";
+
+  const filteredProjects = activeTag === firstTag
     ? ALL_PROJECTS
-    : ALL_PROJECTS.filter(p => p.client === activeTag);
+    : ALL_PROJECTS.filter(p => p.client === activeTag || normTags(p.tags).includes(activeTag));
 
   const overlayProject = overlayN ? ALL_PROJECTS.find(p => p.n === overlayN) ?? null : null;
   const overlayIdx     = overlayN ? filteredProjects.findIndex(p => p.n === overlayN) : -1;
@@ -278,7 +251,7 @@ export default function OurWorkContent() {
   }
 
   function handleFilter(tag: string) {
-    setActiveTag(tag);
+    setActiveTag(tag || firstTag);
     if (overlayN) closeOverlay();
   }
 
@@ -337,15 +310,15 @@ export default function OurWorkContent() {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
                 <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
-                <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.18em", color: "#E8D5A3" }}>PORTFOLIO</span>
+                <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.18em", color: "#E8D5A3" }}>{heroBadge}</span>
               </div>
               <h1 style={{ fontSize: "40px", fontWeight: 400, color: "#FFFFFF", lineHeight: 1.05, letterSpacing: "-0.02em", fontFamily: "Georgia, serif", marginBottom: "28px" }}>
                 <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
-                  Our Work &amp;
+                  {heroHeading}
                   <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
                 </span>
                 <br />
-                <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>Portfolio</em>
+                <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>{heroHeadingItalic}</em>
               </h1>
               <div style={{ display: "flex" }}>
                 {STATS.map((s, i) => (

@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { BRAND } from "@/lib/data";
 import { useLang } from "@/contexts/LanguageContext";
+import { useLogoUrl } from "@/hooks/useLogoUrl";
 
 const SERVICES = [
   "Premium Gifts", "Corporate Souvenirs", "New Year Sets",
@@ -56,7 +56,8 @@ function Newsletter() {
 }
 
 export default function Footer() {
-  const { t } = useLang();
+  const { t }   = useLang();
+  const logoUrl = useLogoUrl();
   const QUICK_LINKS = [
     { label: t("หน้าหลัก", "Home"),        href: "/home" },
     { label: t("เกี่ยวกับเรา", "About"),   href: "/about" },
@@ -88,12 +89,11 @@ export default function Footer() {
                 justifyContent: "center",
                 border: "1px solid rgba(232,213,163,0.3)",
               }}>
-                <Image
-                  src="/F2.png"
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={logoUrl}
                   alt="Siam Premium Product Logo"
-                  width={52}
-                  height={52}
-                  style={{ objectFit: "contain" }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               </div>
               <div>

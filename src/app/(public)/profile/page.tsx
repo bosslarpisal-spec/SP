@@ -242,8 +242,11 @@ export default function ProfilePage() {
           </div>
 
           <div style={{
-            maxHeight: wishlistOpen ? "800px" : "0", overflow: "hidden",
-            opacity: wishlistOpen ? 1 : 0, transition: "max-height 0.35s ease, opacity 0.25s ease",
+            height: wishlistOpen ? "auto" : 0, overflow: "hidden",
+            opacity: wishlistOpen ? 1 : 0,
+            transform: wishlistOpen ? "translateY(0)" : "translateY(-6px)",
+            pointerEvents: wishlistOpen ? "auto" : "none",
+            transition: "opacity 0.25s ease, transform 0.25s ease",
           }}>
             <div style={{ padding: "20px" }}>
               {wishedProducts.length === 0 ? (
@@ -317,8 +320,11 @@ export default function ProfilePage() {
               <i className={`ti ${accountOpen ? "ti-chevron-up" : "ti-chevron-down"}`} style={{ fontSize: "14px", color: "#9CA3AF" }} />
             </div>
             <div style={{
-              maxHeight: accountOpen ? "300px" : "0", overflow: "hidden",
-              opacity: accountOpen ? 1 : 0, transition: "max-height 0.35s ease, opacity 0.25s ease",
+              height: accountOpen ? "auto" : 0, overflow: "hidden",
+              opacity: accountOpen ? 1 : 0,
+              transform: accountOpen ? "translateY(0)" : "translateY(-6px)",
+              pointerEvents: accountOpen ? "auto" : "none",
+              transition: "opacity 0.25s ease, transform 0.25s ease",
             }}>
               <div style={{ padding: "20px" }}>
                 <label style={labelStyle}>Display Name</label>
@@ -362,8 +368,11 @@ export default function ProfilePage() {
               <i className={`ti ${securityOpen ? "ti-chevron-up" : "ti-chevron-down"}`} style={{ fontSize: "14px", color: "#9CA3AF" }} />
             </div>
             <div style={{
-              maxHeight: securityOpen ? "400px" : "0", overflow: "hidden",
-              opacity: securityOpen ? 1 : 0, transition: "max-height 0.35s ease, opacity 0.25s ease",
+              height: securityOpen ? "auto" : 0, overflow: "hidden",
+              opacity: securityOpen ? 1 : 0,
+              transform: securityOpen ? "translateY(0)" : "translateY(-6px)",
+              pointerEvents: securityOpen ? "auto" : "none",
+              transition: "opacity 0.25s ease, transform 0.25s ease",
             }}>
               <div style={{ padding: "20px" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

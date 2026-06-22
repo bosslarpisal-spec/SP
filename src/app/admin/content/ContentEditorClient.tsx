@@ -6,6 +6,12 @@ import { supabase } from "@/lib/supabase";
 import type { ContentRow, Category, Tag } from "./page";
 import CategoryManager from "./CategoryManager";
 import TagManager from "./TagManager";
+import { StyleOverride, type BlockStyles } from "@/app/admin/components/StyleOverride";
+import AboutEditor from "./AboutEditor";
+import ServicesEditor from "./ServicesEditor";
+import OurWorkEditor from "./OurWorkEditor";
+import ContactEditor from "./ContactEditor";
+import BrandingEditor from "./BrandingEditor";
 
 /* ── helpers ──────────────────────────────────────────────── */
 function getVal(rows: ContentRow[], section: string, key: string, fallback: string): string {
@@ -16,6 +22,58 @@ function getVisible(rows: ContentRow[], section: string): boolean {
   const row = rows.find(r => r.section === section && r.key === "is_visible");
   return row?.value !== "false";
 }
+
+/* ── catalog style defaults ───────────────────────────────────── */
+const CATALOG_BLOCK_DEFAULTS: Record<string, BlockStyles> = {
+  label:       { color: "#8A6E00",    fontSize: "11px" },
+  heading:     { color: "#0D1E3D",    fontSize: "32px" },
+  headingTh:   { color: "#2C3E50",    fontSize: "14px" },
+  description: { color: "#2C3E50",    fontSize: "14px" },
+  quote:       { color: "#8A9AB8",    fontSize: "15px" },
+  btn1:        { background: "#E8D5A3", color: "#1C2951", fontSize: "13px" },
+  btn2:        { color: "#0D1E3D",    fontSize: "13px" },
+};
+const CATALOG_FONT_SIZE_RANGES: Record<string, { min: number; max: number }> = {
+  label:       { min: 9,  max: 16 },
+  heading:     { min: 18, max: 52 },
+  headingTh:   { min: 11, max: 20 },
+  description: { min: 11, max: 20 },
+  quote:       { min: 12, max: 22 },
+  btn1:        { min: 11, max: 18 },
+  btn2:        { min: 11, max: 18 },
+};
+
+/* ── stats / process / marquee style defaults ─────────────────── */
+const STATS_BLOCK_DEFAULTS: Record<string, BlockStyles> = {
+  statNumber: { color: "#E8D5A3", fontSize: "28px" },
+  statLabel:  { color: "rgba(255,255,255,0.55)", fontSize: "9px" },
+};
+const STATS_FONT_SIZE_RANGES: Record<string, { min: number; max: number }> = {
+  statNumber: { min: 14, max: 40 },
+  statLabel:  { min: 7,  max: 14 },
+};
+
+const PROCESS_BLOCK_DEFAULTS: Record<string, BlockStyles> = {
+  heading:    { color: "#0D1E3D",  fontSize: "18px" },
+  subheading: { color: "#4A5568",  fontSize: "10px" },
+  stepTitle:  { color: "#0D1E3D",  fontSize: "11px" },
+  stepDesc:   { color: "#4A5568",  fontSize: "10px" },
+  stepAccent: { background: "#1C2951" },
+};
+const PROCESS_FONT_SIZE_RANGES: Record<string, { min: number; max: number }> = {
+  heading:    { min: 12, max: 30 },
+  subheading: { min: 8,  max: 16 },
+  stepTitle:  { min: 9,  max: 18 },
+  stepDesc:   { min: 8,  max: 14 },
+};
+
+const MARQUEE_BLOCK_DEFAULTS: Record<string, BlockStyles> = {
+  item:    { color: "#0D1E3D", fontSize: "11px" },
+  diamond: { color: "#0D1E3D" },
+};
+const MARQUEE_FONT_SIZE_RANGES: Record<string, { min: number; max: number }> = {
+  item: { min: 9, max: 18 },
+};
 
 /* ── field → (section,key) map, and section → fields map ───── */
 const FIELD_META: Record<string, { section: string; key: string }> = {
@@ -45,11 +103,15 @@ const FIELD_META: Record<string, { section: string; key: string }> = {
   catalog_quote:       { section: "catalog", key: "quote" },
   catalog_btn1_text:   { section: "catalog", key: "btn1_text" },
   catalog_btn2_text:   { section: "catalog", key: "btn2_text" },
+  catalog_styles:      { section: "catalog", key: "_styles" },
+  stats_styles:        { section: "stats",   key: "_styles" },
+  process_styles:      { section: "process", key: "_styles" },
+  marquee_styles:      { section: "marquee", key: "_styles" },
 };
 
 const SECTION_FIELDS: Record<string, string[]> = {
-  stats: ["stat1_number", "stat1_label", "stat2_number", "stat2_label", "stat3_number", "stat3_label"],
-  marquee: ["marquee_items"],
+  stats: ["stat1_number", "stat1_label", "stat2_number", "stat2_label", "stat3_number", "stat3_label", "stats_styles"],
+  marquee: ["marquee_items", "marquee_styles"],
   process: [
     "process_heading", "process_subheading",
     "process_step1_title", "process_step1_desc",
@@ -57,20 +119,22 @@ const SECTION_FIELDS: Record<string, string[]> = {
     "process_step3_title", "process_step3_desc",
     "process_step4_title", "process_step4_desc",
     "process_step5_title", "process_step5_desc",
+    "process_styles",
   ],
   catalog: [
     "catalog_label", "catalog_heading", "catalog_heading_th",
     "catalog_description", "catalog_quote",
     "catalog_btn1_text", "catalog_btn2_text",
+    "catalog_styles",
   ],
 };
 
 /* ── section registry ─────────────────────────────────────── */
 const SECTIONS = [
-  { id: "stats",   label: "Stat Badges",         icon: "ti-chart-bar",   fieldCount: 6,  hasVisibility: true,  desc: "Three statistics shown below the hero slides" },
-  { id: "marquee", label: "Marquee Ticker",      icon: "ti-arrow-right", fieldCount: 1,  hasVisibility: true,  desc: "Scrolling text ticker across the page" },
-  { id: "process", label: "Production Process", icon: "ti-list-check",  fieldCount: 12, hasVisibility: true,  desc: "Step-by-step production process with 5 stages" },
-  { id: "catalog", label: "Catalog Section",    icon: "ti-layout-grid", fieldCount: 7,  hasVisibility: false, desc: "Heading, description, and buttons for the catalog area" },
+  { id: "stats",   label: "Stat Badges",         icon: "ti-chart-bar",   fieldCount: 8,  hasVisibility: true,  desc: "Three statistics shown below the hero slides" },
+  { id: "marquee", label: "Marquee Ticker",      icon: "ti-arrow-right", fieldCount: 3,  hasVisibility: true,  desc: "Scrolling text ticker across the page" },
+  { id: "process", label: "Production Process", icon: "ti-list-check",  fieldCount: 21, hasVisibility: true,  desc: "Step-by-step production process with 5 stages" },
+  { id: "catalog", label: "Catalog Section",    icon: "ti-layout-grid", fieldCount: 14, hasVisibility: false, desc: "Heading, description, and buttons for the catalog area" },
 ];
 
 /* ── sub-components ───────────────────────────────────────── */
@@ -166,6 +230,10 @@ function computeFields(content: ContentRow[]): Record<string, string> {
     catalog_quote:       getVal(content, "catalog", "quote",        '"Quality is not an act, it is a habit. Every product we deliver carries our promise."'),
     catalog_btn1_text:   getVal(content, "catalog", "btn1_text",    "Browse All"),
     catalog_btn2_text:   getVal(content, "catalog", "btn2_text",    "Filter"),
+    catalog_styles:      getVal(content, "catalog", "_styles",      "{}"),
+    stats_styles:        getVal(content, "stats",   "_styles",      "{}"),
+    process_styles:      getVal(content, "process", "_styles",      "{}"),
+    marquee_styles:      getVal(content, "marquee", "_styles",      "{}"),
   };
 }
 
@@ -179,7 +247,8 @@ export default function ContentEditorClient({
   productCounts: Record<string, number>;
   tagCounts: Record<string, number>;
 }) {
-  const [activeTab, setActiveTab] = useState<"home" | "catalog">("home");
+  type PageTab = "home" | "catalog" | "about" | "services" | "our-work" | "contact" | "branding";
+  const [activeTab, setActiveTab] = useState<PageTab>("home");
   const [activeSection, setActiveSection] = useState("stats");
 
   /* visibility state */
@@ -205,6 +274,25 @@ export default function ContentEditorClient({
     setDirty(p => ({ ...p, [section]: true }));
     setSaved(p => ({ ...p, [section]: false }));
   }
+
+  function makeStyleChangeHandler(fieldKey: string, section: string) {
+    return (blockKey: string, overrides: BlockStyles | null) => {
+      setFields(prev => {
+        const current: Record<string, BlockStyles> = (() => {
+          try { return JSON.parse(prev[fieldKey] || "{}"); } catch { return {}; }
+        })();
+        const next = { ...current };
+        if (overrides === null) { delete next[blockKey]; } else { next[blockKey] = overrides; }
+        return { ...prev, [fieldKey]: JSON.stringify(next) };
+      });
+      setDirty(p => ({ ...p, [section]: true }));
+      setSaved(p => ({ ...p, [section]: false }));
+    };
+  }
+  const handleCatalogStyleChange = makeStyleChangeHandler("catalog_styles", "catalog");
+  const handleStatsStyleChange   = makeStyleChangeHandler("stats_styles",   "stats");
+  const handleProcessStyleChange = makeStyleChangeHandler("process_styles", "process");
+  const handleMarqueeStyleChange = makeStyleChangeHandler("marquee_styles", "marquee");
 
   async function saveSection(section: string) {
     const snapshot = { ...fields };
@@ -259,79 +347,176 @@ export default function ContentEditorClient({
   function renderFields(section: string) {
     const u = (key: string, v: string) => updateField(key, v, section);
 
-    if (section === "stats") return (
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-        {([1, 2, 3] as const).map(n => (
-          <div key={n} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a", margin: 0 }}>Stat {n}</p>
-            <Field label="Number" value={fields[`stat${n}_number`]} placeholder={n === 1 ? "3,000+" : n === 2 ? "50,000+" : "30+"}
-              onChange={v => u(`stat${n}_number`, v)} />
-            <Field label="Label" value={fields[`stat${n}_label`]} placeholder={n === 1 ? "CLIENTS" : n === 2 ? "PROJECTS" : "COUNTRIES"}
-              onChange={v => u(`stat${n}_label`, v)} />
+    if (section === "stats") {
+      const statsStylesObj: Record<string, BlockStyles> = (() => {
+        try { return JSON.parse(fields.stats_styles || "{}"); } catch { return {}; }
+      })();
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+            {([1, 2, 3] as const).map(n => (
+              <div key={n} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a", margin: 0 }}>Stat {n}</p>
+                <Field label="Number" value={fields[`stat${n}_number`]} placeholder={n === 1 ? "3,000+" : n === 2 ? "50,000+" : "30+"}
+                  onChange={v => u(`stat${n}_number`, v)} />
+                <Field label="Label" value={fields[`stat${n}_label`]} placeholder={n === 1 ? "CLIENTS" : n === 2 ? "PROJECTS" : "COUNTRIES"}
+                  onChange={v => u(`stat${n}_label`, v)} />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    );
-
-    if (section === "marquee") return (
-      <div>
-        <Field
-          label="Items (comma-separated)"
-          value={fields.marquee_items}
-          multiline
-          placeholder="PREMIUM GIFTS,CORPORATE SOUVENIRS,..."
-          onChange={v => u("marquee_items", v)}
-        />
-        <p style={{ fontSize: 10, color: "#aaa", marginTop: 6 }}>Separate items with commas.</p>
-      </div>
-    );
-
-    if (section === "process") return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Section Heading" value={fields.process_heading}    onChange={v => u("process_heading", v)} />
-          <Field label="Subheading"      value={fields.process_subheading} onChange={v => u("process_subheading", v)} />
-        </div>
-        <p style={{ ...labelStyle, marginBottom: 2, marginTop: 4 }}>Process Steps</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {([1, 2, 3, 4, 5] as const).map(n => (
-            <div key={n} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <Field label={`Step ${n} Title`}       value={fields[`process_step${n}_title`]} onChange={v => u(`process_step${n}_title`, v)} />
-              <Field label={`Step ${n} Description`} value={fields[`process_step${n}_desc`]}  onChange={v => u(`process_step${n}_desc`, v)} />
+          <div style={{ borderTop: "0.5px solid #E8E6E0", paddingTop: 14 }}>
+            <p style={{ ...labelStyle, marginBottom: 8 }}>Style overrides — shared across all 3 stats</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <StyleOverride blockKey="statNumber" label="Stat number" allStyles={statsStylesObj} onChange={handleStatsStyleChange}
+                defaults={STATS_BLOCK_DEFAULTS.statNumber} fontSizeRange={STATS_FONT_SIZE_RANGES.statNumber} />
+              <StyleOverride blockKey="statLabel" label="Stat label" allStyles={statsStylesObj} onChange={handleStatsStyleChange}
+                defaults={STATS_BLOCK_DEFAULTS.statLabel} fontSizeRange={STATS_FONT_SIZE_RANGES.statLabel} />
             </div>
-          ))}
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
 
-    if (section === "catalog") return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Section Label"    value={fields.catalog_label}    onChange={v => u("catalog_label", v)} />
-          <Field label="Heading (EN)"     value={fields.catalog_heading}  onChange={v => u("catalog_heading", v)} />
+    if (section === "marquee") {
+      const marqueeStylesObj: Record<string, BlockStyles> = (() => {
+        try { return JSON.parse(fields.marquee_styles || "{}"); } catch { return {}; }
+      })();
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <Field
+              label="Items (comma-separated)"
+              value={fields.marquee_items}
+              multiline
+              placeholder="PREMIUM GIFTS,CORPORATE SOUVENIRS,..."
+              onChange={v => u("marquee_items", v)}
+            />
+            <p style={{ fontSize: 10, color: "#aaa", marginTop: 6 }}>Separate items with commas.</p>
+          </div>
+          <div style={{ borderTop: "0.5px solid #E8E6E0", paddingTop: 14 }}>
+            <p style={{ ...labelStyle, marginBottom: 8 }}>Style overrides</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <StyleOverride blockKey="item" label="Item text" allStyles={marqueeStylesObj} onChange={handleMarqueeStyleChange}
+                defaults={MARQUEE_BLOCK_DEFAULTS.item} fontSizeRange={MARQUEE_FONT_SIZE_RANGES.item} />
+              <StyleOverride blockKey="diamond" label="Diamond separator" allStyles={marqueeStylesObj} onChange={handleMarqueeStyleChange}
+                defaults={MARQUEE_BLOCK_DEFAULTS.diamond} withFontSize={false} />
+            </div>
+          </div>
         </div>
-        <Field label="Heading (TH)" value={fields.catalog_heading_th} onChange={v => u("catalog_heading_th", v)} />
-        <Field label="Description"  value={fields.catalog_description} multiline onChange={v => u("catalog_description", v)} />
-        <Field label="Quote / Tagline" value={fields.catalog_quote}   multiline onChange={v => u("catalog_quote", v)} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <Field label="Button 1 Text" value={fields.catalog_btn1_text} onChange={v => u("catalog_btn1_text", v)} />
-          <Field label="Button 2 Text" value={fields.catalog_btn2_text} onChange={v => u("catalog_btn2_text", v)} />
+      );
+    }
+
+    if (section === "process") {
+      const processStylesObj: Record<string, BlockStyles> = (() => {
+        try { return JSON.parse(fields.process_styles || "{}"); } catch { return {}; }
+      })();
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <Field label="Section Heading" value={fields.process_heading} onChange={v => u("process_heading", v)} />
+              <StyleOverride blockKey="heading" label="Section heading" allStyles={processStylesObj} onChange={handleProcessStyleChange}
+                defaults={PROCESS_BLOCK_DEFAULTS.heading} fontSizeRange={PROCESS_FONT_SIZE_RANGES.heading} />
+            </div>
+            <div>
+              <Field label="Subheading" value={fields.process_subheading} onChange={v => u("process_subheading", v)} />
+              <StyleOverride blockKey="subheading" label="Subheading" allStyles={processStylesObj} onChange={handleProcessStyleChange}
+                defaults={PROCESS_BLOCK_DEFAULTS.subheading} fontSizeRange={PROCESS_FONT_SIZE_RANGES.subheading} />
+            </div>
+          </div>
+          <div style={{ borderTop: "0.5px solid #E8E6E0", paddingTop: 12 }}>
+            <p style={{ ...labelStyle, marginBottom: 8 }}>Step style overrides — shared across all 5 steps</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <StyleOverride blockKey="stepTitle" label="Step title" allStyles={processStylesObj} onChange={handleProcessStyleChange}
+                defaults={PROCESS_BLOCK_DEFAULTS.stepTitle} fontSizeRange={PROCESS_FONT_SIZE_RANGES.stepTitle} />
+              <StyleOverride blockKey="stepDesc" label="Step description" allStyles={processStylesObj} onChange={handleProcessStyleChange}
+                defaults={PROCESS_BLOCK_DEFAULTS.stepDesc} fontSizeRange={PROCESS_FONT_SIZE_RANGES.stepDesc} />
+              <StyleOverride blockKey="stepAccent" label="Active step accent" allStyles={processStylesObj} onChange={handleProcessStyleChange}
+                defaults={PROCESS_BLOCK_DEFAULTS.stepAccent}
+                withBackground withTextColor={false} withFontSize={false}
+                backgroundLabel="Accent color (circle + line)" />
+            </div>
+          </div>
+          <p style={{ ...labelStyle, marginBottom: 2, marginTop: 4 }}>Process Steps</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {([1, 2, 3, 4, 5] as const).map(n => (
+              <div key={n} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <Field label={`Step ${n} Title`}       value={fields[`process_step${n}_title`]} onChange={v => u(`process_step${n}_title`, v)} />
+                <Field label={`Step ${n} Description`} value={fields[`process_step${n}_desc`]}  onChange={v => u(`process_step${n}_desc`, v)} />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+
+    if (section === "catalog") {
+      const catalogStylesObj: Record<string, BlockStyles> = (() => {
+        try { return JSON.parse(fields.catalog_styles || "{}"); } catch { return {}; }
+      })();
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <Field label="Section Label" value={fields.catalog_label} onChange={v => u("catalog_label", v)} />
+              <StyleOverride blockKey="label" label="Section label" allStyles={catalogStylesObj} onChange={handleCatalogStyleChange}
+                defaults={CATALOG_BLOCK_DEFAULTS.label} fontSizeRange={CATALOG_FONT_SIZE_RANGES.label} />
+            </div>
+            <div>
+              <Field label="Heading (EN)" value={fields.catalog_heading} onChange={v => u("catalog_heading", v)} />
+              <StyleOverride blockKey="heading" label="Heading" allStyles={catalogStylesObj} onChange={handleCatalogStyleChange}
+                defaults={CATALOG_BLOCK_DEFAULTS.heading} fontSizeRange={CATALOG_FONT_SIZE_RANGES.heading} />
+            </div>
+          </div>
+          <div>
+            <Field label="Heading (TH)" value={fields.catalog_heading_th} onChange={v => u("catalog_heading_th", v)} />
+            <StyleOverride blockKey="headingTh" label="Heading TH" allStyles={catalogStylesObj} onChange={handleCatalogStyleChange}
+              defaults={CATALOG_BLOCK_DEFAULTS.headingTh} fontSizeRange={CATALOG_FONT_SIZE_RANGES.headingTh} />
+          </div>
+          <div>
+            <Field label="Description" value={fields.catalog_description} multiline onChange={v => u("catalog_description", v)} />
+            <StyleOverride blockKey="description" label="Description" allStyles={catalogStylesObj} onChange={handleCatalogStyleChange}
+              defaults={CATALOG_BLOCK_DEFAULTS.description} fontSizeRange={CATALOG_FONT_SIZE_RANGES.description} />
+          </div>
+          <div>
+            <Field label="Quote / Tagline" value={fields.catalog_quote} multiline onChange={v => u("catalog_quote", v)} />
+            <StyleOverride blockKey="quote" label="Quote" allStyles={catalogStylesObj} onChange={handleCatalogStyleChange}
+              defaults={CATALOG_BLOCK_DEFAULTS.quote} fontSizeRange={CATALOG_FONT_SIZE_RANGES.quote} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div>
+              <Field label="Button 1 Text" value={fields.catalog_btn1_text} onChange={v => u("catalog_btn1_text", v)} />
+              <StyleOverride blockKey="btn1" label="Primary button" allStyles={catalogStylesObj} onChange={handleCatalogStyleChange}
+                defaults={CATALOG_BLOCK_DEFAULTS.btn1} fontSizeRange={CATALOG_FONT_SIZE_RANGES.btn1} withBackground />
+            </div>
+            <div>
+              <Field label="Button 2 Text" value={fields.catalog_btn2_text} onChange={v => u("catalog_btn2_text", v)} />
+              <StyleOverride blockKey="btn2" label="Secondary button" allStyles={catalogStylesObj} onChange={handleCatalogStyleChange}
+                defaults={CATALOG_BLOCK_DEFAULTS.btn2} fontSizeRange={CATALOG_FONT_SIZE_RANGES.btn2} withBorderColor borderColorLabel="Border color" />
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return null;
   }
 
-  const PAGE_TABS = [
-    { label: "Home",     key: "home"    as const, enabled: true  },
-    { label: "Catalog",  key: "catalog" as const, enabled: true  },
-    { label: "About",    key: "home"    as const, enabled: false },
-    { label: "Services", key: "home"    as const, enabled: false },
-    { label: "Our Work", key: "home"    as const, enabled: false },
-    { label: "Contact",  key: "home"    as const, enabled: false },
+  const PAGE_TABS: { label: string; key: PageTab; enabled: boolean }[] = [
+    { label: "Home",     key: "home",     enabled: true  },
+    { label: "Catalog",  key: "catalog",  enabled: true  },
+    { label: "About",    key: "about",    enabled: true  },
+    { label: "Services", key: "services", enabled: true  },
+    { label: "Our Work", key: "our-work", enabled: true  },
+    { label: "Contact",  key: "contact",  enabled: true  },
+    { label: "Branding", key: "branding", enabled: true  },
   ];
 
+  const PAGE_LABEL: Record<string, string> = {
+    home: "Home page", catalog: "Catalog page", about: "About page",
+    services: "Services page", "our-work": "Our Work page", contact: "Contact page",
+    branding: "Branding & Logo",
+  };
   const activeSec = SECTIONS.find(s => s.id === activeSection)!;
   const showSaveBar = activeTab === "home" && !!dirty[activeSection];
 
@@ -353,7 +538,7 @@ export default function ContentEditorClient({
           background: "#F5F3F0", border: "0.5px solid #E8E6E0",
           borderRadius: 99, padding: "3px 10px",
         }}>
-          {activeTab === "home" ? "Home page" : "Catalog page"}
+          {PAGE_LABEL[activeTab] ?? activeTab}
         </span>
       </div>
 
@@ -391,6 +576,13 @@ export default function ContentEditorClient({
           <TagManager initialTags={tags} productCounts={tagCounts} />
         </>
       )}
+
+      {/* Page editors — lazy-load from Supabase on mount */}
+      {activeTab === "about"    && <AboutEditor />}
+      {activeTab === "services" && <ServicesEditor />}
+      {activeTab === "our-work" && <OurWorkEditor />}
+      {activeTab === "contact"  && <ContactEditor />}
+      {activeTab === "branding" && <BrandingEditor />}
 
       {/* Home tab — split panel */}
       {activeTab === "home" && (

@@ -1,36 +1,63 @@
 import Link from "next/link";
 import GoldDivider from "@/components/ui/GoldDivider";
+import { createSupabaseServiceClient } from "@/lib/supabase-server";
 
 export const metadata = { title: "Our Services" };
-export const revalidate = 86400;
+export const revalidate = 3600;
 
-const SERVICES = [
-  { n: "01", feat: true,  icon: "ti-gift",    title: "Premium Gifts",        th: "ของพรีเมียม",         desc: "Custom premium gifts from concept to delivery. We handle design, production, and packaging.",  image: null as string | null },
-  { n: "02", feat: false, icon: "ti-award",   title: "Corporate Souvenirs",  th: "ของที่ระลึกองค์กร",   desc: "High-quality branded souvenirs for events, exhibitions, and giveaways." },
-  { n: "03", feat: false, icon: "ti-package", title: "New Year Packages",    th: "ชุดของขวัญปีใหม่",    desc: "Beautifully curated new-year gift sets that leave a lasting impression." },
-  { n: "04", feat: false, icon: "ti-pencil",  title: "Custom Branding",      th: "งานพิมพ์แบรนด์",      desc: "Logo print, screen print, laser engraving, and full-colour embroidery." },
-  { n: "05", feat: false, icon: "ti-settings",title: "OEM Manufacturing",    th: "การผลิต OEM",          desc: "End-to-end OEM product manufacturing with strict quality control." },
-  { n: "06", feat: true,  icon: "ti-truck",   title: "Logistics & Delivery", th: "โลจิสติกส์และจัดส่ง", desc: "Reliable shipping to 30+ countries with real-time tracking and customs support.", image: null as string | null },
+type ContentRow = { section: string; key: string; value: string };
+function gv(rows: ContentRow[], section: string, key: string, fallback: string): string {
+  return rows.find(r => r.section === section && r.key === key)?.value ?? fallback;
+}
+function ga<T>(rows: ContentRow[], section: string, key: string, fallback: T[]): T[] {
+  const raw = rows.find(r => r.section === section && r.key === key)?.value;
+  if (!raw) return fallback;
+  try { return JSON.parse(raw) as T[]; } catch { return fallback; }
+}
+
+type SvcItem   = { n: string; feat: boolean; icon: string; title: string; th: string; desc: string };
+type WhyItem   = { n: string; icon: string; title: string; desc: string };
+type ProcItem  = { n: string; icon: string; title: string; desc: string; active: boolean };
+
+const DEFAULT_SERVICES: SvcItem[] = [
+  { n:"01", feat:true,  icon:"ti-gift",    title:"Premium Gifts",        th:"ของพรีเมียม",         desc:"Custom premium gifts from concept to delivery. We handle design, production, and packaging." },
+  { n:"02", feat:false, icon:"ti-award",   title:"Corporate Souvenirs",  th:"ของที่ระลึกองค์กร",   desc:"High-quality branded souvenirs for events, exhibitions, and giveaways." },
+  { n:"03", feat:false, icon:"ti-package", title:"New Year Packages",    th:"ชุดของขวัญปีใหม่",    desc:"Beautifully curated new-year gift sets that leave a lasting impression." },
+  { n:"04", feat:false, icon:"ti-pencil",  title:"Custom Branding",      th:"งานพิมพ์แบรนด์",      desc:"Logo print, screen print, laser engraving, and full-colour embroidery." },
+  { n:"05", feat:false, icon:"ti-settings",title:"OEM Manufacturing",    th:"การผลิต OEM",          desc:"End-to-end OEM product manufacturing with strict quality control." },
+  { n:"06", feat:true,  icon:"ti-truck",   title:"Logistics & Delivery", th:"โลจิสติกส์และจัดส่ง", desc:"Reliable shipping to 30+ countries with real-time tracking and customs support." },
+];
+const DEFAULT_WHY: WhyItem[] = [
+  { n:"01", icon:"ti-clock",  title:"20+ Years of Experience",  desc:"Decades of know-how delivering premium solutions across all sectors." },
+  { n:"02", icon:"ti-pencil", title:"Custom Design Team",       desc:"In-house designers who bring your brand vision to life from concept to product." },
+  { n:"03", icon:"ti-check",  title:"Strict Quality Control",   desc:"Multi-stage quality checks before every shipment leaves our facility." },
+  { n:"04", icon:"ti-world",  title:"Global Export Capability", desc:"Exporting to 30+ countries with full logistics and customs support." },
+];
+const DEFAULT_PROCESS: ProcItem[] = [
+  { n:"01", icon:"ti-message",  title:"Consultation",    desc:"We discuss your needs, target audience, and budget.",              active:false },
+  { n:"02", icon:"ti-pencil",   title:"Design & Sample", desc:"Our team creates designs and sends physical samples.",              active:true  },
+  { n:"03", icon:"ti-settings", title:"Production",      desc:"Full-scale manufacturing with quality control at every step.",     active:false },
+  { n:"04", icon:"ti-truck",    title:"Delivery",        desc:"On-time delivery worldwide with full tracking support.",            active:false },
 ];
 
-const WHY = [
-  { n: "01", icon: "ti-clock",  title: "20+ Years of Experience",  desc: "Decades of know-how delivering premium solutions across all sectors." },
-  { n: "02", icon: "ti-pencil", title: "Custom Design Team",       desc: "In-house designers who bring your brand vision to life from concept to product." },
-  { n: "03", icon: "ti-check",  title: "Strict Quality Control",   desc: "Multi-stage quality checks before every shipment leaves our facility." },
-  { n: "04", icon: "ti-world",  title: "Global Export Capability", desc: "Exporting to 30+ countries with full logistics and customs support." },
-];
+export default async function ServicesPage() {
+  const supabase = createSupabaseServiceClient();
+  const { data } = await supabase.from("page_content").select("section, key, value").eq("page", "services");
+  const rows: ContentRow[] = data ?? [];
 
-const PROCESS = [
-  { n: "01", icon: "ti-message",  title: "Consultation",    desc: "We discuss your needs, target audience, and budget.",                     active: false },
-  { n: "02", icon: "ti-pencil",   title: "Design & Sample", desc: "Our team creates designs and sends physical samples.",                     active: true  },
-  { n: "03", icon: "ti-settings", title: "Production",      desc: "Full-scale manufacturing with quality control at every step.",             active: false },
-  { n: "04", icon: "ti-truck",    title: "Delivery",        desc: "On-time delivery worldwide with full tracking support.",                   active: false },
-];
+  const heroBadge        = gv(rows, "hero", "badge",          "WHAT WE OFFER");
+  const heroHeading      = gv(rows, "hero", "heading",        "Our Core");
+  const heroHeadingIt    = gv(rows, "hero", "heading_italic", "Services");
+  const heroSubtextTh    = gv(rows, "hero", "subtext_th",     "บริการหลักของเรา");
+  const heroDescription  = gv(rows, "hero", "description",    "From concept to delivery, SP manages every step. Our in-house design team, manufacturing partners, and logistics network ensure your premium products arrive on time, every time.");
+  const whyBadge         = gv(rows, "why",  "badge",          "WHY CHOOSE US");
+  const whyHeading       = gv(rows, "why",  "heading",        "Why SP?");
+  const procBadge        = gv(rows, "process", "badge",       "HOW IT WORKS");
+  const procHeading      = gv(rows, "process", "heading",     "Our Production Process");
 
-const SVC_TAGS = ["Design", "Manufacturing", "Branding", "Logistics", "OEM"];
-
-
-export default function ServicesPage() {
+  const SERVICES  = ga<SvcItem> (rows, "services", "items", DEFAULT_SERVICES);
+  const WHY       = ga<WhyItem> (rows, "why",       "items", DEFAULT_WHY);
+  const PROCESS   = ga<ProcItem>(rows, "process",   "items", DEFAULT_PROCESS);
   return (
     <>
       <style>{`
@@ -67,13 +94,13 @@ export default function ServicesPage() {
           {/* Eyebrow */}
           <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "14px" }}>
             <div style={{ width: "18px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
-            <span style={{ fontSize: "10px", letterSpacing: "0.18em", color: "#E8D5A3", textTransform: "uppercase", fontFamily: "sans-serif" }}>WHAT WE OFFER</span>
+            <span style={{ fontSize: "10px", letterSpacing: "0.18em", color: "#E8D5A3", textTransform: "uppercase", fontFamily: "sans-serif" }}>{heroBadge}</span>
           </div>
 
           {/* Heading row */}
           <div style={{ display: "flex", alignItems: "baseline", gap: "12px", flexWrap: "wrap", marginBottom: "4px" }}>
-            <span style={{ fontSize: "clamp(28px, 4vw, 42px)", color: "#FFFFFF", fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.05 }}>Our Core</span>
-            <span style={{ fontSize: "clamp(24px, 3.5vw, 38px)", color: "#E8D5A3", fontFamily: "Georgia, serif", fontStyle: "italic", lineHeight: 1.05 }}>Services</span>
+            <span style={{ fontSize: "clamp(28px, 4vw, 42px)", color: "#FFFFFF", fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.05 }}>{heroHeading}</span>
+            <span style={{ fontSize: "clamp(24px, 3.5vw, 38px)", color: "#E8D5A3", fontFamily: "Georgia, serif", fontStyle: "italic", lineHeight: 1.05 }}>{heroHeadingIt}</span>
           </div>
 
           {/* Gold divider line */}
@@ -81,10 +108,10 @@ export default function ServicesPage() {
 
           {/* Bottom row: Thai | divider | description */}
           <div className="svc-hero-bottom">
-            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", fontFamily: "sans-serif", whiteSpace: "nowrap", paddingTop: "3px", flexShrink: 0 }}>บริการหลักของเรา</div>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", fontFamily: "sans-serif", whiteSpace: "nowrap", paddingTop: "3px", flexShrink: 0 }}>{heroSubtextTh}</div>
             <div className="svc-hero-vdivider" />
             <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.85, margin: 0 }}>
-              From concept to delivery, SP manages every step. Our in-house design team, manufacturing partners, and logistics network ensure your premium products arrive on time, every time.
+              {heroDescription}
             </p>
           </div>
 
@@ -130,11 +157,7 @@ export default function ServicesPage() {
               className="w-full h-[140px] md:h-auto md:w-1/2 md:min-h-[280px] flex items-center justify-center"
               style={{ background: "#243160" }}
             >
-              {SERVICES[0].image ? (
-                <img src={SERVICES[0].image} alt={SERVICES[0].title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <i className={`ti ${SERVICES[0].icon}`} style={{ fontSize: "80px", color: "#E8D5A3", opacity: 0.2 }} />
-              )}
+              <i className={`ti ${SERVICES[0].icon}`} style={{ fontSize: "80px", color: "#E8D5A3", opacity: 0.2 }} />
             </div>
           </div>
 
@@ -209,11 +232,11 @@ export default function ServicesPage() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
               <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
-              <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#E8D5A3" }}>WHY CHOOSE US</span>
+              <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#E8D5A3" }}>{whyBadge}</span>
             </div>
             <h2 style={{ fontSize: "22px", fontWeight: 400, color: "#FFFFFF", fontFamily: "Georgia, serif", marginBottom: "28px" }}>
               <span style={{ position: "relative", display: "inline-block" }}>
-                Why SP?
+                {whyHeading}
                 <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
               </span>
             </h2>
@@ -243,11 +266,11 @@ export default function ServicesPage() {
           >
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
               <div style={{ width: "24px", height: "1.5px", background: "#C9A84C", flexShrink: 0 }} />
-              <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C9A84C" }}>HOW IT WORKS</span>
+              <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C9A84C" }}>{procBadge}</span>
             </div>
             <h2 style={{ fontSize: "20px", fontWeight: 400, color: "#0D1E3D", fontFamily: "Georgia, serif", marginBottom: "36px" }}>
               <span style={{ position: "relative", display: "inline-block" }}>
-                Our Production Process
+                {procHeading}
                 <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
               </span>
             </h2>

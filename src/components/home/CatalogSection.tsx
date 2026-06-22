@@ -32,6 +32,7 @@ interface Props {
   quote?: string;
   btn1Text?: string;
   btn2Text?: string;
+  styles?: Record<string, Record<string, string>>;
 }
 
 const ICON_MAP: Record<string, string> = {
@@ -52,7 +53,6 @@ const ICON_MAP: Record<string, string> = {
   "default":        "ti-gift",
 };
 
-const BRANDING_OPTIONS = ["Logo Print", "Laser Engraving", "Embroidery", "Screen Print"];
 const ITEMS_PER_PAGE = 12;
 
 function getPageNumbers(current: number, total: number): (number | "…")[] {
@@ -277,7 +277,7 @@ function GridCard({ p, setSelected, animDelay = 0 }: { p: Product; setSelected: 
         e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.boxShadow = "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)";
       }}
-      style={{ background: "#FFFBF0", border: "1.5px solid #C9A84C", borderRadius: "10px", overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", boxShadow: "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)", transition: "transform 0.2s ease, box-shadow 0.2s ease", animation: `slideUp 0.65s cubic-bezier(0.4,0,0.2,1) ${animDelay}ms backwards` }}
+      style={{ background: "#FFFBF0", border: "1.5px solid #C9A84C", borderRadius: "10px", overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", boxShadow: "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)", transition: "transform 0.2s ease, box-shadow 0.2s ease", animation: `slideUp 0.3s cubic-bezier(0.4,0,0.2,1) ${animDelay}ms backwards` }}
     >
       <div style={{ background: p.image_url ? "transparent" : "#C9A84C", height: "120px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
         {p.image_url ? (
@@ -339,7 +339,7 @@ function ListCard({ p, setSelected, animDelay = 0 }: { p: Product; setSelected: 
         e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.boxShadow = "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)";
       }}
-      style={{ background: "#FFFBF0", border: "1.5px solid #C9A84C", borderRadius: "10px", overflow: "hidden", display: "flex", alignItems: "center", cursor: "pointer", boxShadow: "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)", transition: "transform 0.2s ease, box-shadow 0.2s ease", animation: `slideUp 0.65s cubic-bezier(0.4,0,0.2,1) ${animDelay}ms backwards` }}
+      style={{ background: "#FFFBF0", border: "1.5px solid #C9A84C", borderRadius: "10px", overflow: "hidden", display: "flex", alignItems: "center", cursor: "pointer", boxShadow: "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)", transition: "transform 0.2s ease, box-shadow 0.2s ease", animation: `slideUp 0.3s cubic-bezier(0.4,0,0.2,1) ${animDelay}ms backwards` }}
     >
       <div style={{ background: p.image_url ? "transparent" : "#C9A84C", width: "110px", height: "80px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
         {p.image_url ? (
@@ -393,17 +393,16 @@ function SideSection({ title, open, onToggle, children }: { title: string; open:
 }
 
 /* ── MAIN EXPORT ──────────────────────────────────────────── */
-export default function CatalogSection({ products, categoryOrder = [], allTags: allTagsProp, label, heading, headingTh, description, quote, btn1Text, btn2Text }: Props) {
+export default function CatalogSection({ products, categoryOrder = [], allTags: allTagsProp, label, heading, headingTh, description, quote, btn1Text, btn2Text, styles = {} }: Props) {
   const { t, lang } = useLang();
   const [searchQuery,      setSearchQuery]      = useState("");
   const [debouncedSearch,  setDebouncedSearch]  = useState("");
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
   const [activeTags,       setActiveTags]       = useState<string[]>([]);
-  const [activeBranding,   setActiveBranding]   = useState<string[]>([]);
   const [sortBy,           setSortBy]           = useState<"popular"|"newest"|"az">("popular");
   const [viewMode,         setViewMode]         = useState<"grid"|"list">("grid");
   const [currentPage,      setCurrentPage]      = useState(1);
-  const [openSections,     setOpenSections]     = useState({ category: true, branding: true, tags: true });
+  const [openSections,     setOpenSections]     = useState({ category: true, tags: true });
   const [selected,         setSelected]         = useState<Product | null>(null);
 
   useEffect(() => {
@@ -437,24 +436,22 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
         const matchSearch = !q || p.name.toLowerCase().includes(q) || (p.description ?? "").toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q);
         const matchCat    = activeCategories.length === 0 || activeCategories.includes(p.category);
         const matchTag    = activeTags.length === 0 || activeTags.some(t => p.tags?.includes(t));
-        const matchBranding = activeBranding.length === 0 || activeBranding.some(b => p.branding_methods?.includes(b));
-        return matchSearch && matchCat && matchTag && matchBranding;
+        return matchSearch && matchCat && matchTag;
       })
       .sort((a, b) => sortBy === "az" ? a.name.localeCompare(b.name) : 0);
-  }, [products, debouncedSearch, activeCategories, activeTags, activeBranding, sortBy]);
+  }, [products, debouncedSearch, activeCategories, activeTags, sortBy]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated  = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const isFiltered = debouncedSearch !== "" || activeCategories.length > 0 || activeTags.length > 0 || activeBranding.length > 0;
+  const isFiltered = debouncedSearch !== "" || activeCategories.length > 0 || activeTags.length > 0;
 
-  const filterKey = JSON.stringify({ debouncedSearch, activeCategories, activeTags, activeBranding, sortBy });
+  const filterKey = JSON.stringify({ debouncedSearch, activeCategories, activeTags, sortBy });
   useEffect(() => { setCurrentPage(1); }, [filterKey]);
 
   function toggleCategory(cat: string) { setActiveCategories(p => p.includes(cat) ? p.filter(c => c !== cat) : [...p, cat]); }
   function toggleTag(tag: string)      { setActiveTags(p => p.includes(tag) ? p.filter(t => t !== tag) : [...p, tag]); }
-  function toggleBranding(b: string)   { setActiveBranding(p => p.includes(b) ? p.filter(x => x !== b) : [...p, b]); }
   function toggleSection(k: keyof typeof openSections) { setOpenSections(p => ({ ...p, [k]: !p[k] })); }
-  function clearAll() { setSearchQuery(""); setActiveCategories([]); setActiveTags([]); setActiveBranding([]); setCurrentPage(1); }
+  function clearAll() { setSearchQuery(""); setActiveCategories([]); setActiveTags([]); setCurrentPage(1); }
 
   return (
     <div style={{ background: "#F8F6F1" }}>
@@ -469,19 +466,19 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
               <span style={{ display: "block", fontSize: "120px", fontWeight: 400, color: "rgba(28,41,81,0.04)", lineHeight: 1, marginBottom: "-16px" }}>SP</span>
               <div className="flex items-center gap-[7px]" style={{ marginBottom: "10px" }}>
                 <span style={{ display: "block", width: "18px", height: "2px", background: "#E8D5A3", flexShrink: 0 }} />
-                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.14em", color: "#8A6E00" }}>{label ?? "PRODUCT CATALOG"}</span>
+                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.14em", color: "#8A6E00", ...(styles.label as React.CSSProperties) }}>{label ?? "PRODUCT CATALOG"}</span>
               </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 400, color: "#0D1E3D", letterSpacing: "-0.02em", marginTop: "6px", marginBottom: "8px" }}>{lang === "th" ? (headingTh ?? "คอลเลกชันของเรา") : (heading ?? "Our Collection")}</h2>
-              <p style={{ fontSize: "14px", color: "#2C3E50", marginBottom: "6px" }}>คอลเลกชันสินค้าพรีเมียมของเรา</p>
-              <p style={{ fontSize: "14px", color: "#2C3E50", lineHeight: 1.8, maxWidth: "480px" }}>{description ?? "Explore our full range of premium gifts, corporate souvenirs, and branded merchandise."}</p>
+              <h2 style={{ fontSize: "32px", fontWeight: 400, color: "#0D1E3D", letterSpacing: "-0.02em", marginTop: "6px", marginBottom: "8px", ...(styles.heading as React.CSSProperties) }}>{lang === "th" ? (headingTh ?? "คอลเลกชันของเรา") : (heading ?? "Our Collection")}</h2>
+              <p style={{ fontSize: "14px", color: "#2C3E50", marginBottom: "6px", ...(styles.headingTh as React.CSSProperties) }}>คอลเลกชันสินค้าพรีเมียมของเรา</p>
+              <p style={{ fontSize: "14px", color: "#2C3E50", lineHeight: 1.8, maxWidth: "480px", ...(styles.description as React.CSSProperties) }}>{description ?? "Explore our full range of premium gifts, corporate souvenirs, and branded merchandise."}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-              <p style={{ fontStyle: "italic", fontSize: "15px", color: "#8A9AB8", lineHeight: 1.75 }}>
+              <p style={{ fontStyle: "italic", fontSize: "15px", color: "#8A9AB8", lineHeight: 1.75, ...(styles.quote as React.CSSProperties) }}>
                 {quote || "“Quality is not an act, it is a habit. Every product we deliver carries our promise.”"}
               </p>
               <div className="flex" style={{ marginTop: "20px", gap: "10px" }}>
-                <button onClick={clearAll} style={{ fontSize: "13px", fontWeight: 500, background: "#E8D5A3", color: "#1C2951", padding: "9px 20px", borderRadius: "5px", cursor: "pointer" }}>{btn1Text ?? "Browse All"}</button>
-                <button style={{ fontSize: "13px", color: "#0D1E3D", border: "0.5px solid rgba(13,30,61,0.2)", padding: "9px 18px", borderRadius: "5px", cursor: "pointer", background: "transparent" }}>{btn2Text ?? "Filter"}</button>
+                <button onClick={clearAll} style={{ fontSize: "13px", fontWeight: 500, background: "#E8D5A3", color: "#1C2951", padding: "9px 20px", borderRadius: "5px", cursor: "pointer", ...(styles.btn1 as React.CSSProperties) }}>{btn1Text ?? "Browse All"}</button>
+                <button style={{ fontSize: "13px", color: "#0D1E3D", border: "0.5px solid rgba(13,30,61,0.2)", padding: "9px 18px", borderRadius: "5px", cursor: "pointer", background: "transparent", ...(styles.btn2 as React.CSSProperties), ...(styles.btn2?.borderColor ? { borderColor: styles.btn2.borderColor } : {}) }}>{btn2Text ?? "Filter"}</button>
               </div>
             </div>
           </div>
@@ -533,11 +530,6 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
             {activeTags.map(tag => (
               <span key={tag} onClick={() => toggleTag(tag)} className="flex items-center gap-1" style={{ fontSize: "12px", color: "#0D1E3D", background: "rgba(13,30,61,0.08)", border: "0.5px solid rgba(13,30,61,0.15)", padding: "4px 10px", borderRadius: "3px", cursor: "pointer" }}>
                 {tag} <i className="ti ti-x" style={{ fontSize: "12px" }} />
-              </span>
-            ))}
-            {activeBranding.map(b => (
-              <span key={b} onClick={() => toggleBranding(b)} className="flex items-center gap-1" style={{ fontSize: "12px", color: "#0D1E3D", background: "rgba(13,30,61,0.08)", border: "0.5px solid rgba(13,30,61,0.15)", padding: "4px 10px", borderRadius: "3px", cursor: "pointer" }}>
-                {b} <i className="ti ti-x" style={{ fontSize: "12px" }} />
               </span>
             ))}
             {searchQuery && (
@@ -601,18 +593,6 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
             ))}
           </SideSection>
 
-          <SideSection title={t("วิธีพิมพ์โลโก้", "Branding Method")} open={openSections.branding} onToggle={() => toggleSection("branding")}>
-            {BRANDING_OPTIONS.map(b => (
-              <div key={b} onClick={() => toggleBranding(b)}
-                style={{ padding: "5px 14px", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
-                <div style={{ width: "12px", height: "12px", borderRadius: "2px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: activeBranding.includes(b) ? "#1C2951" : "transparent", border: activeBranding.includes(b) ? "none" : "0.5px solid rgba(13,30,61,0.25)" }}>
-                  {activeBranding.includes(b) && <i className="ti ti-check" style={{ fontSize: "8px", color: "#E8D5A3" }} />}
-                </div>
-                <span style={{ fontSize: "11px", color: "#2C3E50" }}>{b}</span>
-              </div>
-            ))}
-          </SideSection>
-
           {allTags.length > 0 && (
             <SideSection title={t("แท็ก", "Tags")} open={openSections.tags} onToggle={() => toggleSection("tags")}>
               <div style={{ padding: "10px 16px 14px", display: "flex", flexWrap: "wrap", gap: "4px" }}>
@@ -649,11 +629,11 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
             <>
               {viewMode === "grid" ? (
                 <div key={`g-${filterKey}`} style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px" }}>
-                  {paginated.map((p, i) => <GridCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 40, 200)} />)}
+                  {paginated.map((p, i) => <GridCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 25, 80)} />)}
                 </div>
               ) : (
                 <div key={`l-${filterKey}`} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {paginated.map((p, i) => <ListCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 40, 200)} />)}
+                  {paginated.map((p, i) => <ListCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 25, 80)} />)}
                 </div>
               )}
 

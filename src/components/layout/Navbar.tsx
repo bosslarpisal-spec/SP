@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useLang } from "@/contexts/LanguageContext";
+import { useLogoUrl } from "@/hooks/useLogoUrl";
 
 export default function Navbar() {
   const pathname               = usePathname();
+  const logoUrl                = useLogoUrl();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAdmin,  setIsAdmin]  = useState(false);
   const [isUser,   setIsUser]   = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const { t } = useLang();
   const LINKS = [
     { label: t("หน้าหลัก", "Home"),      href: "/home" },
@@ -34,21 +35,8 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 80);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
-
-  // /profile has a cream/white background (every other public page opens
-  // with a dark navy hero), so the navbar stays solid navy there instead
-  // of transparent-until-scrolled like the hero pages.
-  const isLightPage = pathname === "/profile";
-  const navSolid = scrolled || isLightPage;
-  const inactiveLinkColor = navSolid ? "rgba(255,255,255,0.8)" : "#8A9AB8";
 
   return (
     <>
@@ -60,13 +48,10 @@ export default function Navbar() {
       className="fixed top-0 inset-x-0 z-50 flex items-stretch"
       style={{
         minHeight: "72px",
-        background: navSolid ? "rgba(13,30,61,0.95)" : "transparent",
-        backdropFilter: navSolid ? "blur(12px)" : "none",
-        WebkitBackdropFilter: navSolid ? "blur(12px)" : "none",
-        borderBottom: navSolid ? "1px solid rgba(232,213,163,0.15)" : "none",
+        background: "#0D1E3D",
+        borderBottom: "1px solid rgba(232,213,163,0.35)",
         paddingLeft: "40px",
         paddingRight: "40px",
-        transition: "background 0.3s ease, backdrop-filter 0.3s ease",
       }}
     >
       {/* Logo */}
@@ -87,7 +72,7 @@ export default function Navbar() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/F2.png"
+            src={logoUrl}
             alt="Siam Premium logo"
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
@@ -121,7 +106,7 @@ export default function Navbar() {
             className="flex items-center h-full"
             style={{
               fontSize: "14px",
-              color: isActive(l.href) ? "#E8D5A3" : inactiveLinkColor,
+              color: isActive(l.href) ? "#E8D5A3" : "rgba(255,255,255,0.8)",
               padding: "0 16px",
               borderBottom: isActive(l.href) ? "2px solid #E8D5A3" : "2px solid transparent",
               transition: "color 0.2s, border-color 0.2s",

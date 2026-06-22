@@ -1,5 +1,5 @@
 // src/app/admin/products/[id]/page.tsx
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import ProductForm from "../ProductForm";
 
@@ -11,48 +11,60 @@ export default async function EditProductPage({
   params: { id: string };
 }) {
   const supabase = await createSupabaseServerClient();
+  const service = createSupabaseServiceClient();
 
-  // Need to bypass RLS (inactive products need to be editable too)
-  // We use the server client which runs as authenticated user
-  // The admin check is already done in middleware
-  const { data: product, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", params.id)
-    .single();
+  // Products use the auth client (needs session to bypass inactive-product RLS).
+  // Tags/categories use the service client to bypass RLS on those lookup tables.
+  const [
+    { data: product, error },
+    { data: categories },
+    { data: tags, error: tagsError },
+  ] = await Promise.all([
+    supabase
+      .from("products")
+      .select("*")
+      .eq("id", params.id)
+      .single(),
+    supabase
+      .from("categories")
+      .select("name")
+      .eq("is_visible", true)
+      .order("display_order"),
+    service
+      .from("tags")
+      .select("name")
+      .order("name"),
+  ]);
+
+  if (tagsError) {
+    console.error("[admin/products/edit] tags query failed:", tagsError.message);
+  }
 
   if (error || !product) {
     notFound();
   }
 
   return (
-    <div className="max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Edit Product</h1>
-        <p className="text-gray-500 mt-1">
-          Editing: <span className="font-medium text-gray-700">{product.name}</span>
-        </p>
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <ProductForm
-          mode="edit"
-          productId={product.id}
-          initial={{
-            name: product.name,
-            name_th: product.name_th,
-            category: product.category,
-            description: product.description,
-            description_th: product.description_th,
-            image_url: product.image_url,
-            is_new: product.is_new,
-            is_active: product.is_active,
-            display_order: product.display_order,
-            tags: product.tags,
-            images: product.images ?? [],
-          }}
-        />
-      </div>
-    </div>
+    <ProductForm
+      mode="edit"
+      productId={product.id}
+      categories={categories?.map((c) => c.name) ?? []}
+      availableTags={tags?.map((t) => t.name) ?? []}
+      initial={{
+        name: product.name,
+        name_th: product.name_th,
+        category: product.category,
+        description: product.description,
+        description_th: product.description_th,
+        image_url: product.image_url,
+        is_new: product.is_new,
+        is_active: product.is_active,
+        display_order: product.display_order,
+        tags: product.tags,
+        moq: product.moq ?? null,
+        branding_methods: product.branding_methods ?? [],
+        images: product.images ?? [],
+      }}
+    />
   );
 }

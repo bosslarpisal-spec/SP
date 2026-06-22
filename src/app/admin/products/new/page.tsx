@@ -1,20 +1,33 @@
 // src/app/admin/products/new/page.tsx
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import ProductForm from "../ProductForm";
 
-export default function NewProductPage() {
-  return (
-    <div className="max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Add New Product</h1>
-        <p className="text-gray-500 mt-1">
-          Fill in the details below. The product will appear on the public
-          catalog once you set it as visible.
-        </p>
-      </div>
+export const dynamic = "force-dynamic";
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <ProductForm mode="new" />
-      </div>
-    </div>
+export default async function NewProductPage() {
+  const supabase = await createSupabaseServerClient();
+  const service = createSupabaseServiceClient();
+  const [{ data: categories }, { data: tags, error: tagsError }] = await Promise.all([
+    supabase
+      .from("categories")
+      .select("name")
+      .eq("is_visible", true)
+      .order("display_order"),
+    service
+      .from("tags")
+      .select("name")
+      .order("name"),
+  ]);
+
+  if (tagsError) {
+    console.error("[admin/products/new] tags query failed:", tagsError.message);
+  }
+
+  return (
+    <ProductForm
+      mode="new"
+      categories={categories?.map((c) => c.name) ?? []}
+      availableTags={tags?.map((t) => t.name) ?? []}
+    />
   );
 }

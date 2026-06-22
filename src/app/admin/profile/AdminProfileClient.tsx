@@ -3,13 +3,19 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { addAdmin, removeAdmin, changeAdminEmail, changeAdminPassword } from "./actions";
+import { useToast } from "../components/Toast";
 
 type Admin = {
   id: number;
   email: string;
   created_at: string;
 };
+
+function nameFromEmail(email: string): string {
+  const local = email.split("@")[0] ?? "Admin";
+  return local.charAt(0).toUpperCase() + local.slice(1);
+}
 
 export default function AdminProfileClient({
   currentUserEmail,
@@ -18,31 +24,27 @@ export default function AdminProfileClient({
   currentUserEmail: string;
   admins: Admin[];
 }) {
-  const router = useRouter();
+  const toast = useToast();
   const [admins, setAdmins] = useState(initial);
 
   // ── Add admin ──────────────────────────────────────────────
   const [newEmail, setNewEmail] = useState("");
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
-  const [addSuccess, setAddSuccess] = useState<string | null>(null);
 
   // ── Remove admin ───────────────────────────────────────────
   const [removingId, setRemovingId] = useState<number | null>(null);
-  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
 
   // ── Change own email ───────────────────────────────────────
   const [newAuthEmail, setNewAuthEmail] = useState("");
   const [changingEmail, setChangingEmail] = useState(false);
-  const [emailMsg, setEmailMsg] = useState<string | null>(null);
-  const [emailErr, setEmailErr] = useState<string | null>(null);
 
   // ── Change password ────────────────────────────────────────
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
-  const [pwMsg, setPwMsg] = useState<string | null>(null);
-  const [pwErr, setPwErr] = useState<string | null>(null);
 
   // ── Handlers ───────────────────────────────────────────────
 
@@ -50,50 +52,28 @@ export default function AdminProfileClient({
     e.preventDefault();
     setAdding(true);
     setAddError(null);
-    setAddSuccess(null);
-
-    const email = newEmail.trim().toLowerCase();
-    if (!email) { setAdding(false); return; }
-
-    const { data, error } = await supabase
-      .from("admins")
-      .insert({ email })
-      .select()
-      .single();
-
-    if (error) {
-      setAddError(
-        error.code === "23505"
-          ? "That email is already an admin."
-          : error.message
-      );
-    } else {
+    try {
+      const data = await addAdmin(newEmail);
       setAdmins((prev) => [...prev, data]);
       setNewEmail("");
-      setAddSuccess(`${email} added as admin.`);
+      toast.success(`${data.email} added as admin`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to add admin";
+      setAddError(msg);
+      toast.error(msg);
     }
     setAdding(false);
   }
 
   async function handleRemoveAdmin(admin: Admin) {
-    if (admin.email === currentUserEmail) {
-      alert("You can't remove yourself — add another admin first.");
-      return;
-    }
-    if (!confirm(`Remove ${admin.email} from admins?`)) return;
-
     setRemovingId(admin.id);
-    setRemoveError(null);
-
-    const { error } = await supabase
-      .from("admins")
-      .delete()
-      .eq("id", admin.id);
-
-    if (error) {
-      setRemoveError(`Failed to remove ${admin.email}: ${error.message}`);
-    } else {
+    setConfirmRemoveId(null);
+    try {
+      await removeAdmin(admin.id);
       setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
+      toast.success(`${admin.email} removed`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : `Failed to remove ${admin.email}`);
     }
     setRemovingId(null);
   }
@@ -101,260 +81,462 @@ export default function AdminProfileClient({
   async function handleChangeEmail(e: React.FormEvent) {
     e.preventDefault();
     setChangingEmail(true);
-    setEmailMsg(null);
-    setEmailErr(null);
-
-    const email = newAuthEmail.trim().toLowerCase();
-    if (!email) { setChangingEmail(false); return; }
-
-    // 1. Update Supabase Auth email (sends confirmation to new address)
-    const { error: authError } = await supabase.auth.updateUser({ email });
-    if (authError) {
-      setEmailErr(authError.message);
-      setChangingEmail(false);
-      return;
-    }
-
-    // 2. Update the admins table so the whitelist stays in sync
-    const { error: dbError } = await supabase
-      .from("admins")
-      .update({ email })
-      .eq("email", currentUserEmail);
-
-    if (dbError) {
-      setEmailErr(`Auth email updated but admins table failed: ${dbError.message}`);
-    } else {
-      setEmailMsg(
-        `Confirmation sent to ${email}. Click the link in that inbox, then log in with the new address.`
+    try {
+      await changeAdminEmail(newAuthEmail);
+      toast.success(
+        `Confirmation sent to ${newAuthEmail.trim()}. Click the link in that inbox.`
       );
       setNewAuthEmail("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update email");
     }
     setChangingEmail(false);
   }
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
-    setPwMsg(null);
-    setPwErr(null);
-
     if (newPassword !== confirmPassword) {
-      setPwErr("Passwords don't match.");
+      toast.error("Passwords don't match");
       return;
     }
     if (newPassword.length < 6) {
-      setPwErr("Password must be at least 6 characters.");
+      toast.error("Password must be at least 6 characters");
       return;
     }
-
     setChangingPw(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-    if (error) {
-      setPwErr(error.message);
-    } else {
-      setPwMsg("Password updated successfully.");
+    try {
+      await changeAdminPassword(newPassword);
+      toast.success("Password updated successfully");
       setNewPassword("");
       setConfirmPassword("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update password");
     }
     setChangingPw(false);
   }
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    router.push("/login");
+    window.location.href = "/login";
   }
 
+  const displayName = nameFromEmail(currentUserEmail);
+
   // ── UI ─────────────────────────────────────────────────────
-  const inputClass =
-    "w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all";
-
-  const labelClass = "block text-sm font-medium text-gray-700 mb-1";
-
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Admin Profile</h1>
-        <p className="text-gray-500 mt-1">
-          Logged in as <span className="font-medium text-gray-700">{currentUserEmail}</span>
-        </p>
-      </div>
-
-      {/* ── Admin whitelist ───────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <h2 className="font-semibold text-gray-800">Admin Accounts</h2>
-        <p className="text-sm text-gray-500">
-          Anyone listed here can access <code className="bg-gray-100 px-1 rounded">/admin</code>.
-        </p>
-
-        {/* Current admins list */}
-        <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
-          {admins.map((a) => (
-            <div
-              key={a.id}
-              className="flex items-center justify-between px-4 py-3 bg-white hover:bg-gray-50"
-            >
-              <div>
-                <p className="text-sm font-medium text-gray-800">{a.email}</p>
-                <p className="text-xs text-gray-400">
-                  Added {new Date(a.created_at).toLocaleDateString()}
-                  {a.email === currentUserEmail && (
-                    <span className="ml-2 bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-semibold">
-                      You
-                    </span>
-                  )}
-                </p>
-              </div>
-              <button
-                onClick={() => handleRemoveAdmin(a)}
-                disabled={a.email === currentUserEmail || removingId === a.id}
-                className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                title={
-                  a.email === currentUserEmail
-                    ? "Can't remove yourself"
-                    : "Remove admin"
-                }
+    <div style={{ maxWidth: 560, display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Account info */}
+      <div
+        style={{
+          background: "#FFFFFF",
+          border: "0.5px solid #E8E6E0",
+          borderRadius: 10,
+          padding: 24,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+          <div
+            style={{
+              width: 60, height: 60, borderRadius: "50%",
+              background: "#0D1E3D", display: "flex", alignItems: "center",
+              justifyContent: "center", fontSize: 22, fontWeight: 600, color: "#E8D5A3",
+              flexShrink: 0,
+            }}
+          >
+            {(currentUserEmail[0] ?? "A").toUpperCase()}
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", margin: 0 }}>{displayName}</p>
+              <span
+                style={{
+                  background: "#0D1E3D", color: "#E8D5A3",
+                  fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 99,
+                }}
               >
-                {removingId === a.id ? "Removing…" : "Remove"}
-              </button>
+                Admin
+              </span>
             </div>
-          ))}
+            <p style={{ fontSize: 12, color: "#aaa", margin: "2px 0 0" }}>{currentUserEmail}</p>
+          </div>
         </div>
 
-        {removeError && (
-          <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-            {removeError}
-          </p>
-        )}
-
-        {/* Add new admin */}
-        <form onSubmit={handleAddAdmin} className="flex gap-2">
-          <input
-            type="email"
-            required
-            placeholder="new-admin@example.com"
-            value={newEmail}
-            onChange={(e) => setNewEmail(e.target.value)}
-            className={`${inputClass} flex-1`}
-          />
-          <button
-            type="submit"
-            disabled={adding}
-            className="px-4 py-2 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 shrink-0"
-          >
-            {adding ? "Adding…" : "Add Admin"}
-          </button>
-        </form>
-
-        {addError && (
-          <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-            {addError}
-          </p>
-        )}
-        {addSuccess && (
-          <p className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
-            {addSuccess}
-          </p>
-        )}
-      </div>
-
-      {/* ── Change login email ────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <h2 className="font-semibold text-gray-800">Change Login Email</h2>
-        <p className="text-sm text-gray-500">
-          A confirmation link will be sent to the new address. Both the auth
-          account and admin whitelist will be updated.
-        </p>
-        <form onSubmit={handleChangeEmail} className="space-y-3">
-          <div>
-            <label className={labelClass}>New Email Address</label>
+        <form onSubmit={handleChangeEmail} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+          <div style={{ flex: 1 }}>
+            <SLabel>New Email Address</SLabel>
             <input
               type="email"
               required
               placeholder="new-email@example.com"
               value={newAuthEmail}
               onChange={(e) => setNewAuthEmail(e.target.value)}
-              className={inputClass}
+              style={inputStyle}
             />
           </div>
-          <button
-            type="submit"
-            disabled={changingEmail}
-            className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
-          >
-            {changingEmail ? "Sending…" : "Update Email"}
-          </button>
+          <PrimaryButton type="submit" disabled={changingEmail}>
+            {changingEmail ? "Sending…" : "Save"}
+          </PrimaryButton>
         </form>
-        {emailErr && (
-          <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-            {emailErr}
-          </p>
-        )}
-        {emailMsg && (
-          <p className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
-            {emailMsg}
-          </p>
-        )}
       </div>
 
-      {/* ── Change password ───────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <h2 className="font-semibold text-gray-800">Change Password</h2>
-        <form onSubmit={handleChangePassword} className="space-y-3">
-          <div>
-            <label className={labelClass}>New Password</label>
-            <input
-              type="password"
-              required
-              placeholder="Min. 6 characters"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className={labelClass}>Confirm Password</label>
-            <input
-              type="password"
-              required
-              placeholder="Repeat password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={inputClass}
-            />
-          </div>
+      {/* Password + Session */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <SettingsCard title="Password">
+          <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div>
+              <SLabel>New Password</SLabel>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="Min. 6 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  style={{ ...inputStyle, paddingRight: 36 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#aaa",
+                    padding: 0,
+                  }}
+                >
+                  <i
+                    className={`ti ${showPassword ? "ti-eye-off" : "ti-eye"}`}
+                    style={{ fontSize: 15 }}
+                  />
+                </button>
+              </div>
+            </div>
+            <div>
+              <SLabel>Confirm Password</SLabel>
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="Repeat password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <PrimaryButton type="submit" disabled={changingPw}>
+                {changingPw ? "Saving…" : "Update Password"}
+              </PrimaryButton>
+            </div>
+          </form>
+        </SettingsCard>
+
+        <SettingsCard title="Session">
+          <p style={{ fontSize: 12, color: "#aaa", marginBottom: 4 }}>Signed in as</p>
+          <p style={{ fontSize: 13, color: "#333", fontWeight: 500, marginBottom: 16 }}>{currentUserEmail}</p>
           <button
-            type="submit"
-            disabled={changingPw}
-            className="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
+            onClick={handleSignOut}
+            style={{
+              width: "100%",
+              padding: "9px 18px",
+              background: "#FCEBEB",
+              color: "#A32D2D",
+              border: "0.5px solid #F09595",
+              borderRadius: 7,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
           >
-            {changingPw ? "Saving…" : "Update Password"}
+            Sign Out
           </button>
-        </form>
-        {pwErr && (
-          <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-            {pwErr}
+          <p style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
+            Signs you out of all devices.
           </p>
-        )}
-        {pwMsg && (
-          <p className="text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
-            {pwMsg}
-          </p>
-        )}
+        </SettingsCard>
       </div>
 
-      {/* ── Sign out ──────────────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center justify-between">
-        <div>
-          <p className="font-semibold text-gray-800">Sign Out</p>
-          <p className="text-sm text-gray-500">You&apos;ll be sent back to the login page.</p>
-        </div>
-        <button
-          onClick={handleSignOut}
-          className="px-4 py-2 bg-red-50 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-100 transition-colors"
+      {/* Admin Accounts */}
+      <div
+        style={{
+          background: "#FFFFFF",
+          border: "0.5px solid #E8E6E0",
+          borderRadius: 10,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            padding: "16px 24px",
+            borderBottom: "0.5px solid #E8E6E0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
         >
-          Sign Out
-        </button>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
+            Admin Accounts
+          </p>
+          <span
+            style={{
+              background: "#0D1E3D",
+              color: "#E8D5A3",
+              fontSize: 11,
+              fontWeight: 600,
+              padding: "2px 8px",
+              borderRadius: 99,
+            }}
+          >
+            {admins.length}
+          </span>
+        </div>
+
+        <div>
+          {admins.map((a) => (
+            <div
+              key={a.id}
+              style={{
+                padding: "12px 24px",
+                borderBottom: "0.5px solid #F0EDE6",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: "50%",
+                  background: "#0D1E3D",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#E8D5A3",
+                  flexShrink: 0,
+                }}
+              >
+                {(a.email[0] ?? "A").toUpperCase()}
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#1a1a1a",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {a.email}
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                  <span style={{ fontSize: 11, color: "#aaa" }}>
+                    {new Date(a.created_at).toLocaleDateString()}
+                  </span>
+                  {a.email === currentUserEmail && (
+                    <span
+                      style={{
+                        background: "#F5F3F0",
+                        color: "#888",
+                        border: "0.5px solid #E8E6E0",
+                        fontSize: 10,
+                        fontWeight: 600,
+                        padding: "1px 6px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      You
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {a.email !== currentUserEmail && (
+                confirmRemoveId === a.id ? (
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <button
+                      onClick={() => handleRemoveAdmin(a)}
+                      disabled={removingId === a.id}
+                      style={{
+                        padding: "3px 8px",
+                        background: "#A32D2D",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Remove
+                    </button>
+                    <button
+                      onClick={() => setConfirmRemoveId(null)}
+                      style={{
+                        padding: "3px 8px",
+                        background: "#F5F3F0",
+                        color: "#555",
+                        border: "none",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmRemoveId(a.id)}
+                    disabled={removingId === a.id}
+                    title="Remove admin"
+                    style={{
+                      width: 26,
+                      height: 26,
+                      border: "none",
+                      borderRadius: 4,
+                      background: "#FCEBEB",
+                      color: "#A32D2D",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <i className="ti ti-x" style={{ fontSize: 13 }} />
+                  </button>
+                )
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ padding: "16px 24px", borderTop: "0.5px solid #E8E6E0" }}>
+          <p
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.07em",
+              color: "#aaa",
+              marginBottom: 10,
+            }}
+          >
+            Add Admin
+          </p>
+          <form onSubmit={handleAddAdmin} style={{ display: "flex", gap: 8 }}>
+            <input
+              type="email"
+              required
+              placeholder="admin@example.com"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              style={{ ...inputStyle, flex: 1 }}
+            />
+            <PrimaryButton type="submit" disabled={adding}>
+              {adding ? "Adding…" : "Add Admin"}
+            </PrimaryButton>
+          </form>
+          {addError && (
+            <p style={{ fontSize: 12, color: "#A32D2D", marginTop: 8 }}>{addError}</p>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
+/* ── Shared sub-components ─────────────────────────────── */
+
+function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        background: "#FFFFFF",
+        border: "0.5px solid #E8E6E0",
+        borderRadius: 10,
+        padding: 24,
+      }}
+    >
+      <p
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.07em",
+          color: "#aaa",
+          marginBottom: 16,
+        }}
+      >
+        {title}
+      </p>
+      {children}
+    </div>
+  );
+}
+
+function SLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label
+      style={{
+        display: "block",
+        fontSize: 10,
+        fontWeight: 500,
+        textTransform: "uppercase",
+        letterSpacing: "0.07em",
+        color: "#aaa",
+        marginBottom: 6,
+      }}
+    >
+      {children}
+    </label>
+  );
+}
+
+function PrimaryButton({
+  children,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      {...props}
+      style={{
+        padding: "9px 20px",
+        background: "#0D1E3D",
+        opacity: props.disabled ? 0.5 : 1,
+        color: "#E8D5A3",
+        border: "none",
+        borderRadius: 7,
+        fontSize: 13,
+        fontWeight: 600,
+        cursor: props.disabled ? "not-allowed" : "pointer",
+        whiteSpace: "nowrap",
+        transition: "background 0.15s",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "#FFFFFF",
+  border: "0.5px solid #E8E6E0",
+  borderRadius: 7,
+  padding: "7px 9px",
+  fontSize: 12,
+  color: "#333",
+  outline: "none",
+  boxSizing: "border-box",
+};

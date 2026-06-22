@@ -26,7 +26,10 @@ export const BRAND = {
   },
 };
 
-// ── Product categories (add/remove as needed) ──────────────
+// ── Product categories ──────────────────────────────────────
+// @deprecated Categories now live in the `categories` Supabase table,
+// managed via /admin/content's Catalog tab. This array is kept only
+// as a last-resort fallback and is no longer read by the live app.
 export const CATEGORIES = [
   "All",
   "IT Gadgets",
@@ -39,6 +42,8 @@ export const CATEGORIES = [
 ];
 
 // ── Products ───────────────────────────────────────────────
+// @deprecated Products now live in the `products` Supabase table,
+// managed via /admin/products. This array is no longer read by the live app.
 export type Product = {
   id:       number;
   name:     string;

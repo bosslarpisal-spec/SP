@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { BRAND } from "@/lib/data";
 import { useLang } from "@/contexts/LanguageContext";
 
@@ -64,6 +65,7 @@ export default function Footer() {
     { label: t("ติดต่อ", "Contact"),       href: "/contact" },
     { label: t("เข้าสู่ระบบ", "Sign In"),  href: "/login" },
   ];
+
   return (
     <footer style={{ background: "#0D1E3D", borderTop: "0.5px solid rgba(232,213,163,0.1)" }}>
       <div style={{ padding: "40px 64px 0" }}>
@@ -74,9 +76,25 @@ export default function Footer() {
           {/* Brand + newsletter */}
           <div>
             <Link href="/home" className="flex items-center gap-[10px] mb-3">
-              <div className="flex items-center justify-center rounded-[5px]"
-                style={{ width: "28px", height: "28px", background: "#E8D5A3", fontSize: "10px", fontWeight: 500, color: "#1C2951" }}>
-                SP
+              <div style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "50%",
+                overflow: "hidden",
+                background: "#FFFFFF",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "1px solid rgba(232,213,163,0.3)",
+              }}>
+                <Image
+                  src="/F2.png"
+                  alt="Siam Premium Product Logo"
+                  width={52}
+                  height={52}
+                  style={{ objectFit: "contain" }}
+                />
               </div>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 500, color: "#FFFFFF" }}>{BRAND.fullName}</div>
@@ -137,9 +155,9 @@ export default function Footer() {
             </h4>
             <ul className="space-y-[10px]">
               {[
-                { icon: "ti-phone", text: `${BRAND.phone1} / ${BRAND.phone2}` },
-                { icon: "ti-mail",  text: BRAND.email },
-                { icon: "ti-clock", text: BRAND.hours },
+                { icon: "ti-phone",   text: `${BRAND.phone1} / ${BRAND.phone2}` },
+                { icon: "ti-mail",    text: BRAND.email },
+                { icon: "ti-clock",   text: BRAND.hours },
                 { icon: "ti-map-pin", text: `${BRAND.address}` },
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2">

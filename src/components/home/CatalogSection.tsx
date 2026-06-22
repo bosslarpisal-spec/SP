@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLang } from "@/contexts/LanguageContext";
+import { useWishlist } from "@/hooks/useWishlist";
 
 interface Product {
   id: string;
@@ -13,12 +14,25 @@ interface Product {
   is_visible: boolean;
   is_new?: boolean;
   tags?: string[];
+  moq?: number | null;
+  branding_methods?: string[];
   icon_name?: string;
   image_url?: string;
   images?: string[];
 }
 
-interface Props { products: Product[] }
+interface Props {
+  products: Product[];
+  categoryOrder?: string[];
+  allTags?: string[];
+  label?: string;
+  heading?: string;
+  headingTh?: string;
+  description?: string;
+  quote?: string;
+  btn1Text?: string;
+  btn2Text?: string;
+}
 
 const ICON_MAP: Record<string, string> = {
   "Premium Gift":   "ti-gift",
@@ -107,7 +121,7 @@ function QuickViewPopup({ product: p, onClose }: { product: Product; onClose: ()
             aspectRatio: "1 / 1",
             borderRadius: "16px 16px 0 0",
             overflow: "hidden",
-            background: "#243160",
+            background: "#C9A84C",
           }}>
             {allImages.length > 0 ? (
               <img
@@ -130,7 +144,7 @@ function QuickViewPopup({ product: p, onClose }: { product: Product; onClose: ()
                 justifyContent: "center",
               }}>
                 <i className={`ti ${icon}`} style={{
-                  fontSize: "56px", color: "#E8D5A3", opacity: 0.35
+                  fontSize: "56px", color: "#FFFFFF", opacity: 0.5
                 }} />
               </div>
             )}
@@ -210,8 +224,8 @@ function QuickViewPopup({ product: p, onClose }: { product: Product; onClose: ()
 
             {[
               { icon: "ti-tag",    label: t("หมวดหมู่", "Category"), value: p.category },
-              { icon: "ti-box",    label: t("จำนวนสั่งซื้อขั้นต่ำ", "MOQ"),      value: t("สั่งซื้อขั้นต่ำ 50 ชิ้น", "50 pcs minimum order") },
-              { icon: "ti-pencil", label: t("การพิมพ์โลโก้", "Branding"), value: "Logo Print, Laser Engraving, Embroidery, Screen Print" },
+              { icon: "ti-box",    label: t("จำนวนสั่งซื้อขั้นต่ำ", "MOQ"),      value: p.moq ? t(`สั่งซื้อขั้นต่ำ ${p.moq} ชิ้น`, `${p.moq} pcs minimum order`) : t("สั่งซื้อขั้นต่ำ 50 ชิ้น", "50 pcs minimum order") },
+              { icon: "ti-pencil", label: t("การพิมพ์โลโก้", "Branding"), value: p.branding_methods?.length ? p.branding_methods.join(", ") : "Logo Print, Laser Engraving, Embroidery, Screen Print" },
               { icon: "ti-truck",  label: t("การจัดส่ง", "Delivery"),  value: t("จัดส่งทั่วประเทศและต่างประเทศ", "Nationwide & International Shipping") },
             ].map(row => (
               <div key={row.label} style={{ display: "flex", gap: "12px", alignItems: "center", padding: "6px 0", borderBottom: "0.5px solid rgba(13,30,61,0.06)" }}>
@@ -247,8 +261,10 @@ function QuickViewPopup({ product: p, onClose }: { product: Product; onClose: ()
 }
 
 /* ── GRID CARD ────────────────────────────────────────────── */
-function GridCard({ p, setSelected }: { p: Product; setSelected: (p: Product) => void }) {
+function GridCard({ p, setSelected, animDelay = 0 }: { p: Product; setSelected: (p: Product) => void; animDelay?: number }) {
   const { t } = useLang();
+  const { isWished, toggle } = useWishlist();
+  const wished = isWished(Number(p.id));
   const icon = p.icon_name ?? ICON_MAP[p.category] ?? ICON_MAP["default"];
   return (
     <div
@@ -261,21 +277,25 @@ function GridCard({ p, setSelected }: { p: Product; setSelected: (p: Product) =>
         e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.boxShadow = "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)";
       }}
-      style={{ background: "#FFFFFF", border: "1.5px solid #1C2951", borderRadius: "10px", overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", boxShadow: "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)", transition: "transform 0.2s ease, box-shadow 0.2s ease" }}
+      style={{ background: "#FFFBF0", border: "1.5px solid #C9A84C", borderRadius: "10px", overflow: "hidden", display: "flex", flexDirection: "column", cursor: "pointer", boxShadow: "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)", transition: "transform 0.2s ease, box-shadow 0.2s ease", animation: `slideUp 0.65s cubic-bezier(0.4,0,0.2,1) ${animDelay}ms backwards` }}
     >
-      <div style={{ background: "#1C2951", height: "120px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+      <div style={{ background: p.image_url ? "transparent" : "#C9A84C", height: "120px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
         {p.image_url ? (
           <Image src={p.image_url} alt={p.name} fill style={{ objectFit: "cover" }} />
         ) : (
-          <i className={`ti ${icon}`} style={{ fontSize: "32px", color: "#E8D5A3", opacity: 0.5 }} />
+          <i className={`ti ${icon}`} style={{ fontSize: "32px", color: "#FFFFFF", opacity: 0.6 }} />
         )}
         {p.is_new && (
           <span style={{ position: "absolute", top: "8px", left: "8px", background: "#E8D5A3", color: "#1C2951", fontSize: "9px", fontWeight: 600, padding: "2px 7px", borderRadius: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             New
           </span>
         )}
-        <button style={{ position: "absolute", top: "8px", right: "8px", width: "24px", height: "24px", borderRadius: "50%", background: "rgba(28,41,81,0.7)", border: "0.5px solid rgba(232,213,163,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-          <i className="ti ti-heart" style={{ fontSize: "11px", color: "#8A9AB8" }} />
+        <button
+          onClick={e => { e.stopPropagation(); toggle(Number(p.id)); }}
+          aria-label={wished ? "Remove from wishlist" : "Save to wishlist"}
+          style={{ position: "absolute", top: "8px", right: "8px", width: "24px", height: "24px", borderRadius: "50%", background: "rgba(28,41,81,0.7)", border: "0.5px solid rgba(232,213,163,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+        >
+          <i className={`ti ${wished ? "ti-heart-filled" : "ti-heart"}`} style={{ fontSize: "11px", color: wished ? "#E8D5A3" : "#8A9AB8" }} />
         </button>
       </div>
       <div style={{ flex: 1, padding: "10px 12px", display: "flex", flexDirection: "column" }}>
@@ -289,8 +309,8 @@ function GridCard({ p, setSelected }: { p: Product; setSelected: (p: Product) =>
             ))}
           </div>
         )}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: "6px", borderTop: "0.5px solid rgba(28,41,81,0.08)" }}>
-          <span style={{ fontSize: "10px", color: "#2C3E50", border: "1px solid rgba(28,41,81,0.15)", padding: "2px 6px", borderRadius: "3px" }}>{t("สั่งขั้นต่ำ 50 ชิ้น", "MOQ 50 pcs")}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", paddingTop: "6px", borderTop: "0.5px solid rgba(201,168,76,0.2)" }}>
+          <span style={{ fontSize: "10px", color: "#8A6E00", background: "rgba(201,168,76,0.1)", border: "0.5px solid rgba(201,168,76,0.3)", padding: "2px 6px", borderRadius: "3px" }}>{p.moq ? t(`สั่งขั้นต่ำ ${p.moq} ชิ้น`, `MOQ ${p.moq} pcs`) : t("สั่งขั้นต่ำ 50 ชิ้น", "MOQ 50 pcs")}</span>
           <span
             onClick={e => { e.stopPropagation(); setSelected(p); }}
             className="flex items-center"
@@ -305,7 +325,7 @@ function GridCard({ p, setSelected }: { p: Product; setSelected: (p: Product) =>
 }
 
 /* ── LIST CARD ────────────────────────────────────────────── */
-function ListCard({ p, setSelected }: { p: Product; setSelected: (p: Product) => void }) {
+function ListCard({ p, setSelected, animDelay = 0 }: { p: Product; setSelected: (p: Product) => void; animDelay?: number }) {
   const { t } = useLang();
   const icon = p.icon_name ?? ICON_MAP[p.category] ?? ICON_MAP["default"];
   return (
@@ -319,13 +339,13 @@ function ListCard({ p, setSelected }: { p: Product; setSelected: (p: Product) =>
         e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.boxShadow = "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)";
       }}
-      style={{ background: "#FFFFFF", border: "1.5px solid #1C2951", borderRadius: "10px", overflow: "hidden", display: "flex", alignItems: "center", cursor: "pointer", boxShadow: "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)", transition: "transform 0.2s ease, box-shadow 0.2s ease" }}
+      style={{ background: "#FFFBF0", border: "1.5px solid #C9A84C", borderRadius: "10px", overflow: "hidden", display: "flex", alignItems: "center", cursor: "pointer", boxShadow: "0 4px 16px rgba(28,41,81,0.12), 0 1px 4px rgba(28,41,81,0.08)", transition: "transform 0.2s ease, box-shadow 0.2s ease", animation: `slideUp 0.65s cubic-bezier(0.4,0,0.2,1) ${animDelay}ms backwards` }}
     >
-      <div style={{ background: "#1C2951", width: "110px", height: "80px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+      <div style={{ background: p.image_url ? "transparent" : "#C9A84C", width: "110px", height: "80px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
         {p.image_url ? (
           <Image src={p.image_url} alt={p.name} fill style={{ objectFit: "cover" }} />
         ) : (
-          <i className={`ti ${icon}`} style={{ fontSize: "28px", color: "#E8D5A3", opacity: 0.5 }} />
+          <i className={`ti ${icon}`} style={{ fontSize: "28px", color: "#FFFFFF", opacity: 0.6 }} />
         )}
         {p.is_new && (
           <span style={{ position: "absolute", top: "5px", left: "5px", background: "#E8D5A3", color: "#1C2951", fontSize: "7px", fontWeight: 600, padding: "1px 5px", borderRadius: "2px", textTransform: "uppercase" }}>New</span>
@@ -373,8 +393,8 @@ function SideSection({ title, open, onToggle, children }: { title: string; open:
 }
 
 /* ── MAIN EXPORT ──────────────────────────────────────────── */
-export default function CatalogSection({ products }: Props) {
-  const { t } = useLang();
+export default function CatalogSection({ products, categoryOrder = [], allTags: allTagsProp, label, heading, headingTh, description, quote, btn1Text, btn2Text }: Props) {
+  const { t, lang } = useLang();
   const [searchQuery,      setSearchQuery]      = useState("");
   const [debouncedSearch,  setDebouncedSearch]  = useState("");
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
@@ -402,8 +422,13 @@ export default function CatalogSection({ products }: Props) {
     };
   }, [selected]);
 
-  const categories = useMemo(() => Array.from(new Set(products.map(p => p.category))), [products]);
-  const allTags    = useMemo(() => Array.from(new Set(products.flatMap(p => p.tags ?? []))), [products]);
+  const categories = useMemo(() => {
+    if (categoryOrder.length > 0) {
+      return categoryOrder.filter(cat => products.some(p => p.category === cat));
+    }
+    return Array.from(new Set(products.map(p => p.category)));
+  }, [products, categoryOrder]);
+  const allTags    = allTagsProp ?? [];
 
   const filtered = useMemo(() => {
     return products
@@ -412,10 +437,11 @@ export default function CatalogSection({ products }: Props) {
         const matchSearch = !q || p.name.toLowerCase().includes(q) || (p.description ?? "").toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q);
         const matchCat    = activeCategories.length === 0 || activeCategories.includes(p.category);
         const matchTag    = activeTags.length === 0 || activeTags.some(t => p.tags?.includes(t));
-        return matchSearch && matchCat && matchTag;
+        const matchBranding = activeBranding.length === 0 || activeBranding.some(b => p.branding_methods?.includes(b));
+        return matchSearch && matchCat && matchTag && matchBranding;
       })
       .sort((a, b) => sortBy === "az" ? a.name.localeCompare(b.name) : 0);
-  }, [products, debouncedSearch, activeCategories, activeTags, sortBy]);
+  }, [products, debouncedSearch, activeCategories, activeTags, activeBranding, sortBy]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated  = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
@@ -443,19 +469,19 @@ export default function CatalogSection({ products }: Props) {
               <span style={{ display: "block", fontSize: "120px", fontWeight: 400, color: "rgba(28,41,81,0.04)", lineHeight: 1, marginBottom: "-16px" }}>SP</span>
               <div className="flex items-center gap-[7px]" style={{ marginBottom: "10px" }}>
                 <span style={{ display: "block", width: "18px", height: "2px", background: "#E8D5A3", flexShrink: 0 }} />
-                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.14em", color: "#8A6E00" }}>{t("แคตตาล็อกสินค้า", "Product Catalog")}</span>
+                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.14em", color: "#8A6E00" }}>{label ?? "PRODUCT CATALOG"}</span>
               </div>
-              <h2 style={{ fontSize: "32px", fontWeight: 400, color: "#0D1E3D", letterSpacing: "-0.02em", marginTop: "6px", marginBottom: "8px" }}>{t("คอลเลกชันของเรา", "Our Collection")}</h2>
+              <h2 style={{ fontSize: "32px", fontWeight: 400, color: "#0D1E3D", letterSpacing: "-0.02em", marginTop: "6px", marginBottom: "8px" }}>{lang === "th" ? (headingTh ?? "คอลเลกชันของเรา") : (heading ?? "Our Collection")}</h2>
               <p style={{ fontSize: "14px", color: "#2C3E50", marginBottom: "6px" }}>คอลเลกชันสินค้าพรีเมียมของเรา</p>
-              <p style={{ fontSize: "14px", color: "#2C3E50", lineHeight: 1.8, maxWidth: "480px" }}>{t("สำรวจสินค้าพรีเมียม ของที่ระลึกองค์กร และสินค้าแบรนด์ของเราได้เลย", "Explore our full range of premium gifts, corporate souvenirs, and branded merchandise.")}</p>
+              <p style={{ fontSize: "14px", color: "#2C3E50", lineHeight: 1.8, maxWidth: "480px" }}>{description ?? "Explore our full range of premium gifts, corporate souvenirs, and branded merchandise."}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
               <p style={{ fontStyle: "italic", fontSize: "15px", color: "#8A9AB8", lineHeight: 1.75 }}>
-                &ldquo;Quality is not an act, it is a habit. Every product we deliver carries our promise.&rdquo;
+                {quote || "“Quality is not an act, it is a habit. Every product we deliver carries our promise.”"}
               </p>
               <div className="flex" style={{ marginTop: "20px", gap: "10px" }}>
-                <button onClick={clearAll} style={{ fontSize: "13px", fontWeight: 500, background: "#E8D5A3", color: "#1C2951", padding: "9px 20px", borderRadius: "5px", cursor: "pointer" }}>{t("ดูทั้งหมด", "Browse All")}</button>
-                <button style={{ fontSize: "13px", color: "#0D1E3D", border: "0.5px solid rgba(13,30,61,0.2)", padding: "9px 18px", borderRadius: "5px", cursor: "pointer", background: "transparent" }}>{t("กรอง", "Filter")}</button>
+                <button onClick={clearAll} style={{ fontSize: "13px", fontWeight: 500, background: "#E8D5A3", color: "#1C2951", padding: "9px 20px", borderRadius: "5px", cursor: "pointer" }}>{btn1Text ?? "Browse All"}</button>
+                <button style={{ fontSize: "13px", color: "#0D1E3D", border: "0.5px solid rgba(13,30,61,0.2)", padding: "9px 18px", borderRadius: "5px", cursor: "pointer", background: "transparent" }}>{btn2Text ?? "Filter"}</button>
               </div>
             </div>
           </div>
@@ -622,12 +648,12 @@ export default function CatalogSection({ products }: Props) {
           ) : (
             <>
               {viewMode === "grid" ? (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px" }}>
-                  {paginated.map(p => <GridCard key={p.id} p={p} setSelected={setSelected} />)}
+                <div key={`g-${filterKey}`} style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px" }}>
+                  {paginated.map((p, i) => <GridCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 40, 200)} />)}
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {paginated.map(p => <ListCard key={p.id} p={p} setSelected={setSelected} />)}
+                <div key={`l-${filterKey}`} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {paginated.map((p, i) => <ListCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 40, 200)} />)}
                 </div>
               )}
 

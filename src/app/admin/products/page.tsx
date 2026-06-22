@@ -8,32 +8,62 @@ export const dynamic = "force-dynamic";
 export default async function AdminProductsPage() {
   const supabase = await createSupabaseServerClient();
 
-  // Fetch ALL products (including inactive) — admin sees everything
   const { data: products, error } = await supabase
     .from("products")
-    .select("*")
+    .select("id, name, name_th, category, image_url, is_active, is_new, display_order, tags")
     .order("display_order", { ascending: true });
 
   if (error) {
     return (
-      <div className="text-red-600 bg-red-50 p-4 rounded-xl">
+      <div
+        style={{
+          background: "#FCEBEB",
+          border: "1px solid #F09595",
+          color: "#A32D2D",
+          padding: "16px 20px",
+          borderRadius: 10,
+          fontSize: 13,
+        }}
+      >
         Failed to load products: {error.message}
       </div>
     );
   }
 
+  const total = products?.length ?? 0;
+  const active = products?.filter((p) => p.is_active).length ?? 0;
+  const isNew = products?.filter((p) => p.is_new).length ?? 0;
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          marginBottom: 20,
+        }}
+      >
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-500 mt-1">
-            {products?.length ?? 0} products total
+          <h1 style={{ fontSize: 18, fontWeight: 500, color: "#1a1a1a", margin: "0 0 2px" }}>
+            Products
+          </h1>
+          <p style={{ fontSize: 12, color: "#aaa", margin: 0 }}>
+            {total} total · {active} visible · {isNew} new
           </p>
         </div>
         <Link
           href="/admin/products/new"
-          className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors"
+          style={{
+            padding: "9px 18px",
+            background: "#0D1E3D",
+            color: "#E8D5A3",
+            borderRadius: 7,
+            fontSize: 13,
+            fontWeight: 500,
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+          }}
         >
           + Add Product
         </Link>

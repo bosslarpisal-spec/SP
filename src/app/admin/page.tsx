@@ -4,71 +4,319 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+type ProductRow = {
+  id: number;
+  name: string;
+  name_th: string;
+  category: string;
+  is_active: boolean;
+  is_new: boolean;
+  created_at: string;
+};
+
+function nameFromEmail(email: string): string {
+  const local = email.split("@")[0] ?? "Admin";
+  return local.charAt(0).toUpperCase() + local.slice(1);
+}
+
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export default async function AdminDashboard() {
   const supabase = await createSupabaseServerClient();
 
-  const { count: totalProducts } = await supabase
-    .from("products")
-    .select("*", { count: "exact", head: true });
+  const [{ data: { user } }, { data }, { count: categoryCount }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("products")
+      .select("id, name, name_th, category, is_active, is_new, created_at")
+      .order("created_at", { ascending: false }),
+    supabase.from("categories").select("id", { count: "exact", head: true }),
+  ]);
 
-  const { count: activeProducts } = await supabase
-    .from("products")
-    .select("*", { count: "exact", head: true })
-    .eq("is_active", true);
+  const products: ProductRow[] = data ?? [];
+  const total = products.length;
+  const active = products.filter((p) => p.is_active).length;
+  const isNew  = products.filter((p) => p.is_new).length;
+  const recent = products.slice(0, 5);
 
-  const { count: newProducts } = await supabase
-    .from("products")
-    .select("*", { count: "exact", head: true })
-    .eq("is_new", true);
+  const categoryTotals = products.reduce<Record<string, number>>((acc, p) => {
+    acc[p.category] = (acc[p.category] ?? 0) + 1;
+    return acc;
+  }, {});
+  const topCategories = Object.entries(categoryTotals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
 
   const stats = [
-    { label: "Total Products", value: totalProducts ?? 0, color: "bg-blue-50 text-blue-700" },
-    { label: "Active / Visible", value: activeProducts ?? 0, color: "bg-green-50 text-green-700" },
-    { label: "Marked as New", value: newProducts ?? 0, color: "bg-yellow-50 text-yellow-700" },
+    { label: "Total Products", value: total, icon: "ti-package", iconBg: "#F5F3F0", iconColor: "#0D1E3D" },
+    { label: "Visible", value: active, icon: "ti-eye", iconBg: "#EAF5E8", iconColor: "#3B6D11" },
+    { label: "Marked as New", value: isNew, icon: "ti-sparkles", iconBg: "#E1F5EE", iconColor: "#0F6E56" },
+    { label: "Categories", value: categoryCount ?? 0, icon: "ti-category", iconBg: "#F5F3F0", iconColor: "#0D1E3D" },
   ];
+
+  const displayName = nameFromEmail(user?.email ?? "");
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-lg font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 text-sm mt-0.5">SP Admin Panel — manage products shown to customers.</p>
+      {/* Greeting */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: 18, fontWeight: 500, color: "#1a1a1a", margin: "0 0 2px" }}>
+          {greeting()}, {displayName}
+        </h1>
+        <p style={{ fontSize: 12, color: "#aaa", margin: 0 }}>
+          Here&rsquo;s what&rsquo;s happening today.
+        </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((s) => (
-          <div key={s.label} className="bg-white rounded-lg border border-gray-200 p-4">
-            <p className="text-xs text-gray-500 mb-1">{s.label}</p>
-            <p className={`text-2xl font-bold ${s.color} inline-block px-2 py-0.5 rounded-lg`}>
-              {s.value}
-            </p>
+          <div
+            key={s.label}
+            style={{
+              background: "#FFFFFF",
+              border: "0.5px solid #E8E6E0",
+              borderRadius: 10,
+              padding: "18px 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 9,
+                background: s.iconBg,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              <i className={`ti ${s.icon}`} style={{ fontSize: 18, color: s.iconColor }} />
+            </div>
+            <div>
+              <p
+                style={{
+                  fontSize: 22,
+                  fontWeight: 500,
+                  color: "#1a1a1a",
+                  lineHeight: 1,
+                  marginBottom: 4,
+                }}
+              >
+                {s.value}
+              </p>
+              <p style={{ fontSize: 12, color: "#aaa" }}>{s.label}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Quick actions */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h2 className="font-semibold text-sm text-gray-800 mb-3">Quick Actions</h2>
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/admin/products"
-            className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
+        {/* Left: Recent products */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "0.5px solid #E8E6E0",
+            borderRadius: 10,
+            overflow: "hidden",
+            alignSelf: "start",
+          }}
+        >
+          <div style={{ padding: "16px 20px", borderBottom: "0.5px solid #E8E6E0" }}>
+            <p style={{ fontSize: 13, fontWeight: 500, color: "#1a1a1a" }}>
+              Recent Products
+            </p>
+          </div>
+
+          {recent.length === 0 ? (
+            <div style={{ padding: "40px 24px", textAlign: "center", color: "#aaa", fontSize: 13 }}>
+              No products yet.
+            </div>
+          ) : (
+            <div>
+              {recent.map((p) => (
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "12px 20px",
+                    borderBottom: "0.5px solid #F0EDE6",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                        background: "#F5F3F0", display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      <i className="ti ti-gift" style={{ fontSize: 15, color: "#888" }} />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "#1a1a1a",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {p.name}
+                      </p>
+                      {p.name_th && (
+                        <p style={{ fontSize: 11, color: "#aaa", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {p.name_th}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 16, flexShrink: 0 }}>
+                    <span
+                      style={{
+                        background: "#F5F3F0",
+                        color: "#888",
+                        border: "0.5px solid #E8E6E0",
+                        fontSize: 11,
+                        fontWeight: 500,
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                      }}
+                    >
+                      {p.category}
+                    </span>
+                    <span
+                      style={{
+                        background: p.is_active ? "#EAF5E8" : "#F5F3F0",
+                        color: p.is_active ? "#3B6D11" : "#888",
+                        fontSize: 11,
+                        fontWeight: 500,
+                        padding: "2px 8px",
+                        borderRadius: 99,
+                      }}
+                    >
+                      {p.is_active ? "Active" : "Hidden"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div
+            style={{
+              padding: "12px 20px",
+              borderTop: total > 5 ? "0.5px solid #E8E6E0" : "none",
+            }}
           >
-            View all products
-          </Link>
-          <Link
-            href="/admin/products/new"
-            className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+            <Link
+              href="/admin/products"
+              style={{
+                fontSize: 12,
+                color: "#0D1E3D",
+                fontWeight: 500,
+                textDecoration: "none",
+              }}
+            >
+              View all products →
+            </Link>
+          </div>
+        </div>
+
+        {/* Right: Top categories + Quick actions */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "0.5px solid #E8E6E0",
+              borderRadius: 10,
+              padding: "16px 20px",
+            }}
           >
-            + Add new product
-          </Link>
-          <Link
-            href="/home"
-            target="_blank"
-            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+            <p style={{ fontSize: 13, fontWeight: 500, color: "#1a1a1a", marginBottom: 14 }}>
+              Top Categories
+            </p>
+            {topCategories.length === 0 ? (
+              <p style={{ fontSize: 12, color: "#aaa" }}>No products yet.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {topCategories.map(([category, count]) => {
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  return (
+                    <div key={category}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, color: "#333" }}>{category}</span>
+                        <span style={{ fontSize: 11, color: "#aaa" }}>{count}</span>
+                      </div>
+                      <div style={{ height: 6, borderRadius: 99, background: "#F0EDE6", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, background: "#0D1E3D", borderRadius: 99 }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div
+            style={{
+              background: "#FFFFFF",
+              border: "0.5px solid #E8E6E0",
+              borderRadius: 10,
+              padding: "16px 20px",
+            }}
           >
-            Preview catalog ↗
-          </Link>
+            <p style={{ fontSize: 13, fontWeight: 500, color: "#1a1a1a", marginBottom: 12 }}>
+              Quick Actions
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <Link
+                href="/admin/products/new"
+                style={{
+                  padding: "9px 16px",
+                  background: "#0D1E3D",
+                  border: "1px solid #0D1E3D",
+                  color: "#E8D5A3",
+                  borderRadius: 7,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  textDecoration: "none",
+                  textAlign: "center",
+                }}
+              >
+                + Add New Product
+              </Link>
+              <Link
+                href="/admin/products"
+                style={{
+                  padding: "9px 16px",
+                  background: "#FFFFFF",
+                  border: "1px solid #D8D5CE",
+                  color: "#555",
+                  borderRadius: 7,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  textDecoration: "none",
+                  textAlign: "center",
+                }}
+              >
+                View Products
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

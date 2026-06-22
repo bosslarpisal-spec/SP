@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import SectionLabel from "@/components/ui/SectionLabel";
+import GoldDivider from "@/components/ui/GoldDivider";
 
 /* ── DATA ─────────────────────────────────────────────────── */
 const STATS = [
@@ -328,16 +329,22 @@ export default function OurWorkContent() {
       `}</style>
 
       {/* §1 — HERO */}
-      <section style={{ background: "#1C2951" }} className="min-h-[45vh] flex items-center">
-        <div className="hero-animate" style={{ maxWidth: "1200px", margin: "0 auto", padding: "64px 64px", width: "100%" }}>
+      <section style={{ backgroundImage: "url('/HeroBlockHome.png')", backgroundSize: "cover", backgroundPosition: "right center", backgroundRepeat: "no-repeat", position: "relative", overflow: "hidden" }} className="min-h-[45vh] flex items-center">
+        {/* Gradient overlay */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(13,30,61,0.92) 0%, rgba(13,30,61,0.80) 40%, rgba(13,30,61,0.40) 70%, rgba(13,30,61,0.10) 100%)", zIndex: 0, pointerEvents: "none" }} />
+        <div className="hero-animate" style={{ maxWidth: "1200px", margin: "0 auto", padding: "120px 64px 64px", width: "100%", position: "relative", zIndex: 1 }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "18px" }}>
-                <span style={{ display: "block", width: "20px", height: "1px", background: "#E8D5A3", flexShrink: 0 }} />
-                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.16em", color: "#F0DC9A" }}>PORTFOLIO</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
+                <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
+                <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.18em", color: "#E8D5A3" }}>PORTFOLIO</span>
               </div>
               <h1 style={{ fontSize: "40px", fontWeight: 400, color: "#FFFFFF", lineHeight: 1.05, letterSpacing: "-0.02em", fontFamily: "Georgia, serif", marginBottom: "28px" }}>
-                Our Work &amp;<br />
+                <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
+                  Our Work &amp;
+                  <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
+                </span>
+                <br />
                 <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>Portfolio</em>
               </h1>
               <div style={{ display: "flex" }}>
@@ -360,6 +367,8 @@ export default function OurWorkContent() {
           </div>
         </div>
       </section>
+
+      <GoldDivider />
 
       {/* §2 — FILTER BAR */}
       <div style={{ background: "#1C2951", borderBottom: "0.5px solid rgba(232,213,163,0.12)", position: "sticky", top: 0, zIndex: 50 }}>
@@ -384,6 +393,8 @@ export default function OurWorkContent() {
           ))}
         </div>
       </div>
+
+      <GoldDivider />
 
       {/* §3 — MASONRY GALLERY */}
       <section style={{ background: "#F8F6F1" }}>
@@ -430,6 +441,8 @@ export default function OurWorkContent() {
         </div>
       </section>
 
+      <GoldDivider />
+
       {/* §4 — SPOTLIGHT OVERLAY */}
       {overlayProject && (
         <ProjectOverlay
@@ -443,6 +456,8 @@ export default function OurWorkContent() {
           hasNext={overlayIdx < filteredProjects.length - 1}
         />
       )}
+
+      <GoldDivider />
 
       {/* §5 — CTA STRIP */}
       <section style={{ background: "#1C2951" }} className="py-24">

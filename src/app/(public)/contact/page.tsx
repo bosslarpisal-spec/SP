@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { BRAND } from "@/lib/data";
 import { IconPhone, IconMail, IconClock, IconMapPin, IconCheckCircle, IconLock } from "@/lib/icons";
+import GoldDivider from "@/components/ui/GoldDivider";
 
 // ── Inline social icons ─────────────────────────────────────
 function IconFacebook({ className = "w-4 h-4" }: { className?: string }) {
@@ -112,15 +113,14 @@ export default function ContactPage() {
           backgroundSize: "28px 28px",
         }}
       >
-        <div className="relative z-10 text-center px-6 py-20 max-w-3xl mx-auto">
+        <div className="relative z-10 text-center px-6 pb-20 max-w-3xl mx-auto" style={{ paddingTop: "120px" }}>
 
           {/* Gold label */}
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <GoldLine width={32} />
-            <span className="text-xs tracking-[0.25em] uppercase font-medium" style={{ color: "#F0DC9A" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "12px" }}>
+            <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
+            <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#E8D5A3" }}>
               Get In Touch
             </span>
-            <GoldLine width={32} />
           </div>
 
           {/* Heading */}
@@ -128,13 +128,17 @@ export default function ContactPage() {
             className="text-5xl md:text-6xl text-white mb-4"
             style={{ fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.1 }}
           >
-            Contact Us
+            <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
+              Contact Us
+              <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
+            </span>
           </h1>
 
           {/* Thai subtext */}
-          <p className="text-base mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>
-            ติดต่อเราเพื่อรับคำปรึกษาและใบเสนอราคาฟรี
-          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }} className="mb-2">
+            <span style={{ width: "16px", height: "1px", background: "#E8D5A3", opacity: 0.4, flexShrink: 0, display: "block" }} />
+            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>ติดต่อเราเพื่อรับคำปรึกษาและใบเสนอราคาฟรี</span>
+          </div>
 
           {/* English subtext */}
           <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.90)" }}>
@@ -155,6 +159,8 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      <GoldDivider />
 
       {/* ━━━━ SECTION 2 — Main Content ━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="py-16" style={{ background: "#F8F6F1" }}>
@@ -380,6 +386,8 @@ export default function ContactPage() {
         </div>
       </section>
 
+      <GoldDivider />
+
       {/* ━━━━ SECTION 3 — Map / CTA Strip ━━━━━━━━━━━━━━━━━━━━━ */}
       <section className="py-16" style={{ background: "#1C2951" }}>
         <div className="max-w-7xl mx-auto px-6 md:px-12 text-center">
@@ -427,6 +435,8 @@ export default function ContactPage() {
 
         </div>
       </section>
+
+      <GoldDivider />
 
     </div>
   );

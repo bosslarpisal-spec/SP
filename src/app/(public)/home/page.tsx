@@ -1,9 +1,27 @@
 //src/app/(public)/home/page.tsx
 import { createSupabaseServiceClient } from "@/lib/supabase-server";
 import HomeClient from "./HomeClient";
+import type { ContentMap } from "@/app/admin/content/page";
 
 export const metadata = { title: "Home" };
-export const revalidate = 60;
+export const revalidate = 30;
+
+export interface HeroSlide {
+  id: number;
+  display_order: number;
+  badge: string;
+  heading: string;
+  subheadline: string;
+  subtext: string;
+  description: string;
+  btn1_text: string;
+  btn1_link: string;
+  btn2_text: string;
+  btn2_link: string;
+  bg_image_url: string;
+  bg_color: string;
+  is_active: boolean;
+}
 
 interface DbProduct {
   id: number;
@@ -16,44 +34,66 @@ interface DbProduct {
   is_active: boolean;
   display_order: number;
   tags: string[];
+  moq: number | null;
+  branding_methods: string[] | null;
 }
 
 export default async function HomePage() {
-  let products: {
-    id: string;
-    name: string;
-    description: string;
-    category: string;
-    is_visible: boolean;
-    is_new: boolean;
-    tags: string[];
-    image_url: string;
-    images: string[];
-  }[] = [];
+  const supabase = createSupabaseServiceClient();
 
-  try {
-    const supabase = createSupabaseServiceClient();
-    const { data } = await supabase
+  const [productsResult, contentResult, categoriesResult, tagsResult, slidesResult] = await Promise.all([
+    supabase
       .from("products")
-      .select("id,name,name_th,category,image_url,images,is_new,is_active,display_order,tags")
+      .select("id,name,name_th,category,image_url,images,is_new,is_active,display_order,tags,moq,branding_methods")
       .eq("is_active", true)
-      .order("display_order");
-    if (data) {
-      products = (data as DbProduct[]).map(p => ({
-        id:          String(p.id),
-        name:        p.name,
-        description: p.name_th,
-        category:    p.category,
-        is_visible:  p.is_active,
-        is_new:      p.is_new,
-        tags:        p.tags ?? [],
-        image_url:   p.image_url ?? "",
-        images:      p.images ?? [],
-      }));
-    }
-  } catch (err) {
-    console.error("[home] product fetch failed:", err);
+      .order("display_order"),
+    supabase
+      .from("page_content")
+      .select("section, key, value")
+      .eq("page", "home"),
+    supabase
+      .from("categories")
+      .select("name, display_order, is_visible")
+      .eq("is_visible", true)
+      .order("display_order"),
+    supabase
+      .from("tags")
+      .select("name")
+      .order("name"),
+    supabase
+      .from("hero_slides")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order"),
+  ]);
+
+  if (productsResult.error) {
+    console.error("[home/page] products query failed:", productsResult.error.message);
   }
 
-  return <HomeClient products={products} />;
+  const products = (productsResult.data as DbProduct[] ?? []).map(p => ({
+    id:          String(p.id),
+    name:        p.name,
+    description: p.name_th,
+    category:    p.category,
+    is_visible:  p.is_active,
+    is_new:      p.is_new,
+    tags:        p.tags ?? [],
+    moq:         p.moq ?? null,
+    branding_methods: p.branding_methods ?? [],
+    image_url:   p.image_url ?? "",
+    images:      p.images ?? [],
+  }));
+
+  const contentMap: ContentMap = {};
+  for (const row of contentResult.data ?? []) {
+    if (!contentMap[row.section]) contentMap[row.section] = {};
+    contentMap[row.section][row.key] = row.value;
+  }
+
+  const categoryOrder = (categoriesResult.data ?? []).map(c => c.name);
+  const allTags = (tagsResult.data ?? []).map(t => t.name);
+  const slides = (slidesResult.data ?? []) as HeroSlide[];
+
+  return <HomeClient products={products} content={contentMap} categoryOrder={categoryOrder} allTags={allTags} slides={slides} />;
 }

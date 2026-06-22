@@ -10,6 +10,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAdmin,  setIsAdmin]  = useState(false);
   const [isUser,   setIsUser]   = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { t } = useLang();
   const LINKS = [
     { label: t("หน้าหลัก", "Home"),      href: "/home" },
@@ -33,13 +34,40 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 80);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
+  // /profile has a cream/white background (every other public page opens
+  // with a dark navy hero), so the navbar stays solid navy there instead
+  // of transparent-until-scrolled like the hero pages.
+  const isLightPage = pathname === "/profile";
+  const navSolid = scrolled || isLightPage;
+  const inactiveLinkColor = navSolid ? "rgba(255,255,255,0.8)" : "#8A9AB8";
+
   return (
+    <>
+      <style>{`
+        .nav-icon-btn:hover { background: rgba(13,30,61,0.95) !important; border-color: rgba(232,213,163,0.6) !important; }
+        .nav-quote-btn:hover { background: #E8D5A3 !important; color: #1C2951 !important; }
+      `}</style>
     <header
-      className="sticky top-0 z-50 flex items-stretch"
-      style={{ minHeight: "72px", background: "#1C2951", borderBottom: "0.5px solid rgba(232,213,163,0.12)", paddingLeft: "40px", paddingRight: "40px" }}
+      className="fixed top-0 inset-x-0 z-50 flex items-stretch"
+      style={{
+        minHeight: "72px",
+        background: navSolid ? "rgba(13,30,61,0.95)" : "transparent",
+        backdropFilter: navSolid ? "blur(12px)" : "none",
+        WebkitBackdropFilter: navSolid ? "blur(12px)" : "none",
+        borderBottom: navSolid ? "1px solid rgba(232,213,163,0.15)" : "none",
+        paddingLeft: "40px",
+        paddingRight: "40px",
+        transition: "background 0.3s ease, backdrop-filter 0.3s ease",
+      }}
     >
       {/* Logo */}
       <Link
@@ -93,7 +121,7 @@ export default function Navbar() {
             className="flex items-center h-full"
             style={{
               fontSize: "14px",
-              color: isActive(l.href) ? "#E8D5A3" : "#8A9AB8",
+              color: isActive(l.href) ? "#E8D5A3" : inactiveLinkColor,
               padding: "0 16px",
               borderBottom: isActive(l.href) ? "2px solid #E8D5A3" : "2px solid transparent",
               transition: "color 0.2s, border-color 0.2s",
@@ -105,49 +133,29 @@ export default function Navbar() {
       </nav>
 
       {/* Right buttons */}
-      <div className="hidden md:flex items-center gap-2 ml-auto">
+      <div className="hidden md:flex items-center ml-auto" style={{ gap: "8px" }}>
         {isAdmin && (
           <Link
             href="/admin"
-            style={{
-              fontSize: "12px", fontWeight: 500, color: "#8A9AB8",
-              border: "0.5px solid rgba(232,213,163,0.2)",
-              padding: "8px 16px", borderRadius: "5px",
-            }}
+            title="Admin Panel"
+            className="nav-icon-btn"
+            style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(13,30,61,0.8)", border: "1px solid rgba(232,213,163,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", textDecoration: "none", flexShrink: 0 }}
           >
-            Admin
-          </Link>
-        )}
-        {isUser ? (
-          <Link
-            href="/profile"
-            style={{
-              fontSize: "12px", color: "#E8D5A3",
-              border: "0.5px solid rgba(255,255,255,0.25)",
-              padding: "8px 16px", borderRadius: "5px",
-            }}
-          >
-            {t("บัญชีของฉัน", "My Account")}
-          </Link>
-        ) : (
-          <Link
-            href="/login"
-            style={{
-              fontSize: "12px", color: "#E8D5A3",
-              border: "0.5px solid rgba(255,255,255,0.25)",
-              padding: "8px 16px", borderRadius: "5px",
-            }}
-          >
-            {t("เข้าสู่ระบบ", "Sign In")}
+            <i className="ti ti-shield" style={{ fontSize: "16px", color: "#E8D5A3" }} />
           </Link>
         )}
         <Link
+          href="/profile"
+          title="My Account"
+          className="nav-icon-btn"
+          style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(13,30,61,0.8)", border: "1px solid rgba(232,213,163,0.35)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", textDecoration: "none", flexShrink: 0 }}
+        >
+          <i className="ti ti-user" style={{ fontSize: "16px", color: "#E8D5A3" }} />
+        </Link>
+        <Link
           href="/contact"
-          style={{
-            fontSize: "12px", fontWeight: 500,
-            background: "#E8D5A3", color: "#1C2951",
-            padding: "8px 16px", borderRadius: "5px",
-          }}
+          className="nav-quote-btn"
+          style={{ background: "rgba(13,30,61,0.8)", border: "1.5px solid #E8D5A3", color: "#E8D5A3", fontSize: "12px", fontWeight: 600, padding: "8px 18px", borderRadius: "6px", cursor: "pointer", textDecoration: "none", letterSpacing: "0.03em", whiteSpace: "nowrap", flexShrink: 0 }}
         >
           {t("ขอใบเสนอราคา", "Get a Quote")}
         </Link>
@@ -206,5 +214,6 @@ export default function Navbar() {
         </div>
       )}
     </header>
+    </>
   );
 }

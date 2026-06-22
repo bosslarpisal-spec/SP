@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import GoldDivider from "@/components/ui/GoldDivider";
 
 /* ── DATA ───────────────────────────────────────────────── */
 const MILESTONES = [
@@ -101,6 +102,9 @@ export default function AboutContent() {
   const { ref: storyRef,  inView: storyInView  } = useInView(0.15);
   const { ref: quoteRef,  inView: quoteInView  } = useInView(0.3);
 
+  const storyPhoto = null; // replace with "/photos/team.jpg" later
+  const timelinePhoto = null; // replace with "/photos/office.jpg" later
+
   return (
     <>
       <style>{`
@@ -134,15 +138,32 @@ export default function AboutContent() {
           .reveal, .quote-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
           .hero-content { animation: none !important; opacity: 1 !important; }
         }
+
+        .story-outer-grid {
+          display: grid;
+          grid-template-columns: 35% 65%;
+          gap: 48px;
+          align-items: start;
+        }
+        .timeline-outer-grid {
+          display: grid;
+          grid-template-columns: 65% 35%;
+          gap: 48px;
+          align-items: start;
+        }
+        @media (max-width: 768px) {
+          .story-outer-grid,
+          .timeline-outer-grid { grid-template-columns: 1fr; }
+          .timeline-photo-mobile-first { order: -1; }
+          .photo-frame-mobile { max-height: 200px; }
+        }
       `}</style>
 
       {/* §1 — HERO ──────────────────────────────────────── */}
-      <section style={{ background: "#1C2951", minHeight: "60vh", position: "relative", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <section style={{ backgroundImage: "url('/HeroBlockHome.png')", backgroundSize: "cover", backgroundPosition: "right center", backgroundRepeat: "no-repeat", minHeight: "45vh", paddingTop: "120px", paddingBottom: "60px", position: "relative", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
 
-        {/* "SP" watermark */}
-        <div aria-hidden="true" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", userSelect: "none", overflow: "hidden" }}>
-          <span style={{ fontSize: "clamp(12rem, 30vw, 22rem)", fontWeight: 800, color: "#E8D5A3", opacity: 0.04, lineHeight: 1, letterSpacing: "-0.05em" }}>SP</span>
-        </div>
+        {/* Gradient overlay */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(13,30,61,0.92) 0%, rgba(13,30,61,0.80) 40%, rgba(13,30,61,0.40) 70%, rgba(13,30,61,0.10) 100%)", zIndex: 0, pointerEvents: "none" }} />
 
         {/* Floating particles */}
         {PARTICLES.map((p, i) => (
@@ -150,24 +171,30 @@ export default function AboutContent() {
         ))}
 
         {/* Content */}
-        <div className="hero-content" style={{ maxWidth: "700px", textAlign: "center", padding: "80px 40px", position: "relative", zIndex: 2 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginBottom: "24px" }}>
-            <div style={{ width: "36px", height: "1px", background: "#E8D5A3", flexShrink: 0 }} />
-            <span style={{ fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#F0DC9A" }}>Our Story</span>
-            <div style={{ width: "36px", height: "1px", background: "#E8D5A3", flexShrink: 0 }} />
+        <div className="hero-content" style={{ maxWidth: "700px", textAlign: "center", padding: "0 40px", position: "relative", zIndex: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "12px" }}>
+            <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
+            <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#E8D5A3" }}>Our Story</span>
           </div>
           <h1 style={{ fontSize: "40px", fontWeight: 400, color: "#FFFFFF", lineHeight: 1.05, letterSpacing: "-0.02em", margin: "0 0 18px 0", fontFamily: "Georgia, serif" }}>
-            Crafting Moments That<br />
+            <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
+              Crafting Moments That
+              <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
+            </span>
+            <br />
             <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>Last a Lifetime</em>
           </h1>
-          <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.85)", lineHeight: 1.8, margin: "0 auto 28px" }}>
-            ผู้เชี่ยวชาญด้านของพรีเมียมและโปรโมชันครบวงจร
-          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", margin: "0 auto 28px" }}>
+            <span style={{ width: "16px", height: "1px", background: "#E8D5A3", opacity: 0.4, flexShrink: 0, display: "block" }} />
+            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>ผู้เชี่ยวชาญด้านของพรีเมียมและโปรโมชันครบวงจร</span>
+          </div>
           <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.90)", lineHeight: 1.8, maxWidth: "520px", margin: "0 auto" }}>
             Since 2003, SP has partnered with leading brands across Thailand and beyond — designing, producing, and delivering premium gifts that carry meaning far beyond their moment of giving.
           </p>
         </div>
       </section>
+
+      <GoldDivider />
 
       {/* §2 — STATS ─────────────────────────────────────── */}
       <section style={{ background: "#F8F6F1", borderTop: "0.5px solid rgba(232,213,163,0.15)", borderBottom: "0.5px solid rgba(232,213,163,0.15)" }}>
@@ -183,48 +210,73 @@ export default function AboutContent() {
         </div>
       </section>
 
+      <GoldDivider />
+
       {/* §3 — STORY GRID ─────────────────────────────────── */}
       <section style={{ background: "#F8F6F1" }}>
         <div
           ref={storyRef}
-          className={`reveal${storyInView ? " in-view" : ""}`}
-          style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 64px", display: "grid", gridTemplateColumns: "3fr 2fr", gap: "72px", alignItems: "start" }}
+          className={`reveal${storyInView ? " in-view" : ""} story-outer-grid`}
+          style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 64px" }}
         >
-          {/* Left — story copy */}
-          <div style={{ position: "relative" }}>
-            <div aria-hidden="true" style={{ position: "absolute", top: "-0.5rem", left: "-1rem", fontSize: "6rem", fontWeight: 700, color: "#E8D5A3", opacity: 0.15, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>01</div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-              <span style={{ display: "block", width: "20px", height: "1px", background: "#C4B07A", flexShrink: 0 }} />
-              <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.16em", color: "#8A6E00" }}>About SP</span>
+          {/* Photo frame — LEFT (35%) */}
+          <div>
+            <div
+              className="photo-frame-mobile"
+              style={{ width: "100%", aspectRatio: "3/4", borderRadius: "12px", overflow: "hidden", border: "1.5px solid rgba(232,213,163,0.25)", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            >
+              {storyPhoto ? (
+                <img src={storyPhoto} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Our Team" />
+              ) : (
+                <div style={{ background: "#1C2951", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  <i className="ti ti-users" style={{ fontSize: "36px", color: "#E8D5A3", opacity: 0.4 }} />
+                  <span style={{ fontSize: "10px", color: "rgba(232,213,163,0.35)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Our Team</span>
+                </div>
+              )}
             </div>
-            <h2 style={{ fontSize: "22px", fontWeight: 400, color: "#0D1E3D", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: "20px", fontFamily: "Georgia, serif" }}>
-              Thailand&rsquo;s Trusted Partner in<br />
-              <em style={{ fontStyle: "italic", color: "#8A6E00" }}>Premium Merchandise</em>
-            </h2>
-            <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.8, marginBottom: "14px" }}>
-              Founded in Bangkok in 2003, SP began as a small creative studio with one goal: to make branded gifting feel personal. Two decades later, we operate as a full-service premium goods partner — from concept and design through OEM manufacturing and global logistics.
-            </p>
-            <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.8 }}>
-              We work directly with procurement and marketing teams at companies like P&G, Acer, Oral-B, and SCB Bank — delivering products that reflect each brand&rsquo;s identity at every touchpoint.
-            </p>
+            <p style={{ fontSize: "11px", color: "#9CA3AF", textAlign: "center", marginTop: "8px", fontStyle: "italic" }}>— Our Team &amp; Workshop</p>
           </div>
 
-          {/* Right — checklist */}
-          <div style={{ paddingTop: "12px" }}>
-            <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A5568", marginBottom: "20px" }}>Why clients choose SP</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-              {CHECKLIST.map((item) => (
-                <div key={item} className="checklist-item" style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "6px" }}>
-                  <div style={{ width: "18px", height: "18px", flexShrink: 0, borderRadius: "50%", background: "rgba(13,30,61,0.06)", border: "0.5px solid rgba(13,30,61,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <i className="ti ti-check" style={{ fontSize: "12px", color: "#8A6E00" }} />
+          {/* Story copy + checklist — RIGHT (65%) */}
+          <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "72px", alignItems: "start" }}>
+            {/* Left — story copy */}
+            <div style={{ position: "relative" }}>
+              <div aria-hidden="true" style={{ position: "absolute", top: "-0.5rem", left: "-1rem", fontSize: "6rem", fontWeight: 700, color: "#E8D5A3", opacity: 0.15, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>01</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                <span style={{ display: "block", width: "20px", height: "1px", background: "#C4B07A", flexShrink: 0 }} />
+                <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.16em", color: "#8A6E00" }}>About SP</span>
+              </div>
+              <h2 style={{ fontSize: "22px", fontWeight: 400, color: "#0D1E3D", lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: "20px", fontFamily: "Georgia, serif" }}>
+                Thailand&rsquo;s Trusted Partner in<br />
+                <em style={{ fontStyle: "italic", color: "#8A6E00" }}>Premium Merchandise</em>
+              </h2>
+              <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.8, marginBottom: "14px" }}>
+                Founded in Bangkok in 2003, SP began as a small creative studio with one goal: to make branded gifting feel personal. Two decades later, we operate as a full-service premium goods partner — from concept and design through OEM manufacturing and global logistics.
+              </p>
+              <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.8 }}>
+                We work directly with procurement and marketing teams at companies like P&G, Acer, Oral-B, and SCB Bank — delivering products that reflect each brand&rsquo;s identity at every touchpoint.
+              </p>
+            </div>
+
+            {/* Right — checklist */}
+            <div style={{ paddingTop: "12px" }}>
+              <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A5568", marginBottom: "20px" }}>Why clients choose SP</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                {CHECKLIST.map((item) => (
+                  <div key={item} className="checklist-item" style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "6px" }}>
+                    <div style={{ width: "18px", height: "18px", flexShrink: 0, borderRadius: "50%", background: "rgba(13,30,61,0.06)", border: "0.5px solid rgba(13,30,61,0.18)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <i className="ti ti-check" style={{ fontSize: "12px", color: "#8A6E00" }} />
+                    </div>
+                    <span style={{ fontSize: "12px", color: "#2C3E50", lineHeight: 1.5 }}>{item}</span>
                   </div>
-                  <span style={{ fontSize: "12px", color: "#2C3E50", lineHeight: 1.5 }}>{item}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+      <GoldDivider />
 
       {/* §4 — PULL QUOTE ─────────────────────────────────── */}
       <section style={{ background: "#1C2951", paddingTop: "112px", paddingBottom: "112px", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
@@ -254,49 +306,76 @@ export default function AboutContent() {
         </div>
       </section>
 
+      <GoldDivider />
+
       {/* §5 — TIMELINE ───────────────────────────────────── */}
       <section style={{ background: "#F8F6F1" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 64px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-            <span style={{ display: "block", width: "20px", height: "1px", background: "#C4B07A", flexShrink: 0 }} />
-            <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.16em", color: "#8A6E00" }}>Our History</span>
-          </div>
-          <h2 style={{ fontSize: "20px", fontWeight: 400, color: "#0D1E3D", letterSpacing: "-0.02em", margin: "0 0 32px 0", fontFamily: "Georgia, serif" }}>Milestones</h2>
+        <div className="timeline-outer-grid" style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 64px" }}>
 
-          {/* Desktop timeline */}
-          <div className="hidden md:block scrollbar-hide" style={{ overflowX: "auto", paddingBottom: "16px" }}>
-            <div style={{ display: "flex", position: "relative", minWidth: `${MILESTONES.length * 190}px` }}>
-              {/* Connecting line */}
-              <div style={{ position: "absolute", top: "82px", left: "95px", right: "95px", height: "1px", background: "rgba(13,30,61,0.15)", pointerEvents: "none" }} />
+          {/* Left (65%) — header + timelines */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+              <span style={{ display: "block", width: "20px", height: "1px", background: "#C4B07A", flexShrink: 0 }} />
+              <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.16em", color: "#8A6E00" }}>Our History</span>
+            </div>
+            <h2 style={{ fontSize: "20px", fontWeight: 400, color: "#0D1E3D", letterSpacing: "-0.02em", margin: "0 0 32px 0", fontFamily: "Georgia, serif" }}>Milestones</h2>
 
-              {MILESTONES.map((m) => (
-                <div key={m.yr} style={{ flex: "0 0 190px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 10px" }}>
-                  {/* Decorative year above */}
-                  <div style={{ height: "72px", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: "12px" }}>
-                    <span style={{ fontSize: "11px", letterSpacing: "0.1em", color: m.active ? "#8A6E00" : "#4A5568", fontWeight: m.active ? 600 : 400 }}>{m.year}</span>
+            {/* Desktop timeline */}
+            <div className="hidden md:block scrollbar-hide" style={{ overflowX: "auto", paddingBottom: "16px" }}>
+              <div style={{ display: "flex", position: "relative", minWidth: `${MILESTONES.length * 190}px` }}>
+                {/* Connecting line */}
+                <div style={{ position: "absolute", top: "82px", left: "95px", right: "95px", height: "1px", background: "rgba(13,30,61,0.15)", pointerEvents: "none" }} />
+
+                {MILESTONES.map((m) => (
+                  <div key={m.yr} style={{ flex: "0 0 190px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "0 10px" }}>
+                    {/* Decorative year above */}
+                    <div style={{ height: "72px", display: "flex", alignItems: "flex-end", justifyContent: "center", paddingBottom: "12px" }}>
+                      <span style={{ fontSize: "11px", letterSpacing: "0.1em", color: m.active ? "#8A6E00" : "#4A5568", fontWeight: m.active ? 600 : 400 }}>{m.year}</span>
+                    </div>
+                    {/* Dot */}
+                    <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: m.active ? "#1C2951" : "rgba(13,30,61,0.1)", border: `0.5px solid ${m.active ? "#1C2951" : "rgba(13,30,61,0.2)"}`, flexShrink: 0, position: "relative", zIndex: 2, marginBottom: "14px" }} />
+                    {/* Text */}
+                    <p style={{ fontSize: "12px", color: m.active ? "#0D1E3D" : "#4A5568", lineHeight: 1.6 }}>{m.text}</p>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile timeline */}
+            <div className="md:hidden" style={{ borderLeft: "1px solid rgba(13,30,61,0.15)", marginLeft: "16px", display: "flex", flexDirection: "column", gap: "0" }}>
+              {MILESTONES.map((m) => (
+                <div key={m.yr} style={{ position: "relative", padding: "12px 0 12px 28px" }}>
                   {/* Dot */}
-                  <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: m.active ? "#1C2951" : "rgba(13,30,61,0.1)", border: `0.5px solid ${m.active ? "#1C2951" : "rgba(13,30,61,0.2)"}`, flexShrink: 0, position: "relative", zIndex: 2, marginBottom: "14px" }} />
-                  {/* Text */}
-                  <p style={{ fontSize: "12px", color: m.active ? "#0D1E3D" : "#4A5568", lineHeight: 1.6 }}>{m.text}</p>
+                  <div style={{ position: "absolute", left: "-5px", top: "18px", width: "10px", height: "10px", borderRadius: "50%", background: m.active ? "#1C2951" : "rgba(13,30,61,0.1)", border: `0.5px solid ${m.active ? "#1C2951" : "rgba(13,30,61,0.2)"}` }} />
+                  <span style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#8A6E00", display: "block", marginBottom: "4px" }}>{m.year}</span>
+                  <p style={{ fontSize: "13px", color: m.active ? "#0D1E3D" : "#4A5568", lineHeight: 1.6, margin: 0 }}>{m.text}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Mobile timeline */}
-          <div className="md:hidden" style={{ borderLeft: "1px solid rgba(13,30,61,0.15)", marginLeft: "16px", display: "flex", flexDirection: "column", gap: "0" }}>
-            {MILESTONES.map((m) => (
-              <div key={m.yr} style={{ position: "relative", padding: "12px 0 12px 28px" }}>
-                {/* Dot */}
-                <div style={{ position: "absolute", left: "-5px", top: "18px", width: "10px", height: "10px", borderRadius: "50%", background: m.active ? "#1C2951" : "rgba(13,30,61,0.1)", border: `0.5px solid ${m.active ? "#1C2951" : "rgba(13,30,61,0.2)"}` }} />
-                <span style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#8A6E00", display: "block", marginBottom: "4px" }}>{m.year}</span>
-                <p style={{ fontSize: "13px", color: m.active ? "#0D1E3D" : "#4A5568", lineHeight: 1.6, margin: 0 }}>{m.text}</p>
-              </div>
-            ))}
+          {/* Right (35%) — photo frame */}
+          <div className="timeline-photo-mobile-first" style={{ alignSelf: "center" }}>
+            <div
+              className="photo-frame-mobile"
+              style={{ width: "100%", aspectRatio: "4/3", borderRadius: "12px", overflow: "hidden", border: "1.5px solid rgba(232,154,91,0.25)", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+            >
+              {timelinePhoto ? (
+                <img src={timelinePhoto} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Bangkok 2003" />
+              ) : (
+                <div style={{ background: "#1C2951", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  <i className="ti ti-building" style={{ fontSize: "36px", color: "#E8D5A3", opacity: 0.4 }} />
+                  <span style={{ fontSize: "10px", color: "rgba(232,213,163,0.35)", letterSpacing: "0.12em", textTransform: "uppercase" }}>Since 2003</span>
+                </div>
+              )}
+            </div>
+            <p style={{ fontSize: "11px", color: "#9CA3AF", textAlign: "center", marginTop: "8px", fontStyle: "italic" }}>— Bangkok, 2003</p>
           </div>
+
         </div>
       </section>
+
+      <GoldDivider />
     </>
   );
 }

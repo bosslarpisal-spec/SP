@@ -5,31 +5,32 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { th } from "@/app/admin/lib/admin-th";
 
 const NAV_GROUPS = [
   {
-    label: "MAIN",
+    label: th.navGroupMain,
     items: [
-      { href: "/admin",          label: "Dashboard", icon: "ti-layout-dashboard" },
-      { href: "/admin/products", label: "Products",  icon: "ti-package" },
-      { href: "/admin/content",  label: "Content",    icon: "ti-file-text" },
-      { href: "/admin/slides",   label: "Hero Slides", icon: "ti-slideshow" },
+      { href: "/admin",          label: th.navDashboard, icon: "ti-layout-dashboard" },
+      { href: "/admin/products", label: th.navProducts,  icon: "ti-package" },
+      { href: "/admin/content",  label: th.navContent,   icon: "ti-file-text" },
+      { href: "/admin/slides",   label: th.navSlides,    icon: "ti-slideshow" },
     ],
   },
   {
-    label: "SETTINGS",
+    label: th.navGroupSettings,
     items: [
-      { href: "/admin/profile",  label: "Profile",   icon: "ti-user-shield" },
+      { href: "/admin/profile",  label: th.navProfile,   icon: "ti-user-shield" },
     ],
   },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
-  "/admin":          "Dashboard",
-  "/admin/products": "Products",
-  "/admin/content":  "Content",
-  "/admin/slides":   "Hero Slides",
-  "/admin/profile":  "Profile",
+  "/admin":          th.navDashboard,
+  "/admin/products": th.navProducts,
+  "/admin/content":  th.navContent,
+  "/admin/slides":   th.navSlides,
+  "/admin/profile":  th.navProfile,
 };
 
 function nameFromEmail(email: string): string {
@@ -52,7 +53,7 @@ export default function AdminShell({
     Object.entries(PAGE_TITLES)
       .sort((a, b) => b[0].length - a[0].length)
       .find(([key]) => pathname === key || pathname.startsWith(key + "/"))?.[1] ??
-    "Admin";
+    th.shellPageAdmin;
 
   const displayName = nameFromEmail(adminEmail);
   const initial = (adminEmail?.[0] ?? "A").toUpperCase();
@@ -87,7 +88,7 @@ export default function AdminShell({
           >
             <Image
               src="/F2.png"
-              alt="SP Logo"
+              alt={th.shellLogoAlt}
               width={32}
               height={32}
               style={{ borderRadius: "50%", objectFit: "cover" }}
@@ -102,7 +103,7 @@ export default function AdminShell({
                 letterSpacing: "-0.01em",
               }}
             >
-              SP Admin
+              {th.shellBrand}
             </div>
             <div
               style={{
@@ -111,7 +112,7 @@ export default function AdminShell({
                 marginTop: 1,
               }}
             >
-              Siam Premium
+              {th.shellSubBrand}
             </div>
           </div>
         </div>
@@ -203,7 +204,7 @@ export default function AdminShell({
           }}
         >
           <i className="ti ti-arrow-left" style={{ fontSize: 15 }} />
-          Public site
+          {th.navPublicSite}
         </a>
 
         {/* Sign out */}
@@ -233,7 +234,7 @@ export default function AdminShell({
           }}
         >
           <i className="ti ti-logout" style={{ fontSize: 15 }} />
-          Sign Out
+          {th.navSignOut}
         </button>
       </nav>
     </aside>
@@ -333,21 +334,9 @@ export default function AdminShell({
 
           {/* Right: bell, settings, user chip */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button
-              type="button"
-              title="Notifications"
-              style={{
-                width: 30, height: 30, display: "flex", alignItems: "center",
-                justifyContent: "center", background: "#F7F6F3",
-                border: "0.5px solid #E8E6E0", borderRadius: 7,
-                color: "#0D1E3D", cursor: "default",
-              }}
-            >
-              <i className="ti ti-bell" style={{ fontSize: 15 }} />
-            </button>
-            <Link
+<Link
               href="/admin/profile"
-              title="Settings"
+              title={th.shellSettingsTitle}
               style={{
                 width: 30, height: 30, display: "flex", alignItems: "center",
                 justifyContent: "center", background: "#F7F6F3",
@@ -411,7 +400,7 @@ export default function AdminShell({
                     href="/admin/profile"
                     style={{ display: "block", padding: "10px 14px", fontSize: 12, color: "#333", textDecoration: "none" }}
                   >
-                    Profile settings
+                    {th.shellProfileMenu}
                   </Link>
                   <button
                     onClick={signOut}
@@ -421,7 +410,7 @@ export default function AdminShell({
                       background: "transparent", border: "none", cursor: "pointer",
                     }}
                   >
-                    Sign out
+                    {th.shellSignOutMenu}
                   </button>
                 </div>
               )}

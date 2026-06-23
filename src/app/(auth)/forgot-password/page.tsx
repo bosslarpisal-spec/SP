@@ -25,6 +25,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: "24px 16px", background: "#FFFFFF" }}>
     <div className="w-full max-w-md">
       {/* Logo */}
       <div className="text-center mb-8">
@@ -81,6 +82,7 @@ export default function ForgotPasswordPage() {
           Sign in
         </Link>
       </p>
+    </div>
     </div>
   );
 }

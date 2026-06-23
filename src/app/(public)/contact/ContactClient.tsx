@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useLang } from "@/contexts/LanguageContext";
 import { IconPhone, IconMail, IconClock, IconMapPin, IconCheckCircle, IconLock } from "@/lib/icons";
 import GoldDivider from "@/components/ui/GoldDivider";
 
@@ -26,7 +27,14 @@ function IconLineApp({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-/* ── Shared style helpers ────────────────────────────────── */
+/* ── style helpers ───────────────────────────────────────── */
+type BS = Record<string, string>;
+
+function gs(obj: Record<string, BS>, key: string, def: BS): BS {
+  const ov = obj[key] ?? {};
+  return { color: ov.color ?? def.color, fontSize: ov.fontSize ?? def.fontSize };
+}
+
 const inputBase: React.CSSProperties = {
   background: "#F8F6F1", border: "1px solid rgba(13,30,61,0.15)",
   borderRadius: 8, padding: "10px 16px", fontSize: 14, color: "#0D1E3D", width: "100%", outline: "none",
@@ -53,6 +61,7 @@ interface ContactClientProps {
   heroHeading: string;
   heroSubtextTh: string;
   heroDescription: string;
+  heroStylesJson: string;
   phone1: string;
   phone2: string;
   mobile: string;
@@ -60,6 +69,8 @@ interface ContactClientProps {
   address: string;
   addressTh: string;
   hours: string;
+  hoursTh: string;
+  infoStylesJson: string;
   facebook: string;
   instagram: string;
   line: string;
@@ -67,10 +78,11 @@ interface ContactClientProps {
 
 /* ── Component ───────────────────────────────────────────── */
 export default function ContactClient({
-  heroBadge, heroHeading, heroSubtextTh, heroDescription,
-  phone1, phone2, mobile, email, address, hours,
+  heroBadge, heroHeading, heroSubtextTh, heroDescription, heroStylesJson,
+  phone1, phone2, mobile, email, address, addressTh, hours, hoursTh, infoStylesJson,
   facebook, instagram, line,
 }: ContactClientProps) {
+  const { lang } = useLang();
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", interest: "", message: "" });
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
 
@@ -85,12 +97,30 @@ export default function ContactClient({
     } catch { setStatus("err"); }
   }
 
+  /* ── Resolve styles ─── */
+  const heroSt: Record<string, BS> = (() => { try { return JSON.parse(heroStylesJson); } catch { return {}; } })();
+  const infoSt: Record<string, BS> = (() => { try { return JSON.parse(infoStylesJson); } catch { return {}; } })();
+
+  const hBadge = gs(heroSt, "badge",       { color: "#E8D5A3",                fontSize: "10px" });
+  const hHead  = gs(heroSt, "heading",     { color: "#FFFFFF",                fontSize: "48px" });
+  const hSubTh = gs(heroSt, "subtext_th",  { color: "rgba(255,255,255,0.7)",  fontSize: "13px" });
+  const hDesc  = gs(heroSt, "description", { color: "rgba(255,255,255,0.90)", fontSize: "14px" });
+
+  const iPhone = gs(infoSt, "phone_value",   { color: "#0D1E3D", fontSize: "14px" });
+  const iEmail = gs(infoSt, "email_value",   { color: "#0D1E3D", fontSize: "14px" });
+  const iHours = gs(infoSt, "hours_value",   { color: "#0D1E3D", fontSize: "14px" });
+  const iAddr  = gs(infoSt, "address_value", { color: "#0D1E3D", fontSize: "14px" });
+
+  const displayAddress = lang === "th" && addressTh ? addressTh : address;
+  const displayHours   = lang === "th" && hoursTh   ? hoursTh   : hours;
+
   const INFO = [
-    { icon: <IconPhone className="w-5 h-5" />,  label: "PHONE",   lines: [phone1, phone2, mobile].filter(Boolean) },
-    { icon: <IconMail className="w-5 h-5" />,   label: "EMAIL",   lines: [email].filter(Boolean) },
-    { icon: <IconClock className="w-5 h-5" />,  label: "HOURS",   lines: [hours].filter(Boolean) },
-    { icon: <IconMapPin className="w-5 h-5" />, label: "ADDRESS", lines: [address].filter(Boolean) },
+    { icon: <IconPhone className="w-5 h-5" />,  label: "PHONE",   lines: [phone1, phone2, mobile].filter(Boolean), itemStyle: iPhone },
+    { icon: <IconMail className="w-5 h-5" />,   label: "EMAIL",   lines: [email].filter(Boolean),                  itemStyle: iEmail },
+    { icon: <IconClock className="w-5 h-5" />,  label: "HOURS",   lines: [displayHours].filter(Boolean),           itemStyle: iHours },
+    { icon: <IconMapPin className="w-5 h-5" />, label: "ADDRESS", lines: [displayAddress].filter(Boolean),         itemStyle: iAddr  },
   ];
+
   const SOCIALS = [
     { label: "Facebook",  href: facebook,  Icon: IconFacebook  },
     { label: "Instagram", href: instagram, Icon: IconInstagram },
@@ -109,19 +139,21 @@ export default function ContactClient({
         <div className="relative z-10 text-center px-6 pb-20 max-w-3xl mx-auto" style={{ paddingTop: "120px" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginBottom: "12px" }}>
             <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
-            <span style={{ fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#E8D5A3" }}>{heroBadge}</span>
+            <span style={{ letterSpacing: "0.18em", textTransform: "uppercase", color: hBadge.color, fontSize: hBadge.fontSize }}>{heroBadge}</span>
           </div>
-          <h1 className="text-5xl md:text-6xl text-white mb-4" style={{ fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.1 }}>
+          <h1 className="mb-4" style={{ fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.1, color: hHead.color, fontSize: hHead.fontSize }}>
             <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
               {heroHeading}
               <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
             </span>
           </h1>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }} className="mb-2">
-            <span style={{ width: "16px", height: "1px", background: "#E8D5A3", opacity: 0.4, flexShrink: 0, display: "block" }} />
-            <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)" }}>{heroSubtextTh}</span>
-          </div>
-          <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.90)" }}>{heroDescription}</p>
+          {lang === "th" && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }} className="mb-2">
+              <span style={{ width: "16px", height: "1px", background: "#E8D5A3", opacity: 0.4, flexShrink: 0, display: "block" }} />
+              <span style={{ fontSize: hSubTh.fontSize, color: hSubTh.color }}>{heroSubtextTh}</span>
+            </div>
+          )}
+          <p className="mb-8" style={{ color: hDesc.color, fontSize: hDesc.fontSize }}>{heroDescription}</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             {["Response within 1 business day", "Free consultation"].map(pill => (
               <span key={pill} className="text-sm px-4 py-1.5 rounded-full" style={{ border: "1px solid rgba(232,213,163,0.3)", color: "#E8D5A3" }}>{pill}</span>
@@ -157,7 +189,7 @@ export default function ContactClient({
                   <div>
                     <div className="text-xs tracking-widest uppercase mb-1" style={{ color: "#8A6E00" }}>{item.label}</div>
                     {item.lines.map((line, j) => (
-                      <div key={j} className="text-sm leading-relaxed" style={{ color: "#0D1E3D" }}>{line}</div>
+                      <div key={j} className="leading-relaxed" style={{ color: item.itemStyle.color, fontSize: item.itemStyle.fontSize }}>{line}</div>
                     ))}
                   </div>
                 </div>
@@ -264,7 +296,7 @@ export default function ContactClient({
             <GoldLine width={24} />
           </div>
           <h2 className="text-3xl text-white mb-3" style={{ fontFamily: "Georgia, serif", fontWeight: 400 }}>Visit Our Office</h2>
-          <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.90)" }}>{address}</p>
+          <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.90)" }}>{displayAddress}</p>
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-80 mb-10"
             style={{ border: "1px solid rgba(232,213,163,0.5)", color: "#E8D5A3" }}>

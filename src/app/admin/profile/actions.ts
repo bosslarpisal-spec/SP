@@ -3,11 +3,12 @@
 
 import { assertAdmin } from "../lib/admin-guard";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
+import { th } from "@/app/admin/lib/admin-th";
 
 export async function addAdmin(email: string) {
   await assertAdmin();
   const clean = email.trim().toLowerCase();
-  if (!clean) throw new Error("Email is required");
+  if (!clean) throw new Error(th.errEmailRequired);
   const service = createSupabaseServiceClient();
   const { data, error } = await service
     .from("admins")
@@ -16,7 +17,7 @@ export async function addAdmin(email: string) {
     .single();
   if (error) {
     throw new Error(
-      error.code === "23505" ? "That email is already an admin." : error.message
+      error.code === "23505" ? th.errEmailExists : error.message
     );
   }
   return data as { id: number; email: string; created_at: string };
@@ -31,7 +32,7 @@ export async function removeAdmin(id: number) {
     .eq("id", id)
     .single();
   if (target?.email === user.email) {
-    throw new Error("Cannot remove yourself — add another admin first.");
+    throw new Error(th.errCannotRemoveSelf);
   }
   const { error } = await service.from("admins").delete().eq("id", id);
   if (error) throw new Error(error.message);
@@ -40,7 +41,7 @@ export async function removeAdmin(id: number) {
 export async function changeAdminEmail(newEmail: string) {
   const user = await assertAdmin();
   const clean = newEmail.trim().toLowerCase();
-  if (!clean) throw new Error("Email is required");
+  if (!clean) throw new Error(th.errEmailRequired);
 
   // Update Supabase Auth (sends confirmation to new address)
   const sessionClient = await createSupabaseServerClient();
@@ -60,7 +61,7 @@ export async function changeAdminEmail(newEmail: string) {
 
 export async function changeAdminPassword(newPassword: string) {
   const user = await assertAdmin();
-  if (newPassword.length < 6) throw new Error("Password must be at least 6 characters.");
+  if (newPassword.length < 6) throw new Error(th.errPwTooShort);
   const service = createSupabaseServiceClient();
   const { error } = await service.auth.admin.updateUserById(user.id, {
     password: newPassword,

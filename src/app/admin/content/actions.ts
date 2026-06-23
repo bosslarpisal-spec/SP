@@ -20,6 +20,7 @@ export async function saveContentField(
     );
   if (error) throw new Error(error.message);
   revalidatePath("/");
+  revalidatePath("/home");
   revalidatePath("/about");
   revalidatePath("/services");
   revalidatePath("/our-work");

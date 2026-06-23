@@ -7,6 +7,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { createSlide, updateSlide } from "./actions";
 import { useToast } from "../components/Toast";
+import { th } from "@/app/admin/lib/admin-th";
 import type { HeroSlide } from "./page";
 import type { SlidePayload } from "./actions";
 
@@ -202,7 +203,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
 
   async function handleImageUpload(file: File) {
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image must be under 10 MB");
+      toast.error(th.toastImg10MB);
       return;
     }
     setUploading(true);
@@ -217,9 +218,9 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
         data: { publicUrl },
       } = supabase.storage.from("page-images").getPublicUrl(data.path);
       set("bg_image_url", publicUrl);
-      toast.success("Image uploaded");
+      toast.success(th.toastImageUploaded);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
+      toast.error(err instanceof Error ? err.message : th.toastSaveFail);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -229,23 +230,23 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.heading.trim()) {
-      toast.error("Heading is required");
+      toast.error(th.sfHeadingRequired);
       return;
     }
     setSaving(true);
     try {
       if (mode === "new") {
         await createSlide(form);
-        toast.success("Slide created");
+        toast.success(th.toastSlideCreated);
         router.push("/admin/slides");
       } else {
         await updateSlide(slideId!, form);
-        toast.success("Changes saved");
+        toast.success(th.toastChangesSaved);
         setDirty(false);
         router.refresh();
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save");
+      toast.error(err instanceof Error ? err.message : th.toastSaveFail);
     } finally {
       setSaving(false);
     }
@@ -266,12 +267,12 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
       >
         {/* ── Left column ─────────────────────────────────── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <Card label="Slide Content">
+          <Card label={th.sfCardContent}>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
                   <Field
-                    label="Badge / Eyebrow"
+                    label={th.sfBadge}
                     value={form.badge}
                     onChange={(v) => set("badge", v)}
                     placeholder="WELCOME TO SP"
@@ -303,7 +304,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                 </div>
                 <div>
                   <Field
-                    label="Heading"
+                    label={th.sfHeading}
                     value={form.heading}
                     onChange={(v) => set("heading", v)}
                     placeholder="The Expert In"
@@ -324,7 +325,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
               </div>
               <div>
                 <Field
-                  label="Gold Italic Subheadline"
+                  label={th.sfSubheadline}
                   value={form.subheadline}
                   onChange={(v) => set("subheadline", v)}
                   placeholder='"Total Premiums & Promotion Solution"'
@@ -344,7 +345,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
               </div>
               <div>
                 <Field
-                  label="Thai Subtext"
+                  label={th.sfSubtext}
                   value={form.subtext}
                   onChange={(v) => set("subtext", v)}
                   placeholder="ผู้เชี่ยวชาญด้านของพรีเมียม..."
@@ -363,7 +364,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
               </div>
               <div>
                 <Field
-                  label="Description"
+                  label={th.sfDescription}
                   value={form.description}
                   onChange={(v) => set("description", v)}
                   multiline
@@ -384,16 +385,16 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
             </div>
           </Card>
 
-          <Card label="Call-to-Action Buttons">
+          <Card label={th.sfCardCTA}>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a", margin: "0 0 8px" }}>
-                  Primary Button (Gold fill)
+                  {th.sfBtn1Head}
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div>
                     <Field
-                      label="Label"
+                      label={th.sfBtnLabel}
                       value={form.btn1_text}
                       onChange={(v) => set("btn1_text", v)}
                       placeholder="Browse Our Work"
@@ -412,7 +413,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                     )}
                   </div>
                   <Field
-                    label="Link"
+                    label={th.sfBtnLink}
                     value={form.btn1_link}
                     onChange={(v) => set("btn1_link", v)}
                     placeholder="/our-work"
@@ -421,12 +422,12 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
               </div>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: "#1a1a1a", margin: "0 0 8px" }}>
-                  Secondary Button (Outline)
+                  {th.sfBtn2Head}
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div>
                     <Field
-                      label="Label"
+                      label={th.sfBtnLabel}
                       value={form.btn2_text}
                       onChange={(v) => set("btn2_text", v)}
                       placeholder="Get a Quote"
@@ -444,7 +445,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                     )}
                   </div>
                   <Field
-                    label="Link"
+                    label={th.sfBtnLink}
                     value={form.btn2_link}
                     onChange={(v) => set("btn2_link", v)}
                     placeholder="/contact"
@@ -458,7 +459,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
         {/* ── Right column ────────────────────────────────── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Background image */}
-          <Card label="Background Image">
+          <Card label={th.sfCardBg}>
             <input
               ref={fileInputRef}
               type="file"
@@ -516,7 +517,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                         cursor: uploading ? "wait" : "pointer",
                       }}
                     >
-                      {uploading ? "…" : "Replace"}
+                      {uploading ? "…" : th.sfBgReplace}
                     </button>
                     <button
                       type="button"
@@ -531,11 +532,11 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                         cursor: "pointer",
                       }}
                     >
-                      Remove
+                      {th.sfBgRemove}
                     </button>
                   </div>
                   <p style={{ fontSize: 10, color: "#aaa", margin: "4px 0 0" }}>
-                    Recommended: 1920×1080px (16:9)
+                    {th.sfBgRecommended}
                   </p>
                 </div>
               </div>
@@ -557,7 +558,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
               >
                 <i className="ti ti-photo-plus" style={{ fontSize: 24, color: "#bbb" }} />
                 <span style={{ fontSize: 12, color: "#999" }}>
-                  {uploading ? "Uploading…" : "Click to upload background"}
+                  {uploading ? th.sfBgUploading : th.sfBgClickUpload}
                 </span>
                 <span style={{ fontSize: 10, color: "#bbb" }}>1920×1080px (16:9)</span>
               </div>
@@ -565,7 +566,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
           </Card>
 
           {/* Status */}
-          <Card label="Status">
+          <Card label={th.sfCardStatus}>
             <button
               type="button"
               onClick={() => set("is_active", !form.is_active)}
@@ -590,10 +591,10 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                     margin: 0,
                   }}
                 >
-                  {form.is_active ? "Active" : "Hidden"}
+                  {form.is_active ? th.sfStatusActive : th.sfStatusHidden}
                 </p>
                 <p style={{ fontSize: 10, color: "#aaa", margin: "2px 0 0" }}>
-                  {form.is_active ? "Visible on homepage" : "Not shown on homepage"}
+                  {form.is_active ? th.sfStatusActiveDesc : th.sfStatusHiddenDesc}
                 </p>
               </div>
               <div
@@ -624,7 +625,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
           </Card>
 
           {/* Display order */}
-          <Card label="Display Order">
+          <Card label={th.sfCardOrder}>
             <input
               type="number"
               min={1}
@@ -633,7 +634,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
               style={inputSt}
             />
             <p style={{ fontSize: 10, color: "#aaa", marginTop: 6 }}>
-              Lower numbers appear first. Drag rows in the list to reorder.
+              {th.sfOrderHint}
             </p>
           </Card>
         </div>
@@ -660,7 +661,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
             href="/admin/slides"
             style={{ fontSize: 13, color: "#888", textDecoration: "none" }}
           >
-            ← Back to slides
+            {th.sfBackBtn}
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {mode === "edit" && (
@@ -677,7 +678,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                   cursor: "pointer",
                 }}
               >
-                Discard
+                {th.sfDiscard}
               </button>
             )}
             <button
@@ -695,7 +696,7 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
                 cursor: saving ? "wait" : "pointer",
               }}
             >
-              {saving ? "Saving…" : mode === "new" ? "Create Slide" : "Save Changes"}
+              {saving ? th.sfSaving : mode === "new" ? th.sfCreate : th.sfSaveChanges}
             </button>
           </div>
         </div>

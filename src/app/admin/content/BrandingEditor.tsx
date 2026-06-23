@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { saveContentField } from "./actions";
 import { useToast } from "../components/Toast";
+import { th } from "@/app/admin/lib/admin-th";
 
 const FALLBACK = "/F2.png";
 const BUCKET = "page-images";
@@ -31,7 +32,7 @@ export default function BrandingEditor() {
 
   async function handleFile(file: File) {
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5 MB");
+      toast.error(th.toastLogoSize5);
       return;
     }
     setUploading(true);
@@ -41,7 +42,7 @@ export default function BrandingEditor() {
       .from(BUCKET)
       .upload(path, file, { upsert: true });
     if (error) {
-      toast.error(`Upload failed: ${error.message}`);
+      toast.error(th.toastLogoUploadFail(error.message));
       setUploading(false);
       return;
     }
@@ -51,23 +52,23 @@ export default function BrandingEditor() {
     try {
       await saveContentField("site", "branding", "logo_url", publicUrl);
       setCurrentUrl(publicUrl);
-      toast.success("Logo updated — both navbar and footer will reflect the change");
+      toast.success(th.toastLogoUpdated);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Save failed");
+      toast.error(e instanceof Error ? e.message : th.toastLogoSaveFail);
     } finally {
       setSaving(false);
     }
   }
 
   async function handleRevert() {
-    if (!confirm("Revert to the default logo (/F2.png)?")) return;
+    if (!confirm(th.brandingRevertConfirm)) return;
     setSaving(true);
     try {
       await saveContentField("site", "branding", "logo_url", "");
       setCurrentUrl(FALLBACK);
-      toast.success("Reverted to default logo");
+      toast.success(th.toastLogoReverted);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Save failed");
+      toast.error(e instanceof Error ? e.message : th.toastLogoSaveFail);
     } finally {
       setSaving(false);
     }
@@ -77,10 +78,8 @@ export default function BrandingEditor() {
     <div style={{ maxWidth: 500 }}>
       {/* Section heading */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", margin: "0 0 4px" }}>Site Logo</h2>
-        <p style={{ fontSize: 12, color: "#888", margin: 0 }}>
-          Shown in the navbar and footer on every page. Recommended: square PNG, 200 × 200 px minimum.
-        </p>
+        <h2 style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", margin: "0 0 4px" }}>{th.brandingTitle}</h2>
+        <p style={{ fontSize: 12, color: "#888", margin: 0 }}>{th.brandingDesc}</p>
       </div>
 
       {/* Preview card */}
@@ -100,17 +99,17 @@ export default function BrandingEditor() {
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>…</span>
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={previewSrc} alt="Logo preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={previewSrc} alt={th.brandingAlt} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           )}
         </div>
 
         <div>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", marginBottom: 3 }}>
             {currentUrl === null
-              ? "Loading…"
+              ? th.brandingLoadingLogo
               : isCustom
-              ? "Custom logo (from storage)"
-              : "Default logo  ·  /F2.png"}
+              ? th.brandingCustomLogo
+              : th.brandingDefaultLogo}
           </div>
           {isCustom && (
             <div style={{
@@ -147,7 +146,7 @@ export default function BrandingEditor() {
             opacity: busy ? 0.6 : 1,
           }}
         >
-          {uploading ? "Uploading…" : saving ? "Saving…" : "Upload New Logo"}
+          {uploading ? th.brandingUploading : saving ? th.brandingSaving : th.brandingUploadBtn}
         </button>
 
         {isCustom && !busy && (
@@ -159,14 +158,12 @@ export default function BrandingEditor() {
               border: "1px solid #D4D0C8", cursor: "pointer",
             }}
           >
-            Revert to default
+            {th.brandingRevert}
           </button>
         )}
       </div>
 
-      <p style={{ fontSize: 11, color: "#aaa", marginTop: 10 }}>
-        PNG, JPEG, WebP, or SVG · max 5 MB. Changes apply immediately — no separate save step needed.
-      </p>
+      <p style={{ fontSize: 11, color: "#aaa", marginTop: 10 }}>{th.brandingHint}</p>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { ToastProvider } from "./components/Toast";
 import AdminShell from "./AdminShell";
 
 export const metadata: Metadata = {
-  title: "SP Admin",
+  title: "SP แอดมิน",
   robots: "noindex,nofollow",
 };
 

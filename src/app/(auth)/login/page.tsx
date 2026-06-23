@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { AuthSplitLayout } from "../AuthSplitLayout";
 
+/* ── input style for dark panel ──────────────────────────── */
 const inputBase: React.CSSProperties = {
   width: "100%",
   background: "rgba(255,255,255,0.08)",
@@ -17,7 +18,6 @@ const inputBase: React.CSSProperties = {
   outline: "none",
   boxSizing: "border-box",
 };
-
 function onFocus(e: React.FocusEvent<HTMLInputElement>) {
   e.currentTarget.style.borderColor = "#E8D5A3";
   e.currentTarget.style.boxShadow = "0 0 0 3px rgba(232,213,163,0.1)";
@@ -34,7 +34,6 @@ export default function LoginPage() {
   const [error, setError]               = useState("");
   const [loading, setLoading]           = useState(false);
   const [googleHover, setGoogleHover]   = useState(false);
-  const [backHover, setBackHover]       = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -72,90 +71,48 @@ export default function LoginPage() {
   async function handleGoogleLogin() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
   }
 
   return (
-    <div style={{
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      minHeight: "100vh", padding: "40px 16px",
-      background: "#FFFFFF",
-    }}>
+    <AuthSplitLayout
+      leftLine1="Welcome"
+      leftLine2="back"
+      leftSubtext="good to see you again"
+    >
+      <div style={{ width: "100%", maxWidth: "390px" }}>
 
-      {/* Logo */}
-      <Link href="/home" style={{
-        display: "flex", alignItems: "center", gap: "10px",
-        textDecoration: "none", marginBottom: "20px",
-      }}>
-        <div style={{
-          width: "52px", height: "52px", borderRadius: "50%",
-          overflow: "hidden",
-          border: "1.5px solid rgba(28,41,81,0.25)",
-          outline: "1px solid rgba(28,41,81,0.08)",
-          outlineOffset: "3px",
-          flexShrink: 0,
-          background: "#FFFFFF",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <Image src="/F2.png" alt="Siam Premium logo" width={52} height={52} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+        {/* Form header */}
+        <div style={{ marginBottom: "24px" }}>
+          <p style={{ margin: "0 0 4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.16em", color: "rgba(232,213,163,0.6)" }}>
+            Sign In
+          </p>
+          <h2 style={{ margin: "0 0 6px", fontSize: "22px", fontWeight: 400, color: "#FFFFFF", fontFamily: "Georgia, serif" }}>
+            Your account
+          </h2>
+          <p style={{ margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>
+            New here?{" "}
+            <Link href="/signup" style={{ color: "#E8D5A3", fontWeight: 500, textDecoration: "none" }}>Create an account</Link>
+          </p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{
-            fontSize: "15px", fontWeight: 700, color: "#1C2951",
-            fontFamily: "Georgia, serif", letterSpacing: "0.05em", lineHeight: 1.1,
-          }}>SP</span>
-          <span style={{
-            fontSize: "10px", color: "rgba(28,41,81,0.55)",
-            letterSpacing: "0.15em", textTransform: "uppercase", lineHeight: 1,
-          }}>Siam Premium</span>
-        </div>
-      </Link>
-
-      {/* Card */}
-      <div style={{
-        background: "#1C2951",
-        border: "1px solid rgba(232,213,163,0.2)",
-        borderRadius: "16px",
-        boxShadow: "0 8px 40px rgba(28,41,81,0.2)",
-        padding: "36px",
-        width: "100%",
-        maxWidth: "390px",
-      }}>
-        <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#FFFFFF", fontFamily: "Georgia, serif", margin: "0 0 4px" }}>
-          Welcome back
-        </h1>
-        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", margin: "0 0 20px" }}>
-          Sign in to your account &nbsp;·&nbsp;{" "}
-          <Link href="/signup" style={{ color: "#E8D5A3", fontWeight: 500, textDecoration: "none" }}>Create account</Link>
-        </p>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
 
           {/* Email */}
           <div>
-            <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.7)", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.6)", marginBottom: "6px" }}>
               Email
             </label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              onFocus={onFocus}
-              onBlur={onBlur}
-              required
-              style={inputBase}
-            />
+            <input type="email" placeholder="you@example.com" value={email}
+              onChange={e => setEmail(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+              required style={inputBase} />
           </div>
 
           {/* Password */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-              <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.7)" }}>
+              <label style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.6)" }}>
                 Password
               </label>
               <Link href="/forgot-password" style={{ fontSize: "11px", color: "#E8D5A3", textDecoration: "none", fontWeight: 500 }}>
@@ -163,29 +120,14 @@ export default function LoginPage() {
               </Link>
             </div>
             <div style={{ position: "relative" }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                required
-                style={{ ...inputBase, paddingRight: "42px" }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(prev => !prev)}
+              <input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password}
+                onChange={e => setPassword(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+                required style={{ ...inputBase, paddingRight: "42px" }} />
+              <button type="button" onClick={() => setShowPassword(p => !p)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                style={{
-                  position: "absolute", inset: "0 0 0 auto",
-                  width: "40px", display: "flex", alignItems: "center", justifyContent: "center",
-                  background: "none", border: "none", cursor: "pointer",
-                  color: "rgba(232,213,163,0.5)", transition: "color 0.15s",
-                }}
+                style={{ position: "absolute", inset: "0 0 0 auto", width: "40px", display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "rgba(232,213,163,0.5)", transition: "color 0.15s" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "#E8D5A3")}
-                onMouseLeave={e => (e.currentTarget.style.color = "rgba(232,213,163,0.5)")}
-              >
+                onMouseLeave={e => (e.currentTarget.style.color = "rgba(232,213,163,0.5)")}>
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
@@ -197,72 +139,46 @@ export default function LoginPage() {
             </p>
           )}
 
-          {/* Sign In button */}
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%", padding: "12px",
-              background: "#E8D5A3", color: "#1C2951",
-              fontSize: "14px", fontWeight: 700,
-              borderRadius: "8px", border: "none",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
-              transition: "opacity 0.15s",
-            }}
+          <button type="submit" disabled={loading}
+            style={{ width: "100%", padding: "12px", background: "#E8D5A3", color: "#1C2951", fontSize: "14px", fontWeight: 700, borderRadius: "8px", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, transition: "opacity 0.15s" }}
             onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = "0.85"; }}
-            onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = "1"; }}
-          >
-            {loading ? "Signing in…" : "Sign In"}
+            onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = "1"; }}>
+            {loading ? "Signing in…" : "Sign In →"}
           </button>
         </form>
 
         {/* Divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "16px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "18px 0" }}>
           <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
           <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em" }}>or</span>
           <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
         </div>
 
-        {/* Google button */}
-        <button
-          onClick={handleGoogleLogin}
-          style={{
-            width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-            padding: "11px 16px",
-            background: googleHover ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "8px", cursor: "pointer",
-            fontSize: "14px", color: "#FFFFFF",
-            transition: "background 0.15s",
-          }}
+        {/* Google */}
+        <button onClick={handleGoogleLogin}
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", padding: "11px 16px", background: googleHover ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", cursor: "pointer", fontSize: "14px", color: "#FFFFFF", transition: "background 0.15s" }}
           onMouseEnter={() => setGoogleHover(true)}
-          onMouseLeave={() => setGoogleHover(false)}
-        >
+          onMouseLeave={() => setGoogleHover(false)}>
           <GoogleIcon />
           Continue with Google
         </button>
+
+        {/* Below-form links */}
+        <div style={{ marginTop: "28px", textAlign: "center" }}>
+          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", margin: "0 0 10px" }}>
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" style={{ color: "#E8D5A3", fontWeight: 500, textDecoration: "none" }}>Sign up</Link>
+          </p>
+          <Link href="/home"
+            style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textDecoration: "none", transition: "color 0.15s" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}>
+            ← Back to home
+          </Link>
+        </div>
+
       </div>
-
-      {/* Below-card links */}
-      <p style={{ textAlign: "center", fontSize: "12px", color: "rgba(28,41,81,0.6)", marginTop: "14px" }}>
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" style={{ color: "#1C2951", fontWeight: 600, textDecoration: "none" }}>
-          Sign up
-        </Link>
-      </p>
-
-      <p style={{ textAlign: "center", fontSize: "12px", marginTop: "8px" }}>
-        <Link
-          href="/home"
-          style={{ color: backHover ? "#1C2951" : "rgba(28,41,81,0.5)", textDecoration: "none", transition: "color 0.15s" }}
-          onMouseEnter={() => setBackHover(true)}
-          onMouseLeave={() => setBackHover(false)}
-        >
-          ← Back to home
-        </Link>
-      </p>
-    </div>
+    </AuthSplitLayout>
   );
 }
 

@@ -20,6 +20,7 @@ export default async function ContactPage() {
       heroHeading    ={gv(rows, "hero",   "heading",     "Contact Us")}
       heroSubtextTh  ={gv(rows, "hero",   "subtext_th",  "ติดต่อเราเพื่อรับคำปรึกษาและใบเสนอราคาฟรี")}
       heroDescription={gv(rows, "hero",   "description", "We're here to help you create the perfect premium experience for your brand.")}
+      heroStylesJson ={gv(rows, "hero",   "_styles",     "{}")}
       phone1         ={gv(rows, "info",   "phone1",      "02 555 1234")}
       phone2         ={gv(rows, "info",   "phone2",      "02 555 5678")}
       mobile         ={gv(rows, "info",   "mobile",      "086 999 0000")}
@@ -27,6 +28,8 @@ export default async function ContactPage() {
       address        ={gv(rows, "info",   "address",     "88 Sukhumvit Road, Khlong Toei, Bangkok 10110")}
       addressTh      ={gv(rows, "info",   "address_th",  "88 ถนนสุขุมวิท แขวงคลองเตย กรุงเทพมหานคร 10110")}
       hours          ={gv(rows, "info",   "hours",       "Mon – Fri  09.00 – 18.00")}
+      hoursTh        ={gv(rows, "info",   "hours_th",    "จ–ศ  09.00 – 18.00")}
+      infoStylesJson ={gv(rows, "info",   "_styles",     "{}")}
       facebook       ={gv(rows, "social", "facebook",    "https://facebook.com")}
       instagram      ={gv(rows, "social", "instagram",   "https://instagram.com")}
       line           ={gv(rows, "social", "line",        "https://line.me")}

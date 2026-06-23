@@ -9,6 +9,7 @@ import {
   toggleCategoryVisibility,
 } from "./categoryActions";
 import type { Category } from "./page";
+import { th } from "@/app/admin/lib/admin-th";
 
 export default function CategoryManager({
   initialCategories,
@@ -38,22 +39,22 @@ export default function CategoryManager({
     const name = newCategoryName.trim();
     if (!name) return;
     if (categories.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-      setError(`"${name}" already exists.`);
+      setError(th.catExistsErr(name));
       return;
     }
     setError(null);
     setAdding(true);
     const displayOrder = categories.length + 1;
     try {
-      await addCategory(name, displayOrder);
+      const row = await addCategory(name, displayOrder);
       setCategories(p => [...p, {
-        id: `temp-${Date.now()}`, name, display_order: displayOrder, is_visible: true,
+        id: row.id, name: row.name, display_order: row.display_order, is_visible: row.is_visible,
       }]);
       setCounts(p => ({ ...p, [name]: 0 }));
       setNewCategoryName("");
-      flashSuccess(`✓ "${name}" added`);
+      flashSuccess(th.catAddedMsg(name));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add category.");
+      setError(err instanceof Error ? err.message : th.catAddFail);
     } finally {
       setAdding(false);
     }
@@ -77,7 +78,7 @@ export default function CategoryManager({
       return;
     }
     if (categories.some(c => c.id !== cat.id && c.name.toLowerCase() === newName.toLowerCase())) {
-      setError(`"${newName}" already exists.`);
+      setError(th.catExistsErr(newName));
       return;
     }
     setError(null);
@@ -91,10 +92,10 @@ export default function CategoryManager({
         delete next[cat.name];
         return next;
       });
-      flashSuccess(`✓ Renamed — ${result.productsUpdated} product${result.productsUpdated === 1 ? "" : "s"} updated`);
+      flashSuccess(th.catRenamedMsg(result.productsUpdated));
       cancelEdit();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to rename category.");
+      setError(err instanceof Error ? err.message : th.catRenameFail);
       setEditingName(cat.name);
     } finally {
       setRenamingId(null);
@@ -104,15 +105,15 @@ export default function CategoryManager({
   async function handleDelete(cat: Category) {
     const count = counts[cat.name] ?? 0;
     if (count > 0) return;
-    if (!confirm(`Delete category "${cat.name}"? This cannot be undone.`)) return;
+    if (!confirm(th.catDeleteConfirm(cat.name))) return;
     setError(null);
     setLoading(cat.id);
     try {
       await deleteCategory(cat.id, cat.name);
       setCategories(p => p.filter(c => c.id !== cat.id));
-      flashSuccess(`✓ "${cat.name}" deleted`);
+      flashSuccess(th.catDeletedMsg(cat.name));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete category.");
+      setError(err instanceof Error ? err.message : th.catDeleteFail);
     } finally {
       setLoading(null);
     }
@@ -125,7 +126,7 @@ export default function CategoryManager({
       await toggleCategoryVisibility(cat.id, nextVisible);
     } catch (err) {
       setCategories(p => p.map(c => c.id === cat.id ? { ...c, is_visible: !nextVisible } : c));
-      setError(err instanceof Error ? err.message : "Failed to update visibility.");
+      setError(err instanceof Error ? err.message : th.catVisFail);
     }
   }
 
@@ -148,7 +149,7 @@ export default function CategoryManager({
     setDraggingId(null);
     renumbered.forEach(c => {
       updateCategoryOrder(c.id, c.display_order).catch(err => {
-        setError(err instanceof Error ? err.message : "Failed to save new order.");
+        setError(err instanceof Error ? err.message : th.catOrderFail);
       });
     });
   }
@@ -157,10 +158,10 @@ export default function CategoryManager({
     <div>
       <div style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", margin: "0 0 4px" }}>
-          Category Manager
+          {th.catTitle}
         </h2>
         <p style={{ fontSize: 12, color: "#aaa", margin: 0 }}>
-          Categories auto-generate the filter tabs on the home page. Renaming a category updates all matching products automatically.
+          {th.catDesc}
         </p>
       </div>
 
@@ -171,7 +172,7 @@ export default function CategoryManager({
         marginBottom: 16,
       }}>
         <i className="ti ti-alert-triangle" style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }} />
-        <span>Deleting a category is only possible if no products use it. Reassign products first in the Products section.</span>
+        <span>{th.catWarning}</span>
       </div>
 
       {successMsg && (
@@ -209,9 +210,9 @@ export default function CategoryManager({
           padding: "12px 18px", borderBottom: "0.5px solid #E8E6E0",
         }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>
-            Categories ({categories.length} total)
+            {th.catHeader(categories.length)}
           </span>
-          <span style={{ fontSize: 11, color: "#aaa" }}>↕ Drag to reorder</span>
+          <span style={{ fontSize: 11, color: "#aaa" }}>{th.catDragHint}</span>
         </div>
 
         {categories.map(cat => {
@@ -259,7 +260,7 @@ export default function CategoryManager({
                         border: "none", borderRadius: 5, padding: "5px 10px", cursor: "pointer",
                       }}
                     >
-                      {isRenaming ? "Renaming…" : "Save"}
+                      {isRenaming ? th.catRenaming : th.catSave}
                     </button>
                     <button
                       type="button" onClick={cancelEdit} disabled={isRenaming}
@@ -268,13 +269,13 @@ export default function CategoryManager({
                         border: "1px solid #D8D5CE", borderRadius: 5, padding: "5px 10px", cursor: "pointer",
                       }}
                     >
-                      Cancel
+                      {th.catCancel}
                     </button>
                   </div>
                 ) : (
                   <span
                     onClick={() => startEdit(cat)}
-                    title="Click to rename"
+                    title={th.catClickRename}
                     style={{ fontSize: 13, color: "#1a1a1a", cursor: "pointer" }}
                   >
                     {cat.name}
@@ -285,7 +286,7 @@ export default function CategoryManager({
                   fontSize: 10, fontWeight: 600, color: "#E8D5A3", background: "#0D1E3D",
                   borderRadius: 99, padding: "2px 8px", flexShrink: 0,
                 }}>
-                  {count} product{count === 1 ? "" : "s"}
+                  {th.catProductCount(count)}
                 </span>
               </div>
 
@@ -293,7 +294,7 @@ export default function CategoryManager({
                 <button
                   type="button"
                   onClick={() => handleToggleVisibility(cat)}
-                  title={cat.is_visible ? "Visible — click to hide" : "Hidden — click to show"}
+                  title={cat.is_visible ? th.catVisHide : th.catVisShow}
                   style={{
                     width: 36, height: 20, borderRadius: 10,
                     background: cat.is_visible ? "#0D1E3D" : "#E8E6E0",
@@ -321,7 +322,7 @@ export default function CategoryManager({
                   type="button"
                   onClick={() => handleDelete(cat)}
                   disabled={count > 0 || loading === cat.id}
-                  title={count > 0 ? "Has products" : "Delete category"}
+                  title={count > 0 ? th.catHasProducts : th.catDeleteTitle}
                   style={{
                     background: "none", border: "none", fontSize: 14, padding: 4,
                     color: count > 0 ? "#E8B4B4" : "#A32D2D",
@@ -340,7 +341,7 @@ export default function CategoryManager({
             value={newCategoryName}
             onChange={e => setNewCategoryName(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") handleAdd(); }}
-            placeholder="New category name..."
+            placeholder={th.catPlaceholder}
             style={{
               flex: 1, fontSize: 13, padding: "8px 12px", borderRadius: 6,
               border: "0.5px solid #E8E6E0", outline: "none",
@@ -357,7 +358,7 @@ export default function CategoryManager({
               cursor: adding ? "wait" : "pointer", whiteSpace: "nowrap",
             }}
           >
-            {adding ? "Adding…" : "Add Category"}
+            {adding ? th.catAdding : th.catAddBtn}
           </button>
         </div>
       </div>

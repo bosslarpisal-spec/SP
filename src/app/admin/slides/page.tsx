@@ -3,6 +3,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import AdminSlidesClient from "./AdminSlidesClient";
+import { th } from "@/app/admin/lib/admin-th";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function SlidesPage() {
   if (error) {
     return (
       <div style={{ color: "#A32D2D", padding: 24, fontSize: 14 }}>
-        Failed to load slides: {error.message}
+        {th.slidesLoadFail}: {error.message}
       </div>
     );
   }
@@ -57,11 +58,10 @@ export default async function SlidesPage() {
       >
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 600, color: "#1a1a1a", margin: 0 }}>
-            Hero Slides
+            {th.slidesHeading}
           </h1>
           <p style={{ fontSize: 12, color: "#aaa", margin: "4px 0 0" }}>
-            Drag to reorder · Toggle to show/hide · {(data ?? []).length} slide
-            {(data ?? []).length !== 1 ? "s" : ""} total
+            {th.slidesSubtitle((data ?? []).length)}
           </p>
         </div>
         <Link
@@ -80,7 +80,7 @@ export default async function SlidesPage() {
           }}
         >
           <i className="ti ti-plus" style={{ fontSize: 14 }} />
-          Add Slide
+          {th.slidesAddBtn}
         </Link>
       </div>
 

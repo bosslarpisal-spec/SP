@@ -2,31 +2,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { AuthSplitLayout } from "../AuthSplitLayout";
 
 const inputBase: React.CSSProperties = {
   width: "100%",
   background: "rgba(255,255,255,0.08)",
   border: "1px solid rgba(232,213,163,0.25)",
   borderRadius: "8px",
-  padding: "12px 16px",
+  padding: "10px 16px",
   fontSize: "14px",
   color: "#FFFFFF",
   outline: "none",
   boxSizing: "border-box",
 };
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "11px",
-  textTransform: "uppercase",
-  letterSpacing: "0.12em",
-  color: "rgba(255,255,255,0.7)",
-  fontWeight: 500,
-  marginBottom: "6px",
-};
-
 function onFocus(e: React.FocusEvent<HTMLInputElement>) {
   e.currentTarget.style.borderColor = "#E8D5A3";
   e.currentTarget.style.boxShadow = "0 0 0 3px rgba(232,213,163,0.1)";
@@ -44,7 +33,6 @@ export default function SignUpPage() {
   const [error,    setError   ] = useState("");
   const [loading,  setLoading ] = useState(false);
   const [googleHover, setGoogleHover] = useState(false);
-  const [backHover,   setBackHover  ] = useState(false);
   const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
@@ -55,15 +43,11 @@ export default function SignUpPage() {
     if (password !== confirm) return setError("Passwords do not match.");
 
     setLoading(true);
-
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { full_name: name },
-      },
+      options: { data: { full_name: name } },
     });
-
     setLoading(false);
     if (error) setError(error.message);
     else router.push("/home");
@@ -72,220 +56,123 @@ export default function SignUpPage() {
   async function handleGoogleSignup() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
   }
 
   return (
-    <div style={{
-      display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      minHeight: "100vh", padding: "40px 16px",
-      background: "#FFFFFF",
-    }}>
+    <AuthSplitLayout
+      leftLine1="Hello,"
+      leftLine2="welcome"
+      leftSubtext="let's get you started"
+    >
+      <div style={{ width: "100%", maxWidth: "390px" }}>
 
-      {/* Logo */}
-      <Link href="/home" style={{
-        display: "flex", alignItems: "center", gap: "10px",
-        textDecoration: "none", marginBottom: "20px",
-      }}>
-        <div style={{
-          width: "52px", height: "52px", borderRadius: "50%",
-          overflow: "hidden",
-          border: "1.5px solid rgba(28,41,81,0.25)",
-          outline: "1px solid rgba(28,41,81,0.08)",
-          outlineOffset: "3px",
-          flexShrink: 0,
-          background: "#FFFFFF",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <Image src="/F2.png" alt="Siam Premium logo" width={52} height={52} style={{ objectFit: "cover", width: "100%", height: "100%" }} />
+        {/* Form header */}
+        <div style={{ marginBottom: "24px" }}>
+          <p style={{ margin: "0 0 4px", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.16em", color: "rgba(232,213,163,0.6)" }}>
+            Create Account
+          </p>
+          <h2 style={{ margin: "0 0 6px", fontSize: "22px", fontWeight: 400, color: "#FFFFFF", fontFamily: "Georgia, serif" }}>
+            Join Siam Premium
+          </h2>
+          <p style={{ margin: 0, fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>
+            Already have an account?{" "}
+            <Link href="/login" style={{ color: "#E8D5A3", fontWeight: 500, textDecoration: "none" }}>Sign in</Link>
+          </p>
         </div>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{
-            fontSize: "15px", fontWeight: 700, color: "#1C2951",
-            fontFamily: "Georgia, serif", letterSpacing: "0.05em", lineHeight: 1.1,
-          }}>SP</span>
-          <span style={{
-            fontSize: "10px", color: "rgba(28,41,81,0.55)",
-            letterSpacing: "0.15em", textTransform: "uppercase", lineHeight: 1,
-          }}>Siam Premium</span>
-        </div>
-      </Link>
 
-      {/* Card */}
-      <div style={{
-        background: "#1C2951",
-        border: "1px solid rgba(232,213,163,0.2)",
-        borderRadius: "16px",
-        boxShadow: "0 8px 40px rgba(28,41,81,0.2)",
-        width: "100%",
-        maxWidth: "620px",
-        padding: "44px 72px",
-      }}>
-        <h1 style={{
-          fontSize: "24px", fontWeight: 700, color: "#FFFFFF",
-          fontFamily: "Georgia, serif", margin: "0 0 6px",
-        }}>
-          Create account
-        </h1>
-        <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 24px" }}>
-          Already have an account?{" "}
-          <Link href="/login" style={{ color: "#E8D5A3", fontWeight: 600, textDecoration: "none" }}>
-            Sign in
-          </Link>
-        </p>
-
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
 
           {/* Full Name */}
           <div>
-            <label style={labelStyle}>Full Name</label>
-            <input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              onFocus={onFocus}
-              onBlur={onBlur}
-              required
-              style={inputBase}
-            />
+            <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.6)", marginBottom: "6px" }}>
+              Full Name
+            </label>
+            <input type="text" placeholder="Your name" value={name}
+              onChange={e => setName(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+              required style={inputBase} />
           </div>
 
           {/* Email */}
           <div>
-            <label style={labelStyle}>Email</label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              onFocus={onFocus}
-              onBlur={onBlur}
-              required
-              style={inputBase}
-            />
+            <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.6)", marginBottom: "6px" }}>
+              Email
+            </label>
+            <input type="email" placeholder="you@example.com" value={email}
+              onChange={e => setEmail(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+              required style={inputBase} />
           </div>
 
           {/* Password */}
           <div>
-            <label style={labelStyle}>Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              onFocus={onFocus}
-              onBlur={onBlur}
-              required
-              style={inputBase}
-            />
-            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", margin: "5px 0 0" }}>
+            <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.6)", marginBottom: "6px" }}>
+              Password
+            </label>
+            <input type="password" placeholder="••••••••" value={password}
+              onChange={e => setPassword(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+              required style={inputBase} />
+            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", margin: "5px 0 0" }}>
               At least 6 characters
             </p>
           </div>
 
           {/* Confirm Password */}
           <div>
-            <label style={labelStyle}>Confirm Password</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              onFocus={onFocus}
-              onBlur={onBlur}
-              required
-              style={inputBase}
-            />
+            <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.6)", marginBottom: "6px" }}>
+              Confirm Password
+            </label>
+            <input type="password" placeholder="••••••••" value={confirm}
+              onChange={e => setConfirm(e.target.value)} onFocus={onFocus} onBlur={onBlur}
+              required style={inputBase} />
           </div>
 
           {error && (
-            <p style={{
-              fontSize: "12px", color: "rgba(255,120,120,0.9)",
-              background: "rgba(255,80,80,0.08)",
-              border: "1px solid rgba(255,80,80,0.2)",
-              borderRadius: "6px", padding: "8px 12px", margin: 0,
-            }}>
+            <p style={{ fontSize: "12px", color: "rgba(255,120,120,0.9)", background: "rgba(255,80,80,0.08)", border: "1px solid rgba(255,80,80,0.2)", borderRadius: "6px", padding: "8px 12px", margin: 0 }}>
               {error}
             </p>
           )}
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%", padding: "13px",
-              background: "#E8D5A3", color: "#1C2951",
-              fontSize: "15px", fontWeight: 700,
-              borderRadius: "8px", border: "none",
-              marginTop: "8px",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.7 : 1,
-              transition: "opacity 0.15s",
-            }}
+          <button type="submit" disabled={loading}
+            style={{ width: "100%", padding: "12px", background: "#E8D5A3", color: "#1C2951", fontSize: "14px", fontWeight: 700, borderRadius: "8px", border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, transition: "opacity 0.15s" }}
             onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = "0.85"; }}
-            onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = "1"; }}
-          >
-            {loading ? "Creating account…" : "Create Account"}
+            onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = "1"; }}>
+            {loading ? "Creating account…" : "Create Account →"}
           </button>
         </form>
 
         {/* Divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "20px 0 12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "18px 0" }}>
           <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
-          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em" }}>or</span>
+          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.06em" }}>or</span>
           <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
         </div>
 
         {/* Google */}
-        <button
-          onClick={handleGoogleSignup}
-          style={{
-            width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-            padding: "12px",
-            background: googleHover ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "8px", cursor: "pointer",
-            fontSize: "14px", color: "#FFFFFF",
-            transition: "background 0.15s",
-          }}
+        <button onClick={handleGoogleSignup}
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", padding: "11px 16px", background: googleHover ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "8px", cursor: "pointer", fontSize: "14px", color: "#FFFFFF", transition: "background 0.15s" }}
           onMouseEnter={() => setGoogleHover(true)}
-          onMouseLeave={() => setGoogleHover(false)}
-        >
+          onMouseLeave={() => setGoogleHover(false)}>
           <GoogleIcon />
           Sign up with Google
         </button>
-      </div>
 
-      {/* Below-card links */}
-      <div style={{ textAlign: "center", marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
-        <p style={{ fontSize: "13px", color: "rgba(28,41,81,0.6)", margin: 0 }}>
-          Already have an account?{" "}
-          <Link href="/login" style={{ color: "#1C2951", fontWeight: 600, textDecoration: "none" }}>
-            Sign in
+        {/* Below-form links */}
+        <div style={{ marginTop: "28px", textAlign: "center" }}>
+          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", margin: "0 0 10px" }}>
+            Already have an account?{" "}
+            <Link href="/login" style={{ color: "#E8D5A3", fontWeight: 500, textDecoration: "none" }}>Sign in</Link>
+          </p>
+          <Link href="/home"
+            style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textDecoration: "none", transition: "color 0.15s" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.3)")}>
+            ← Back to home
           </Link>
-        </p>
-        <Link
-          href="/home"
-          style={{
-            fontSize: "13px",
-            color: backHover ? "#1C2951" : "rgba(28,41,81,0.5)",
-            textDecoration: "none",
-            transition: "color 0.15s",
-          }}
-          onMouseEnter={() => setBackHover(true)}
-          onMouseLeave={() => setBackHover(false)}
-        >
-          ← Back to home
-        </Link>
-      </div>
+        </div>
 
-    </div>
+      </div>
+    </AuthSplitLayout>
   );
 }
 

@@ -2,6 +2,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import AdminProductsClient from "./AdminProductsClient";
+import { th } from "@/app/admin/lib/admin-th";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export default async function AdminProductsPage() {
           fontSize: 13,
         }}
       >
-        Failed to load products: {error.message}
+        โหลดสินค้าไม่สำเร็จ: {error.message}
       </div>
     );
   }
@@ -46,10 +47,10 @@ export default async function AdminProductsPage() {
       >
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 500, color: "#1a1a1a", margin: "0 0 2px" }}>
-            Products
+            {th.productsHeading}
           </h1>
           <p style={{ fontSize: 12, color: "#aaa", margin: 0 }}>
-            {total} total · {active} visible · {isNew} new
+            {th.productsSubtitle(total, active, isNew)}
           </p>
         </div>
         <Link
@@ -65,7 +66,7 @@ export default async function AdminProductsPage() {
             whiteSpace: "nowrap",
           }}
         >
-          + Add Product
+          {th.productsAddBtn}
         </Link>
       </div>
 

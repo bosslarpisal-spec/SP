@@ -3,17 +3,20 @@
 import { assertAdmin } from "../lib/admin-guard";
 import { createSupabaseServiceClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
+import { th } from "@/app/admin/lib/admin-th";
 
 export async function addTag(name: string) {
   await assertAdmin();
   const service = createSupabaseServiceClient();
-  const { error } = await service
+  const { data, error } = await service
     .from("tags")
-    .upsert({ name: name.trim().toLowerCase() }, { onConflict: "name", ignoreDuplicates: true });
+    .insert({ name: name.trim().toLowerCase() })
+    .select("id, name")
+    .single();
   if (error) throw new Error(error.message);
   revalidatePath("/home");
   revalidatePath("/admin/content");
-  return { success: true };
+  return data as { id: string; name: string };
 }
 
 export async function renameTag(id: string, oldName: string, newName: string) {
@@ -61,7 +64,7 @@ export async function deleteTag(id: string, name: string) {
   if (countError) throw new Error(countError.message);
 
   if (count && count > 0) {
-    throw new Error(`Cannot delete — ${count} product${count === 1 ? "" : "s"} use this tag. Reassign them first.`);
+    throw new Error(th.errTagDeleteBlocked(count));
   }
 
   const { error } = await service.from("tags").delete().eq("id", id);

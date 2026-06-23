@@ -1,6 +1,7 @@
 // src/app/admin/page.tsx
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Link from "next/link";
+import { th } from "@/app/admin/lib/admin-th";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,9 @@ function nameFromEmail(email: string): string {
 
 function greeting(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return th.greetMorning;
+  if (hour < 18) return th.greetAfternoon;
+  return th.greetEvening;
 }
 
 export default async function AdminDashboard() {
@@ -53,10 +54,10 @@ export default async function AdminDashboard() {
     .slice(0, 5);
 
   const stats = [
-    { label: "Total Products", value: total, icon: "ti-package", iconBg: "#F5F3F0", iconColor: "#0D1E3D" },
-    { label: "Visible", value: active, icon: "ti-eye", iconBg: "#EAF5E8", iconColor: "#3B6D11" },
-    { label: "Marked as New", value: isNew, icon: "ti-sparkles", iconBg: "#E1F5EE", iconColor: "#0F6E56" },
-    { label: "Categories", value: categoryCount ?? 0, icon: "ti-category", iconBg: "#F5F3F0", iconColor: "#0D1E3D" },
+    { label: th.dashStatTotal, value: total, icon: "ti-package", iconBg: "#F5F3F0", iconColor: "#0D1E3D" },
+    { label: th.dashStatVisible, value: active, icon: "ti-eye", iconBg: "#EAF5E8", iconColor: "#3B6D11" },
+    { label: th.dashStatNew, value: isNew, icon: "ti-sparkles", iconBg: "#E1F5EE", iconColor: "#0F6E56" },
+    { label: th.dashStatCats, value: categoryCount ?? 0, icon: "ti-category", iconBg: "#F5F3F0", iconColor: "#0D1E3D" },
   ];
 
   const displayName = nameFromEmail(user?.email ?? "");
@@ -69,7 +70,7 @@ export default async function AdminDashboard() {
           {greeting()}, {displayName}
         </h1>
         <p style={{ fontSize: 12, color: "#aaa", margin: 0 }}>
-          Here&rsquo;s what&rsquo;s happening today.
+          {th.dashSubtitle}
         </p>
       </div>
 
@@ -134,13 +135,13 @@ export default async function AdminDashboard() {
         >
           <div style={{ padding: "16px 20px", borderBottom: "0.5px solid #E8E6E0" }}>
             <p style={{ fontSize: 13, fontWeight: 500, color: "#1a1a1a" }}>
-              Recent Products
+              {th.dashRecent}
             </p>
           </div>
 
           {recent.length === 0 ? (
             <div style={{ padding: "40px 24px", textAlign: "center", color: "#aaa", fontSize: 13 }}>
-              No products yet.
+              {th.dashNoProducts}
             </div>
           ) : (
             <div>
@@ -208,7 +209,7 @@ export default async function AdminDashboard() {
                         borderRadius: 99,
                       }}
                     >
-                      {p.is_active ? "Active" : "Hidden"}
+                      {p.is_active ? th.statusActive : th.statusHidden}
                     </span>
                   </div>
                 </div>
@@ -231,7 +232,7 @@ export default async function AdminDashboard() {
                 textDecoration: "none",
               }}
             >
-              View all products →
+              {th.dashViewAll}
             </Link>
           </div>
         </div>
@@ -247,10 +248,10 @@ export default async function AdminDashboard() {
             }}
           >
             <p style={{ fontSize: 13, fontWeight: 500, color: "#1a1a1a", marginBottom: 14 }}>
-              Top Categories
+              {th.dashTopCats}
             </p>
             {topCategories.length === 0 ? (
-              <p style={{ fontSize: 12, color: "#aaa" }}>No products yet.</p>
+              <p style={{ fontSize: 12, color: "#aaa" }}>{th.dashNoProducts}</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {topCategories.map(([category, count]) => {
@@ -280,7 +281,7 @@ export default async function AdminDashboard() {
             }}
           >
             <p style={{ fontSize: 13, fontWeight: 500, color: "#1a1a1a", marginBottom: 12 }}>
-              Quick Actions
+              {th.dashQuickActions}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <Link
@@ -297,7 +298,7 @@ export default async function AdminDashboard() {
                   textAlign: "center",
                 }}
               >
-                + Add New Product
+                {th.dashAddNew}
               </Link>
               <Link
                 href="/admin/products"
@@ -313,7 +314,7 @@ export default async function AdminDashboard() {
                   textAlign: "center",
                 }}
               >
-                View Products
+                {th.dashViewProducts}
               </Link>
             </div>
           </div>

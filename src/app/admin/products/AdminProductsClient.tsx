@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { toggleProductActive, deleteProduct as deleteProductAction } from "./actions";
 import { useToast } from "../components/Toast";
+import { th } from "@/app/admin/lib/admin-th";
 
 type Product = {
   id: number;
@@ -85,11 +86,11 @@ export default function AdminProductsClient({
         )
       );
       toast.success(
-        product.is_active ? `"${product.name}" hidden` : `"${product.name}" visible`
+        product.is_active ? th.productsHiddenToast(product.name) : th.productsVisibleToast(product.name)
       );
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update product");
+      toast.error(err instanceof Error ? err.message : th.productsUpdateFail);
     }
     setLoadingId(null);
   }
@@ -100,10 +101,10 @@ export default function AdminProductsClient({
     try {
       await deleteProductAction(product.id);
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
-      toast.success("Product deleted");
+      toast.success(th.productsDeleted);
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete product");
+      toast.error(err instanceof Error ? err.message : th.productsDeleteFail);
     }
     setLoadingId(null);
   }
@@ -130,7 +131,7 @@ export default function AdminProductsClient({
         }}
       >
         <p style={{ color: "#aaa", marginBottom: 16, fontSize: 14 }}>
-          No products yet.
+          {th.productsEmpty}
         </p>
         <Link
           href="/admin/products/new"
@@ -144,7 +145,7 @@ export default function AdminProductsClient({
             textDecoration: "none",
           }}
         >
-          Add your first product
+          {th.productsFirstAdd}
         </Link>
       </div>
     );
@@ -177,7 +178,7 @@ export default function AdminProductsClient({
           />
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder={th.productsSearch}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ ...inputStyle, paddingLeft: 30, width: "100%" }}
@@ -194,7 +195,7 @@ export default function AdminProductsClient({
               color: !categoryFilter ? "#E8D5A3" : "#888",
             }}
           >
-            All
+            {th.productsFilterAll}
           </button>
           {categories.map((c) => (
             <button
@@ -216,7 +217,7 @@ export default function AdminProductsClient({
 
       {/* Result count */}
       <p style={{ fontSize: 12, color: "#aaa", marginBottom: 10 }}>
-        Showing {filtered.length} of {products.length} products
+        {th.productsShowing(filtered.length, products.length)}
       </p>
 
       {/* Table */}
@@ -241,15 +242,15 @@ export default function AdminProductsClient({
                 }}
               >
                 <th style={thStyle}>
-                  <input type="checkbox" style={{ cursor: "pointer" }} disabled title="Bulk select coming soon" />
+                  <input type="checkbox" style={{ cursor: "pointer" }} disabled title={th.productsBulkSoon} />
                 </th>
-                <th style={thStyle}>Image</th>
-                <th style={{ ...thStyle, textAlign: "left" }}>Name</th>
-                <th style={{ ...thStyle, textAlign: "left" }} className="hidden sm:table-cell">Category</th>
-                <th style={{ ...thStyle, textAlign: "left" }} className="hidden md:table-cell">Tags</th>
-                <th style={thStyle} className="hidden lg:table-cell">Order</th>
-                <th style={thStyle}>Status</th>
-                <th style={{ ...thStyle, textAlign: "right" }}>Actions</th>
+                <th style={thStyle}>{th.productsColImage}</th>
+                <th style={{ ...thStyle, textAlign: "left" }}>{th.productsColName}</th>
+                <th style={{ ...thStyle, textAlign: "left" }} className="hidden sm:table-cell">{th.productsColCat}</th>
+                <th style={{ ...thStyle, textAlign: "left" }} className="hidden md:table-cell">{th.productsColTags}</th>
+                <th style={thStyle} className="hidden lg:table-cell">{th.productsColOrder}</th>
+                <th style={thStyle}>{th.productsColStatus}</th>
+                <th style={{ ...thStyle, textAlign: "right" }}>{th.productsColActions}</th>
               </tr>
             </thead>
             <tbody>
@@ -368,7 +369,7 @@ export default function AdminProductsClient({
                       <button
                         onClick={() => toggleActive(p)}
                         disabled={loadingId === p.id}
-                        title={p.is_active ? "Click to hide" : "Click to show"}
+                        title={p.is_active ? th.productsClickHide : th.productsClickShow}
                         style={{
                           position: "relative",
                           display: "inline-flex",
@@ -404,7 +405,7 @@ export default function AdminProductsClient({
                           fontWeight: 500,
                         }}
                       >
-                        {p.is_active ? "Active" : "Hidden"}
+                        {p.is_active ? th.statusActive : th.statusHidden}
                       </span>
                     </div>
                   </td>
@@ -413,7 +414,7 @@ export default function AdminProductsClient({
                   <td style={{ ...tdStyle, textAlign: "right" }}>
                     {confirmDeleteId === p.id ? (
                       <div style={{ display: "flex", gap: 4, justifyContent: "flex-end", alignItems: "center" }}>
-                        <span style={{ fontSize: 11, color: "#555" }}>Delete?</span>
+                        <span style={{ fontSize: 11, color: "#555" }}>{th.productsDeleteQ}</span>
                         <button
                           onClick={() => handleDelete(p)}
                           disabled={loadingId === p.id}
@@ -428,7 +429,7 @@ export default function AdminProductsClient({
                             cursor: "pointer",
                           }}
                         >
-                          Yes
+                          {th.productsYes}
                         </button>
                         <button
                           onClick={() => setConfirmDeleteId(null)}
@@ -442,7 +443,7 @@ export default function AdminProductsClient({
                             cursor: "pointer",
                           }}
                         >
-                          No
+                          {th.productsNo}
                         </button>
                       </div>
                     ) : (
@@ -467,14 +468,14 @@ export default function AdminProductsClient({
                             color: "#555",
                             textDecoration: "none",
                           }}
-                          title="Edit"
+                          title={th.productsEdit}
                         >
                           <i className="ti ti-pencil" style={{ fontSize: 13 }} />
                         </Link>
                         <button
                           onClick={() => setConfirmDeleteId(p.id)}
                           disabled={loadingId === p.id}
-                          title="Delete"
+                          title={th.productsDelete}
                           style={{
                             width: 28,
                             height: 28,
@@ -508,7 +509,7 @@ export default function AdminProductsClient({
               fontSize: 13,
             }}
           >
-            No products match your search.
+            {th.productsNoMatch}
           </div>
         )}
 
@@ -521,7 +522,7 @@ export default function AdminProductsClient({
             }}
           >
             <span style={{ fontSize: 12, color: "#aaa" }}>
-              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length}
+              {th.productsPagination((currentPage - 1) * ITEMS_PER_PAGE + 1, Math.min(currentPage * ITEMS_PER_PAGE, filtered.length), filtered.length)}
             </span>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <button
@@ -533,7 +534,7 @@ export default function AdminProductsClient({
                   cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.4 : 1,
                 }}
               >
-                Prev
+                {th.productsPrev}
               </button>
               {getPageNumbers(currentPage, totalPages).map((pg, i) =>
                 pg === "…" ? (
@@ -562,7 +563,7 @@ export default function AdminProductsClient({
                   cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1,
                 }}
               >
-                Next
+                {th.productsNext}
               </button>
             </div>
           </div>

@@ -8,8 +8,15 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { createProduct, updateProduct } from "./actions";
 import { useToast } from "../components/Toast";
+import { th } from "@/app/admin/lib/admin-th";
 
 const BRANDING_OPTIONS = ["Logo Print", "Laser Engraving", "Embroidery", "Screen Print"];
+const BRANDING_LABELS: Record<string, string> = {
+  "Logo Print":      th.brandingLogoPrint,
+  "Laser Engraving": th.brandingLaser,
+  "Embroidery":      th.brandingEmbroidery,
+  "Screen Print":    th.brandingScreen,
+};
 
 type FormData = {
   name: string;
@@ -71,7 +78,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
 
   async function uploadImage(file: File, slotIndex: number): Promise<void> {
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5 MB");
+      toast.error(th.toastImg5MB);
       return;
     }
     setUploadingSlot(slotIndex);
@@ -84,7 +91,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
       .upload(path, file, { upsert: true });
 
     if (uploadError) {
-      toast.error(`Upload failed: ${uploadError.message}`);
+      toast.error(th.toastUploadFail(uploadError.message));
       setUploadingSlot(null);
       return;
     }
@@ -149,17 +156,17 @@ export default function ProductForm({ mode, productId, initial, categories, avai
     try {
       if (mode === "new") {
         await createProduct(payload);
-        toast.success("Product created!");
+        toast.success(th.toastProductCreated);
       } else {
         await updateProduct(productId!, payload);
-        toast.success("Product saved!");
+        toast.success(th.toastProductSaved);
         setLastSaved(new Date());
         setDirty(false);
         setSaving(false);
         return;
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to save product";
+      const msg = err instanceof Error ? err.message : th.toastProductFail;
       setError(msg);
       toast.error(msg);
       setSaving(false);
@@ -198,7 +205,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
         </Link>
         <div>
           <h1 style={{ fontSize: 16, fontWeight: 600, color: "#1a1a1a", margin: 0 }}>
-            {mode === "new" ? "Add product" : "Edit product"}
+            {mode === "new" ? th.formAdd : th.formEdit}
           </h1>
           {mode === "edit" && form.name && (
             <p style={{ fontSize: 11, color: "#aaa", margin: "2px 0 0" }}>{form.name}</p>
@@ -239,10 +246,10 @@ export default function ProductForm({ mode, productId, initial, categories, avai
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
             {/* Basic information */}
-            <Card label="Basic information">
+            <Card label={th.formCardBasic}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <div>
-                  <Label>Product Name (EN) *</Label>
+                  <Label>{th.formNameEn}</Label>
                   <Caption>#0D1E3D, 13px bold (catalog card) / 20px (quick-view popup)</Caption>
                   <Input
                     required
@@ -252,7 +259,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                   />
                 </div>
                 <div>
-                  <Label>Product Name (TH)</Label>
+                  <Label>{th.formNameTh}</Label>
                   <Caption>#1C2951, 14px</Caption>
                   <Input
                     value={form.name_th}
@@ -263,7 +270,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
                 <div>
-                  <Label>Category *</Label>
+                  <Label>{th.formCategory}</Label>
                   <select
                     required
                     value={form.category}
@@ -277,7 +284,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                   </select>
                 </div>
                 <div>
-                  <Label>Display Order</Label>
+                  <Label>{th.formOrder}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -285,16 +292,16 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                     onChange={(e) => set("display_order", Number(e.target.value))}
                     placeholder="0"
                   />
-                  <p style={{ fontSize: 10, color: "#aaa", marginTop: 4 }}>Lower = appears first</p>
+                  <p style={{ fontSize: 10, color: "#aaa", marginTop: 4 }}>{th.formOrderHint}</p>
                 </div>
               </div>
             </Card>
 
             {/* Description */}
-            <Card label="Description">
+            <Card label={th.formCardDesc}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                 <div>
-                  <Label>Description (EN)</Label>
+                  <Label>{th.formDescEn}</Label>
                   <Caption>#4B5563, 18px, relaxed line-height</Caption>
                   <textarea
                     className="pf-input"
@@ -306,7 +313,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                   />
                 </div>
                 <div>
-                  <Label>Description (TH)</Label>
+                  <Label>{th.formDescTh}</Label>
                   <Caption>#9CA3AF, 16px, relaxed line-height</Caption>
                   <textarea
                     className="pf-input"
@@ -321,16 +328,16 @@ export default function ProductForm({ mode, productId, initial, categories, avai
             </Card>
 
             {/* Tags */}
-            <Card label="Tags" allowOverflow headerRight={form.tags.length > 0 ? `${form.tags.length} selected` : undefined}>
+            <Card label={th.formCardTags} allowOverflow headerRight={form.tags.length > 0 ? `${form.tags.length} selected` : undefined}>
               <TagMultiSelect
                 options={availableTags}
                 selected={form.tags}
                 onChange={(tags) => { setForm(prev => ({ ...prev, tags })); setDirty(true); }}
               />
               <p style={{ fontSize: 10, color: "#aaa", marginTop: 8 }}>
-                Used for filtering on the catalog page. To add or rename tags, go to{" "}
+                {th.formTagsHint}{" "}
                 <a href="/admin/content" style={{ color: "#0D1E3D", textDecoration: "underline" }}>
-                  Content settings
+                  {th.formTagsLink}
                 </a>
                 .
               </p>
@@ -341,9 +348,9 @@ export default function ProductForm({ mode, productId, initial, categories, avai
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
             {/* Images */}
-            <Card label="Images">
+            <Card label={th.formCardImages}>
               <p style={{ fontSize: 10, color: "#aaa", marginBottom: 12 }}>
-                First slot = main image. Upload up to 10 images.
+                {th.formImagesHint}
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
                 {Array.from({ length: 10 }).map((_, i) => {
@@ -386,7 +393,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                               padding: "2px 4px", borderRadius: 3,
                               letterSpacing: "0.06em", textTransform: "uppercase",
                             }}>
-                              MAIN
+                              {th.formImageMain}
                             </span>
                           )}
                         </div>
@@ -420,7 +427,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                               padding: "2px 4px", borderRadius: 3,
                               letterSpacing: "0.06em", textTransform: "uppercase",
                             }}>
-                              MAIN
+                              {th.formImageMain}
                             </span>
                           )}
                           <i className="ti ti-plus" style={{ fontSize: 14, color: "#C0BDB7" }} />
@@ -433,8 +440,8 @@ export default function ProductForm({ mode, productId, initial, categories, avai
             </Card>
 
             {/* Branding */}
-            <Card label="Branding">
-              <Label>Branding methods</Label>
+            <Card label={th.formCardBranding}>
+              <Label>{th.formBrandingMethods}</Label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
                 {BRANDING_OPTIONS.map((method) => {
                   const selected = form.branding_methods.includes(method);
@@ -451,12 +458,12 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                         cursor: "pointer", transition: "all 0.15s",
                       }}
                     >
-                      {method}
+                      {BRANDING_LABELS[method] ?? method}
                     </button>
                   );
                 })}
               </div>
-              <Label>MOQ</Label>
+              <Label>{th.formMoq}</Label>
               <Input
                 type="number"
                 min={0}
@@ -465,22 +472,22 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                 placeholder="e.g. 50"
               />
               <p style={{ fontSize: 10, color: "#aaa", marginTop: 4 }}>
-                Shown to customers as minimum pieces per order.
+                {th.formMoqHint}
               </p>
             </Card>
 
             {/* Visibility */}
-            <Card label="Visibility">
+            <Card label={th.formCardVisibility}>
               <ToggleRow
-                label="Visible on catalog"
-                description="Show this product to customers"
+                label={th.formVisible}
+                description={th.formVisibleDesc}
                 checked={form.is_active}
                 onChange={(v) => set("is_active", v)}
               />
               <div style={{ height: 1, background: "#F0EDE6", margin: "14px 0" }} />
               <ToggleRow
-                label="Mark as New"
-                description='Shows a "New" badge on the product'
+                label={th.formMarkNew}
+                description={th.formNewDesc}
                 checked={form.is_new}
                 onChange={(v) => set("is_new", v)}
               />
@@ -511,11 +518,11 @@ export default function ProductForm({ mode, productId, initial, categories, avai
               <i className="ti ti-alert-triangle" style={{ fontSize: 13, color: "#D97706" }} />
             )}
             {mode === "new"
-              ? "New product — not yet saved"
+              ? th.formSaveBarNew
               : dirty
-              ? "Unsaved changes"
+              ? th.formSaveBarUnsaved
               : lastSaved
-              ? `Last saved: ${formatTimeSince(lastSaved)}`
+              ? formatTimeSince(lastSaved)
               : ""}
           </span>
           <div style={{ display: "flex", gap: 10 }}>
@@ -527,7 +534,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
                 color: "#555", borderRadius: 7, fontSize: 12, fontWeight: 500, cursor: "pointer",
               }}
             >
-              Cancel
+              {th.formCancel}
             </button>
             <button
               type="submit"
@@ -543,7 +550,7 @@ export default function ProductForm({ mode, productId, initial, categories, avai
               }}
             >
               {saving && <i className="ti ti-loader-2 animate-spin" style={{ fontSize: 13 }} />}
-              {saving ? "Saving…" : mode === "new" ? "Add Product" : "Save Product"}
+              {saving ? th.formSaving : mode === "new" ? th.formAddBtn : th.formSaveBtn}
             </button>
           </div>
         </div>
@@ -590,7 +597,7 @@ function Label({ children }: { children: React.ReactNode }) {
 function Caption({ children }: { children: React.ReactNode }) {
   return (
     <p style={{ fontSize: 10, color: "#bbb", margin: "0 0 5px", lineHeight: 1.3 }}>
-      Renders as: {children}
+      {th.formRendersAs} {children}
     </p>
   );
 }
@@ -662,7 +669,7 @@ function TagMultiSelect({
   }
 
   const displayText = selected.length === 0
-    ? "Select tags…"
+    ? th.formSelectTags
     : selected.join(", ");
 
   return (
@@ -699,7 +706,7 @@ function TagMultiSelect({
         }}>
           {options.length === 0 ? (
             <p style={{ padding: "10px 12px", fontSize: 11, color: "#aaa", margin: 0 }}>
-              No tags yet — add them in Content settings.
+              {th.formNoTags}
             </p>
           ) : options.map(tag => {
             const isSelected = selected.includes(tag);
@@ -742,7 +749,7 @@ function TagMultiSelect({
 
 function formatTimeSince(date: Date): string {
   const sec = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (sec < 60) return "just now";
+  if (sec < 60) return th.formSaveBarJustNow;
   const min = Math.floor(sec / 60);
-  return `${min} minute${min !== 1 ? "s" : ""} ago`;
+  return th.formSaveBarMinutes(min);
 }

@@ -35,7 +35,7 @@ export default function HomeClient({
   allTags: string[];
   slides: HeroSlide[];
 }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   /* ── content helpers ─────────────────────────────────────── */
   const c = (section: string, key: string, fallback: string) =>
@@ -92,22 +92,40 @@ export default function HomeClient({
   }, [isHeroPaused, heroSlides.length]);
 
   const stat1Num   = c("stats", "stat1_number", "3,000+");
-  const stat1Label = c("stats", "stat1_label",  "CLIENTS");
+  const stat1LabelEn = c("stats", "stat1_label",    "CLIENTS");
+  const stat1LabelTh = c("stats", "stat1_label_th", "ลูกค้า");
+  const stat1Label   = lang === "th" ? (stat1LabelTh || stat1LabelEn) : stat1LabelEn;
   const stat2Num   = c("stats", "stat2_number", "50,000+");
-  const stat2Label = c("stats", "stat2_label",  "PROJECTS");
+  const stat2LabelEn = c("stats", "stat2_label",    "PROJECTS");
+  const stat2LabelTh = c("stats", "stat2_label_th", "โปรเจกต์");
+  const stat2Label   = lang === "th" ? (stat2LabelTh || stat2LabelEn) : stat2LabelEn;
   const stat3Num   = c("stats", "stat3_number", "30+");
-  const stat3Label = c("stats", "stat3_label",  "COUNTRIES");
+  const stat3LabelEn = c("stats", "stat3_label",    "COUNTRIES");
+  const stat3LabelTh = c("stats", "stat3_label_th", "ประเทศ");
+  const stat3Label   = lang === "th" ? (stat3LabelTh || stat3LabelEn) : stat3LabelEn;
 
-  const marqueeRaw  = c("marquee", "items", "PREMIUM GIFTS,CORPORATE SOUVENIRS,NEW YEAR PACKAGES,OEM MANUFACTURING,CUSTOM BRANDING,30+ COUNTRIES");
-  const marqueeItems = marqueeRaw.split(",").map(s => s.trim()).filter(Boolean);
+  const marqueeRawEn  = c("marquee", "items",    "PREMIUM GIFTS,CORPORATE SOUVENIRS,NEW YEAR PACKAGES,OEM MANUFACTURING,CUSTOM BRANDING,30+ COUNTRIES");
+  const marqueeRawTh  = c("marquee", "items_th", "ของขวัญพรีเมียม,ของที่ระลึกองค์กร,ชุดของขวัญปีใหม่,รับผลิต OEM,งานพิมพ์แบรนด์,30+ ประเทศ");
+  const marqueeRaw    = lang === "th" ? (marqueeRawTh || marqueeRawEn) : marqueeRawEn;
+  const marqueeItems  = marqueeRaw.split(",").map(s => s.trim()).filter(Boolean);
 
-  const catalogLabel       = c("catalog", "label",       "PRODUCT CATALOG");
-  const catalogHeading     = c("catalog", "heading",     "Our Collection");
-  const catalogHeadingTh   = c("catalog", "heading_th",  "คอลเลกชันของเรา");
-  const catalogDescription = c("catalog", "description", "Explore our full range of premium gifts, corporate souvenirs, and branded merchandise.");
-  const catalogQuote       = c("catalog", "quote",       '"Quality is not an act, it is a habit. Every product we deliver carries our promise."');
-  const catalogBtn1Text    = c("catalog", "btn1_text",   "Browse All");
-  const catalogBtn2Text    = c("catalog", "btn2_text",   "Filter");
+  const catalogLabelEn       = c("catalog", "label",          "PRODUCT CATALOG");
+  const catalogLabelTh       = c("catalog", "label_th",       "คอลเลกชันสินค้า");
+  const catalogLabel         = lang === "th" ? (catalogLabelTh || catalogLabelEn) : catalogLabelEn;
+  const catalogHeading       = c("catalog", "heading",        "Our Collection");
+  const catalogHeadingTh     = c("catalog", "heading_th",     "คอลเลกชันของเรา");
+  const catalogDescriptionEn = c("catalog", "description",    "Explore our full range of premium gifts, corporate souvenirs, and branded merchandise.");
+  const catalogDescriptionTh = c("catalog", "description_th", "สำรวจสินค้าพรีเมียม ของที่ระลึกองค์กร และสินค้าแบรนด์ครบวงจร");
+  const catalogDescription   = lang === "th" ? (catalogDescriptionTh || catalogDescriptionEn) : catalogDescriptionEn;
+  const catalogQuoteEn       = c("catalog", "quote",          '"Quality is not an act, it is a habit. Every product we deliver carries our promise."');
+  const catalogQuoteTh       = c("catalog", "quote_th",       '"คุณภาพไม่ใช่การกระทำครั้งเดียว แต่คือนิสัย ทุกสินค้าที่เราส่งมอบคือคำมั่นสัญญาของเรา"');
+  const catalogQuote         = lang === "th" ? (catalogQuoteTh || catalogQuoteEn) : catalogQuoteEn;
+  const catalogBtn1En        = c("catalog", "btn1_text",      "Browse All");
+  const catalogBtn1Th        = c("catalog", "btn1_text_th",   "ดูสินค้าทั้งหมด");
+  const catalogBtn1Text      = lang === "th" ? (catalogBtn1Th || catalogBtn1En) : catalogBtn1En;
+  const catalogBtn2En        = c("catalog", "btn2_text",      "Filter");
+  const catalogBtn2Th        = c("catalog", "btn2_text_th",   "กรองสินค้า");
+  const catalogBtn2Text      = lang === "th" ? (catalogBtn2Th || catalogBtn2En) : catalogBtn2En;
   const catalogStyles: Record<string, Record<string, string>> = (() => {
     try { return JSON.parse(c("catalog", "_styles", "{}")); } catch { return {}; }
   })();
@@ -121,15 +139,21 @@ export default function HomeClient({
     try { return JSON.parse(c("marquee", "_styles", "{}")); } catch { return {}; }
   })();
 
-  const processHeading    = c("process", "heading",    "Our Process");
+  const processHeadingEn  = c("process", "heading",    "Our Process");
+  const processHeadingTh  = c("process", "heading_th", "กระบวนการของเรา");
+  const processHeading    = lang === "th" ? (processHeadingTh || processHeadingEn) : processHeadingEn;
   const processSubheading = c("process", "subheading", "From brief to delivery — every step crafted with care");
 
+  function procTitle(en: string, thKey: string, thFallback: string) {
+    const th = c("process", thKey, thFallback);
+    return lang === "th" ? (th || en) : en;
+  }
   const PROCESS_STEPS = [
-    { n: "01", label: c("process", "step1_title", "Brief"),   sub: c("process", "step1_desc", "Share your vision") },
-    { n: "02", label: c("process", "step2_title", "Design"),  sub: c("process", "step2_desc", "Our team creates concepts") },
-    { n: "03", label: c("process", "step3_title", "Produce"), sub: c("process", "step3_desc", "Manufacturing begins"), active: true },
-    { n: "04", label: c("process", "step4_title", "QC"),      sub: c("process", "step4_desc", "Strict quality inspection") },
-    { n: "05", label: c("process", "step5_title", "Deliver"), sub: c("process", "step5_desc", "Worldwide shipping") },
+    { n: "01", label: procTitle(c("process","step1_title","Brief"),   "step1_title_th","บรีฟ"),   sub: c("process","step1_desc","Share your vision") },
+    { n: "02", label: procTitle(c("process","step2_title","Design"),  "step2_title_th","ออกแบบ"), sub: c("process","step2_desc","Our team creates concepts") },
+    { n: "03", label: procTitle(c("process","step3_title","Produce"), "step3_title_th","ผลิต"),   sub: c("process","step3_desc","Manufacturing begins"), active: true },
+    { n: "04", label: procTitle(c("process","step4_title","QC"),      "step4_title_th","ตรวจสอบ"),sub: c("process","step4_desc","Strict quality inspection") },
+    { n: "05", label: procTitle(c("process","step5_title","Deliver"), "step5_title_th","ส่งมอบ"), sub: c("process","step5_desc","Worldwide shipping") },
   ];
 
   return (

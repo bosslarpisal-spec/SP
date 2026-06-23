@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toggleSlideActive, deleteSlide, reorderSlides } from "./actions";
 import { useToast } from "../components/Toast";
+import { th } from "@/app/admin/lib/admin-th";
 import type { HeroSlide } from "./page";
 
 export default function AdminSlidesClient({ slides: initial }: { slides: HeroSlide[] }) {
@@ -48,10 +49,10 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
     setReordering(true);
     try {
       await reorderSlides(next.map((s) => s.id));
-      toast.success("Order saved");
+      toast.success(th.toastOrderSaved);
       router.refresh();
     } catch {
-      toast.error("Failed to save order");
+      toast.error(th.toastOrderFail);
       setSlides(slides);
     } finally {
       setReordering(false);
@@ -66,10 +67,10 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
       setSlides((prev) =>
         prev.map((s) => (s.id === slide.id ? { ...s, is_active: !s.is_active } : s))
       );
-      toast.success(slide.is_active ? `"${slide.heading}" hidden` : `"${slide.heading}" visible`);
+      toast.success(slide.is_active ? th.toastSlideHidden(slide.heading) : th.toastSlideVisible(slide.heading));
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update");
+      toast.error(err instanceof Error ? err.message : th.toastSlideFail);
     } finally {
       setLoadingId(null);
     }
@@ -82,10 +83,10 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
     try {
       await deleteSlide(slide.id);
       setSlides((prev) => prev.filter((s) => s.id !== slide.id));
-      toast.success("Slide deleted");
+      toast.success(th.toastSlideDeleted);
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete");
+      toast.error(err instanceof Error ? err.message : th.toastSlideDeleteFail);
       setLoadingId(null);
     }
   }
@@ -105,7 +106,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
           className="ti ti-photo-off"
           style={{ fontSize: 32, color: "#ccc", display: "block", marginBottom: 12 }}
         />
-        <p style={{ color: "#aaa", marginBottom: 16, fontSize: 14 }}>No slides yet.</p>
+        <p style={{ color: "#aaa", marginBottom: 16, fontSize: 14 }}>{th.slidesEmpty}</p>
         <Link
           href="/admin/slides/new"
           style={{
@@ -118,7 +119,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
             textDecoration: "none",
           }}
         >
-          Add your first slide
+          {th.slidesFirstAdd}
         </Link>
       </div>
     );
@@ -128,7 +129,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {reordering && (
         <p style={{ fontSize: 11, color: "#aaa", textAlign: "center", margin: 0 }}>
-          Saving order…
+          {th.slidesSavingOrder}
         </p>
       )}
 
@@ -221,7 +222,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
                     borderRadius: 4,
                   }}
                 >
-                  Hidden
+                  {th.slidesHidden}
                 </span>
               )}
             </div>
@@ -236,7 +237,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
                 textOverflow: "ellipsis",
               }}
             >
-              {slide.heading || "(no heading)"}
+              {slide.heading || th.slidesNoHeading}
             </p>
             <p
               style={{
@@ -256,7 +257,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
           <button
             onClick={() => handleToggle(slide)}
             disabled={loadingId === slide.id}
-            title={slide.is_active ? "Click to hide" : "Click to show"}
+            title={slide.is_active ? th.slidesClickHide : th.slidesClickShow}
             style={{
               position: "relative",
               width: 36,
@@ -290,7 +291,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
             <div
               style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}
             >
-              <span style={{ fontSize: 11, color: "#555" }}>Delete?</span>
+              <span style={{ fontSize: 11, color: "#555" }}>{th.slidesDeleteQ}</span>
               <button
                 onClick={() => handleDelete(slide)}
                 disabled={loadingId === slide.id}
@@ -305,7 +306,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
                   cursor: "pointer",
                 }}
               >
-                Yes
+                {th.slidesYes}
               </button>
               <button
                 onClick={() => setConfirmDeleteId(null)}
@@ -319,14 +320,14 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
                   cursor: "pointer",
                 }}
               >
-                No
+                {th.slidesNo}
               </button>
             </div>
           ) : (
             <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
               <Link
                 href={`/admin/slides/${slide.id}`}
-                title="Edit"
+                title={th.slidesEdit}
                 style={{
                   width: 30,
                   height: 30,
@@ -345,7 +346,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
               <button
                 onClick={() => setConfirmDeleteId(slide.id)}
                 disabled={loadingId === slide.id}
-                title="Delete"
+                title={th.slidesDelete}
                 style={{
                   width: 30,
                   height: 30,

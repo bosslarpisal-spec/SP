@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { addTag, renameTag, deleteTag } from "./tagActions";
 import type { Tag } from "./page";
+import { th } from "@/app/admin/lib/admin-th";
 
 export default function TagManager({
   initialTags,
@@ -31,19 +32,19 @@ export default function TagManager({
     const name = newTagName.trim().toLowerCase();
     if (!name) return;
     if (tags.some(t => t.name.toLowerCase() === name)) {
-      setError(`"${name}" already exists.`);
+      setError(th.tagExistsErr(name));
       return;
     }
     setError(null);
     setAdding(true);
     try {
-      await addTag(name);
-      setTags(p => [...p, { id: `temp-${Date.now()}`, name }]);
+      const row = await addTag(name);
+      setTags(p => [...p, { id: row.id, name: row.name }]);
       setCounts(p => ({ ...p, [name]: 0 }));
       setNewTagName("");
-      flashSuccess(`✓ "${name}" added`);
+      flashSuccess(th.tagAddedMsg(name));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add tag.");
+      setError(err instanceof Error ? err.message : th.tagAddFail);
     } finally {
       setAdding(false);
     }
@@ -67,7 +68,7 @@ export default function TagManager({
       return;
     }
     if (tags.some(t => t.id !== tag.id && t.name.toLowerCase() === newName)) {
-      setError(`"${newName}" already exists.`);
+      setError(th.tagExistsErr(newName));
       return;
     }
     setError(null);
@@ -81,10 +82,10 @@ export default function TagManager({
         delete next[tag.name];
         return next;
       });
-      flashSuccess(`✓ Renamed — ${result.productsUpdated} product${result.productsUpdated === 1 ? "" : "s"} updated`);
+      flashSuccess(th.tagRenamedMsg(result.productsUpdated));
       cancelEdit();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to rename tag.");
+      setError(err instanceof Error ? err.message : th.tagRenameFail);
       setEditingName(tag.name);
     } finally {
       setRenamingId(null);
@@ -94,15 +95,15 @@ export default function TagManager({
   async function handleDelete(tag: Tag) {
     const count = counts[tag.name] ?? 0;
     if (count > 0) return;
-    if (!confirm(`Delete tag "${tag.name}"? This cannot be undone.`)) return;
+    if (!confirm(th.tagDeleteConfirm(tag.name))) return;
     setError(null);
     setLoading(tag.id);
     try {
       await deleteTag(tag.id, tag.name);
       setTags(p => p.filter(t => t.id !== tag.id));
-      flashSuccess(`✓ "${tag.name}" deleted`);
+      flashSuccess(th.tagDeletedMsg(tag.name));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete tag.");
+      setError(err instanceof Error ? err.message : th.tagDeleteFail);
     } finally {
       setLoading(null);
     }
@@ -112,10 +113,10 @@ export default function TagManager({
     <div style={{ marginTop: 24 }}>
       <div style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 15, fontWeight: 600, color: "#1a1a1a", margin: "0 0 4px" }}>
-          Tag Manager
+          {th.tagTitle}
         </h2>
         <p style={{ fontSize: 12, color: "#aaa", margin: 0 }}>
-          Tags power the filter chips on the catalog page. Renaming a tag updates all matching products automatically.
+          {th.tagDesc}
         </p>
       </div>
 
@@ -126,7 +127,7 @@ export default function TagManager({
         marginBottom: 16,
       }}>
         <i className="ti ti-alert-triangle" style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }} />
-        <span>Deleting a tag is only possible if no products use it. Reassign products first.</span>
+        <span>{th.tagWarning}</span>
       </div>
 
       {successMsg && (
@@ -164,7 +165,7 @@ export default function TagManager({
           padding: "12px 18px", borderBottom: "0.5px solid #E8E6E0",
         }}>
           <span style={{ fontSize: 12, fontWeight: 600, color: "#1a1a1a" }}>
-            Tags ({tags.length} total)
+            {th.tagHeader(tags.length)}
           </span>
         </div>
 
@@ -207,7 +208,7 @@ export default function TagManager({
                         border: "none", borderRadius: 5, padding: "5px 10px", cursor: "pointer",
                       }}
                     >
-                      {isRenaming ? "Renaming…" : "Save"}
+                      {isRenaming ? th.tagRenaming : th.tagSave}
                     </button>
                     <button
                       type="button" onClick={cancelEdit} disabled={isRenaming}
@@ -216,13 +217,13 @@ export default function TagManager({
                         border: "1px solid #D8D5CE", borderRadius: 5, padding: "5px 10px", cursor: "pointer",
                       }}
                     >
-                      Cancel
+                      {th.tagCancel}
                     </button>
                   </div>
                 ) : (
                   <span
                     onClick={() => startEdit(tag)}
-                    title="Click to rename"
+                    title={th.tagClickRename}
                     style={{ fontSize: 13, color: "#1a1a1a", cursor: "pointer" }}
                   >
                     {tag.name}
@@ -233,7 +234,7 @@ export default function TagManager({
                   fontSize: 10, fontWeight: 600, color: "#E8D5A3", background: "#0D1E3D",
                   borderRadius: 99, padding: "2px 8px", flexShrink: 0,
                 }}>
-                  {count} product{count === 1 ? "" : "s"}
+                  {th.tagProductCount(count)}
                 </span>
               </div>
 
@@ -249,7 +250,7 @@ export default function TagManager({
                   type="button"
                   onClick={() => handleDelete(tag)}
                   disabled={count > 0 || loading === tag.id}
-                  title={count > 0 ? "Has products" : "Delete tag"}
+                  title={count > 0 ? th.tagHasProducts : th.tagDeleteTitle}
                   style={{
                     background: "none", border: "none", fontSize: 14, padding: 4,
                     color: count > 0 ? "#E8B4B4" : "#A32D2D",
@@ -268,7 +269,7 @@ export default function TagManager({
             value={newTagName}
             onChange={e => setNewTagName(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") handleAdd(); }}
-            placeholder="New tag name..."
+            placeholder={th.tagPlaceholder}
             style={{
               flex: 1, fontSize: 13, padding: "8px 12px", borderRadius: 6,
               border: "0.5px solid #E8E6E0", outline: "none",
@@ -285,7 +286,7 @@ export default function TagManager({
               cursor: adding ? "wait" : "pointer", whiteSpace: "nowrap",
             }}
           >
-            {adding ? "Adding…" : "Add Tag"}
+            {adding ? th.tagAdding : th.tagAddBtn}
           </button>
         </div>
       </div>

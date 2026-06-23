@@ -3,6 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { th } from "@/app/admin/lib/admin-th";
 
 export default function ResetPasswordPage() {
   return (
@@ -48,8 +49,8 @@ function ResetPasswordForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (newPw.length < 6) { setError("Password must be at least 6 characters."); return; }
-    if (newPw !== confirmPw) { setError("Passwords do not match."); return; }
+    if (newPw.length < 6) { setError(th.resetErrShort); return; }
+    if (newPw !== confirmPw) { setError(th.resetErrMismatch); return; }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: newPw });
     setLoading(false);
@@ -74,7 +75,7 @@ function ResetPasswordForm() {
 
       <div className="card-flat p-8">
         {!ready ? (
-          <p className="text-center text-gray-500 py-6">Verifying reset link…</p>
+          <p className="text-center text-gray-500 py-6">{th.resetVerifying}</p>
         ) : success ? (
           <div className="text-center py-4">
             <div className="w-14 h-14 bg-secondary/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -83,25 +84,21 @@ function ResetPasswordForm() {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-primary mb-2" style={{ fontFamily: "Georgia,serif" }}>
-              Password set!
+              {th.resetSuccess}
             </h2>
-            <p className="text-gray-500 text-sm mb-6">
-              You can now sign in with your email and new password.
-            </p>
-            <Link href="/login" className="btn-primary w-full justify-center">Go to Sign In</Link>
+            <p className="text-gray-500 text-sm mb-6">{th.resetSuccessDesc}</p>
+            <Link href="/login" className="btn-primary w-full justify-center">{th.resetGoSignIn}</Link>
           </div>
         ) : (
           <>
             <h1 className="text-2xl font-bold text-primary mb-1" style={{ fontFamily: "Georgia,serif" }}>
-              Set new password
+              {th.resetFormHead}
             </h1>
-            <p className="text-gray-500 text-sm mb-6">
-              Choose a password to enable email login for your account.
-            </p>
+            <p className="text-gray-500 text-sm mb-6">{th.resetFormSub}</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="form-label">New Password</label>
+                <label className="form-label">{th.resetNewPw}</label>
                 <div className="relative">
                   <input
                     type={showPw ? "text" : "password"}
@@ -114,7 +111,7 @@ function ResetPasswordForm() {
                   <button
                     type="button"
                     onClick={() => setShowPw(p => !p)}
-                    aria-label={showPw ? "Hide password" : "Show password"}
+                    aria-label={showPw ? th.resetHidePw : th.resetShowPw}
                     className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-primary opacity-40 hover:opacity-70 focus:outline-none transition-opacity duration-150"
                   >
                     {showPw ? <EyeOffIcon /> : <EyeIcon />}
@@ -123,7 +120,7 @@ function ResetPasswordForm() {
               </div>
 
               <div>
-                <label className="form-label">Confirm Password</label>
+                <label className="form-label">{th.resetConfirmPw}</label>
                 <input
                   type={showPw ? "text" : "password"}
                   className="form-input"
@@ -137,7 +134,7 @@ function ResetPasswordForm() {
               {error && <p className="form-error">{error}</p>}
 
               <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
-                {loading ? "Saving…" : "Set Password"}
+                {loading ? th.resetSaving : th.resetSetBtn}
               </button>
             </form>
           </>
@@ -145,7 +142,7 @@ function ResetPasswordForm() {
       </div>
 
       <p className="text-center text-sm text-gray-500 mt-4">
-        <Link href="/login" className="text-primary hover:underline">← Back to Sign In</Link>
+        <Link href="/login" className="text-primary hover:underline">{th.resetBack}</Link>
       </p>
     </div>
   );

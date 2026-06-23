@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import SectionLabel from "@/components/ui/SectionLabel";
 import GoldDivider from "@/components/ui/GoldDivider";
+import { useLang } from "@/contexts/LanguageContext";
 
 /* ── DB content helpers ─────────────────────────────────────── */
 type ContentRow = { section: string; key: string; value: string };
+type BS = Record<string, string>;
 function gv(rows: ContentRow[], section: string, key: string, fallback: string): string {
   return rows.find(r => r.section === section && r.key === key)?.value ?? fallback;
 }
@@ -15,25 +17,30 @@ function ga<T>(rows: ContentRow[], section: string, key: string, fallback: T[]):
   if (!raw) return fallback;
   try { return JSON.parse(raw) as T[]; } catch { return fallback; }
 }
+function gs(obj: Record<string, BS>, key: string, def: BS): BS {
+  const ov = obj[key] ?? {};
+  return { color: ov.color ?? def.color, fontSize: ov.fontSize ?? def.fontSize };
+}
 
-/* ── DEFAULT DATA ─────────────────────────────────────────── */
-interface Project {
-  n: string; client: string; title: string;
-  th?: string; desc?: string;
-  tags: string | string[];
-  metrics: string | { n: string; label: string }[];
-  icon: string; category: string;
+/* ── Portfolio project type (matches portfolio_projects table) ── */
+export type PortfolioProject = {
+  id: string;
+  title: string;
+  title_th: string;
+  description: string;
+  client: string;
+  image_url: string;
+  project_link: string;
+  tags: string;
+  metrics: Array<{ n: string; label: string }>;
+  icon: string;
   aspect: "tall" | "wide" | "square";
-}
+  display_order: number;
+  visible: boolean;
+};
 
-function normTags(tags: string | string[]): string[] {
-  if (Array.isArray(tags)) return tags;
+function normTags(tags: string): string[] {
   return tags ? tags.split(",").map(t => t.trim()).filter(Boolean) : [];
-}
-function normMetrics(m: string | { n: string; label: string }[]): { n: string; label: string }[] {
-  if (Array.isArray(m)) return m;
-  if (!m) return [];
-  try { return JSON.parse(m) as { n: string; label: string }[]; } catch { return []; }
 }
 
 const DEFAULT_STATS = [
@@ -41,28 +48,18 @@ const DEFAULT_STATS = [
   { n: "50k+",   label: "Projects Done" },
   { n: "30+",    label: "Countries" },
 ];
-const DEFAULT_CLIENT_TAGS = "All Work,P&G,Acer,Oral-B,Ambipur,VSTECS,Absolute You,SCB Bank,LINE MAN";
-const DEFAULT_PROJECTS: Project[] = [
-  { n:"01", client:"P&G",          title:"Premium New Year Gift Sets",   th:"ชุดของขวัญปีใหม่พรีเมียม", desc:"Designed and produced 12,000 curated gift sets for P&G Thailand's New Year campaign.", tags:["Gift Sets","Custom Packaging","Logistics"], metrics:[{n:"12,000",label:"Units Produced"},{n:"5",label:"Provinces Covered"},{n:"10",label:"Days to Delivery"}], icon:"ti-gift",        category:"Gift Sets",       aspect:"tall"   },
-  { n:"02", client:"Acer",         title:"Branded Corporate Merchandise",th:"สินค้าองค์กรแบรนด์ครบเซ็ต", desc:"A full suite of branded merchandise for Acer's distributor conference.", tags:["OEM Manufacturing","Custom Branding","Screen Print"], metrics:[{n:"8,500",label:"Items Delivered"},{n:"3",label:"Product Types"},{n:"100%",label:"On-time Rate"}], icon:"ti-award",       category:"OEM",             aspect:"wide"   },
-  { n:"03", client:"Oral-B",       title:"Toothbrush Gift Packs",        th:"",                             desc:"", tags:["Gift Sets"],       metrics:[], icon:"ti-package",     category:"Gift Sets",       aspect:"square" },
-  { n:"04", client:"Ambipur",      title:"Scented Promo Kits",           th:"",                             desc:"", tags:["Custom Branding"], metrics:[], icon:"ti-certificate", category:"Custom Branding", aspect:"wide"   },
-  { n:"05", client:"VSTECS",       title:"Tech Distributor Gifts",       th:"",                             desc:"", tags:["OEM"],             metrics:[], icon:"ti-cpu",         category:"OEM",             aspect:"square" },
-  { n:"06", client:"Absolute You", title:"Wellness Premium Sets",        th:"",                             desc:"", tags:["Premium Gifts"],   metrics:[], icon:"ti-heart",       category:"Premium Gifts",   aspect:"tall"   },
-  { n:"07", client:"SCB Bank",     title:"VIP Client Gift Collection",   th:"",                             desc:"", tags:["Luxury Gifts"],    metrics:[], icon:"ti-diamond",     category:"Luxury Gifts",    aspect:"wide"   },
-  { n:"08", client:"LINE MAN",     title:"Rider Appreciation Kits",      th:"",                             desc:"", tags:["Corporate"],       metrics:[], icon:"ti-bike",        category:"Corporate",       aspect:"square" },
-];
 
-/* ── HELPERS ──────────────────────────────────────────────── */
-function cardAspectClass(aspect: Project["aspect"]) {
+/* ── Card aspect ──────────────────────────────────────────────── */
+function cardAspectClass(aspect: PortfolioProject["aspect"]) {
   if (aspect === "tall")  return "aspect-[3/4]";
   if (aspect === "wide")  return "aspect-[4/3]";
   return "aspect-square";
 }
 
-/* ── OVERLAY COMPONENT ────────────────────────────────────── */
+/* ── OVERLAY ─────────────────────────────────────────────────── */
 interface OverlayProps {
-  project: Project;
+  project: PortfolioProject;
+  orderNum: string;
   visible: boolean;
   transKey: number;
   onClose: () => void;
@@ -72,7 +69,13 @@ interface OverlayProps {
   hasNext: boolean;
 }
 
-function ProjectOverlay({ project: p, visible, transKey, onClose, onPrev, onNext, hasPrev, hasNext }: OverlayProps) {
+function ProjectOverlay({ project: p, orderNum, visible, transKey, onClose, onPrev, onNext, hasPrev, hasNext }: OverlayProps) {
+  const { lang } = useLang();
+  const ctaHref = p.project_link || "/contact";
+  const ctaLabel = p.project_link
+    ? (lang === "th" ? "ดูโปรเจกต์" : "View Project")
+    : (lang === "th" ? "ขอใบเสนอราคา" : "Get a Quote");
+
   return (
     <div
       style={{
@@ -108,21 +111,21 @@ function ProjectOverlay({ project: p, visible, transKey, onClose, onPrev, onNext
           style={{ padding: "56px 40px 24px" }}
         >
           <div style={{ fontSize: "10px", letterSpacing: "0.14em", textTransform: "uppercase", color: "#F0DC9A", marginBottom: "16px" }}>
-            {p.n} — {p.client}
+            {orderNum} — {p.client}
           </div>
           <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.25rem)", fontWeight: 400, color: "#FFFFFF", lineHeight: 1.15, letterSpacing: "-0.02em", fontFamily: "Georgia, serif", marginBottom: "8px" }}>
-            {p.title}
+            {lang === "th" ? (p.title_th || p.title) : p.title}
           </h2>
-          {p.th && (
-            <p style={{ fontSize: "11px", color: "#E8D5A3", marginBottom: "16px" }}>{p.th}</p>
+          {lang === "th" && p.title_th && (
+            <p style={{ fontSize: "11px", color: "#E8D5A3", marginBottom: "16px" }}>{p.title}</p>
           )}
           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.90)", lineHeight: 1.8, marginBottom: "22px" }}>
-            {p.desc ?? `A premium branded project delivered for ${p.client}, crafted with care and precision by the SP team.`}
+            {p.description || `A premium branded project delivered for ${p.client}, crafted with care and precision by the SP team.`}
           </p>
 
-          {normMetrics(p.metrics).length > 0 && (
+          {p.metrics.length > 0 && (
             <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
-              {normMetrics(p.metrics).map((m) => (
+              {p.metrics.map((m) => (
                 <div key={m.label} style={{ flex: 1, padding: "10px 12px", textAlign: "center", background: "#243160", borderRadius: "6px", border: "0.5px solid rgba(232,213,163,0.15)" }}>
                   <div style={{ fontSize: "14px", fontWeight: 500, color: "#FFFFFF", letterSpacing: "-0.02em" }}>{m.n}</div>
                   <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.75)", marginTop: "2px" }}>{m.label}</div>
@@ -131,38 +134,36 @@ function ProjectOverlay({ project: p, visible, transKey, onClose, onPrev, onNext
             </div>
           )}
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "24px" }}>
-            {normTags(p.tags).map(t => (
-              <span key={t} style={{ fontSize: "10px", color: "rgba(255,255,255,0.75)", border: "0.5px solid rgba(232,213,163,0.2)", padding: "4px 10px", borderRadius: "4px" }}>{t}</span>
-            ))}
-          </div>
+          {normTags(p.tags).length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "24px" }}>
+              {normTags(p.tags).map(t => (
+                <span key={t} style={{ fontSize: "10px", color: "rgba(255,255,255,0.75)", border: "0.5px solid rgba(232,213,163,0.2)", padding: "4px 10px", borderRadius: "4px" }}>{t}</span>
+              ))}
+            </div>
+          )}
 
           <Link
-            href="/contact"
+            href={ctaHref}
             style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#E8D5A3", color: "#1C2951", fontSize: "12px", fontWeight: 600, padding: "10px 20px", borderRadius: "5px" }}
           >
-            Get a Quote <i className="ti ti-arrow-right" style={{ fontSize: "12px" }} />
+            {ctaLabel} <i className="ti ti-arrow-right" style={{ fontSize: "12px" }} />
           </Link>
         </div>
 
         {/* Prev / Next */}
         <div style={{ display: "flex", gap: "20px", padding: "16px 40px 24px", borderTop: "0.5px solid rgba(232,213,163,0.08)", flexShrink: 0 }}>
-          <button
-            onClick={onPrev} disabled={!hasPrev}
-            style={{ fontSize: "11px", color: hasPrev ? "#E8D5A3" : "rgba(255,255,255,0.2)", cursor: hasPrev ? "pointer" : "default", background: "none", border: "none", padding: 0 }}
-          >
-            ← Previous
+          <button onClick={onPrev} disabled={!hasPrev}
+            style={{ fontSize: "11px", color: hasPrev ? "#E8D5A3" : "rgba(255,255,255,0.2)", cursor: hasPrev ? "pointer" : "default", background: "none", border: "none", padding: 0 }}>
+            {lang === "th" ? "← ก่อนหน้า" : "← Previous"}
           </button>
-          <button
-            onClick={onNext} disabled={!hasNext}
-            style={{ fontSize: "11px", color: hasNext ? "#E8D5A3" : "rgba(255,255,255,0.2)", cursor: hasNext ? "pointer" : "default", background: "none", border: "none", padding: 0 }}
-          >
-            Next →
+          <button onClick={onNext} disabled={!hasNext}
+            style={{ fontSize: "11px", color: hasNext ? "#E8D5A3" : "rgba(255,255,255,0.2)", cursor: hasNext ? "pointer" : "default", background: "none", border: "none", padding: 0 }}>
+            {lang === "th" ? "ถัดไป →" : "Next →"}
           </button>
         </div>
       </div>
 
-      {/* RIGHT — cream, scrollable */}
+      {/* RIGHT — cream, image or placeholder */}
       <div
         className="w-full md:w-[55%] md:h-full md:overflow-auto"
         style={{ background: "#F8F6F1", padding: "40px" }}
@@ -177,58 +178,70 @@ function ProjectOverlay({ project: p, visible, transKey, onClose, onPrev, onNext
             boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
           }}
         >
-          <i className={`ti ${p.icon}`} style={{ fontSize: "72px", color: "#E8D5A3", opacity: 0.12 }} />
+          {p.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={p.image_url}
+              alt={p.title}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+            />
+          ) : (
+            <i className={`ti ${p.icon}`} style={{ fontSize: "72px", color: "#E8D5A3", opacity: 0.12 }} />
+          )}
           <div style={{ position: "absolute", top: "20px", left: "20px", background: "#FFFFFF", borderRadius: "4px", padding: "5px 12px" }}>
             <span style={{ fontSize: "10px", fontWeight: 600, color: "#1C2951" }}>{p.client}</span>
           </div>
           <div style={{ position: "absolute", bottom: "20px", right: "20px", background: "rgba(28,41,81,0.85)", border: "0.5px solid rgba(232,213,163,0.2)", borderRadius: "4px", padding: "5px 12px" }}>
-            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.75)" }}>Project {p.n}</span>
+            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.75)" }}>Project {orderNum}</span>
           </div>
         </div>
 
-        <div style={{ marginTop: "24px" }}>
-          <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A5568", marginBottom: "6px" }}>{p.category}</p>
-          <h3 style={{ fontSize: "16px", fontWeight: 400, color: "#0D1E3D", fontFamily: "Georgia, serif" }}>{p.title}</h3>
-        </div>
+        {normTags(p.tags).length > 0 && (
+          <div style={{ marginTop: "24px" }}>
+            <p style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#4A5568", marginBottom: "6px" }}>{normTags(p.tags)[0]}</p>
+            <h3 style={{ fontSize: "16px", fontWeight: 400, color: "#0D1E3D", fontFamily: "Georgia, serif" }}>{lang === "th" ? (p.title_th || p.title) : p.title}</h3>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 /* ── MAIN ─────────────────────────────────────────────────── */
-export default function OurWorkContent({ rows = [] }: { rows?: ContentRow[] }) {
-  const [activeTag,      setActiveTag     ] = useState("All Work");
-  const [overlayN,       setOverlayN      ] = useState<string | null>(null);
+export default function OurWorkContent({
+  rows = [],
+  projects = [],
+}: {
+  rows?: ContentRow[];
+  projects?: PortfolioProject[];
+}) {
+  const { lang } = useLang();
+  const [overlayIdx,     setOverlayIdx    ] = useState<number | null>(null);
   const [overlayVisible, setOverlayVisible] = useState(false);
   const [transKey,       setTransKey      ] = useState(0);
 
-  const heroBadge         = gv(rows, "hero",        "badge",          "PORTFOLIO");
-  const heroHeading       = gv(rows, "hero",        "heading",        "Our Work &");
-  const heroHeadingItalic = gv(rows, "hero",        "heading_italic", "Portfolio");
-  const STATS             = ga(rows, "stats",        "items",          DEFAULT_STATS);
-  const clientTagsRaw     = gv(rows, "client_tags", "items",          DEFAULT_CLIENT_TAGS);
-  const CLIENT_TAGS       = clientTagsRaw.split(",").map(t => t.trim()).filter(Boolean);
-  const ALL_PROJECTS: Project[] = ga(rows, "projects", "items", DEFAULT_PROJECTS);
+  const heroBadge         = gv(rows, "hero",  "badge",          "PORTFOLIO");
+  const heroHeading       = gv(rows, "hero",  "heading",        "Our Work &");
+  const heroHeadingItalic = gv(rows, "hero",  "heading_italic", "Portfolio");
+  const STATS             = ga(rows, "stats", "items",          DEFAULT_STATS);
 
-  const firstTag = CLIENT_TAGS[0] ?? "All Work";
+  const heroSt: Record<string, BS> = (() => { try { return JSON.parse(gv(rows, "hero", "_styles", "{}")); } catch { return {}; } })();
+  const hBadge    = gs(heroSt, "badge",         { color: "#E8D5A3", fontSize: "10px" });
+  const hHead     = gs(heroSt, "heading",        { color: "#FFFFFF", fontSize: "40px" });
+  const hHeadIt   = gs(heroSt, "headingItalic",  { color: "#E8D5A3", fontSize: "40px" });
 
-  const filteredProjects = activeTag === firstTag
-    ? ALL_PROJECTS
-    : ALL_PROJECTS.filter(p => p.client === activeTag || normTags(p.tags).includes(activeTag));
-
-  const overlayProject = overlayN ? ALL_PROJECTS.find(p => p.n === overlayN) ?? null : null;
-  const overlayIdx     = overlayN ? filteredProjects.findIndex(p => p.n === overlayN) : -1;
+  const overlayProject = overlayIdx !== null ? projects[overlayIdx] ?? null : null;
 
   // Trigger slide-up after the overlay mounts
   useEffect(() => {
-    if (!overlayN) return;
+    if (overlayIdx === null) return;
     const t = setTimeout(() => setOverlayVisible(true), 20);
     return () => clearTimeout(t);
-  }, [overlayN]);
+  }, [overlayIdx]);
 
   const closeOverlay = useCallback(() => {
     setOverlayVisible(false);
-    setTimeout(() => setOverlayN(null), 420);
+    setTimeout(() => setOverlayIdx(null), 420);
   }, []);
 
   // Escape key
@@ -244,27 +257,22 @@ export default function OurWorkContent({ rows = [] }: { rows?: ContentRow[] }) {
     return () => { document.body.style.overflow = ""; };
   }, [overlayVisible]);
 
-  function openOverlay(n: string) {
+  function openOverlay(i: number) {
     setOverlayVisible(false);
-    setOverlayN(n);
+    setOverlayIdx(i);
     setTransKey(k => k + 1);
   }
 
-  function handleFilter(tag: string) {
-    setActiveTag(tag || firstTag);
-    if (overlayN) closeOverlay();
-  }
-
   function goPrev() {
-    if (overlayIdx > 0) {
-      setOverlayN(filteredProjects[overlayIdx - 1].n);
+    if (overlayIdx !== null && overlayIdx > 0) {
+      setOverlayIdx(overlayIdx - 1);
       setTransKey(k => k + 1);
     }
   }
 
   function goNext() {
-    if (overlayIdx < filteredProjects.length - 1) {
-      setOverlayN(filteredProjects[overlayIdx + 1].n);
+    if (overlayIdx !== null && overlayIdx < projects.length - 1) {
+      setOverlayIdx(overlayIdx + 1);
       setTransKey(k => k + 1);
     }
   }
@@ -291,9 +299,6 @@ export default function OurWorkContent({ rows = [] }: { rows?: ContentRow[] }) {
         @keyframes overlay-img-in { from { opacity: 0; } to { opacity: 1; } }
         .overlay-img-animate { animation: overlay-img-in 0.4s ease 0.1s both; }
 
-        .filter-btn { transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease; cursor: pointer; }
-        .filter-btn:not(.filter-active):hover { border-color: rgba(232,213,163,0.5) !important; color: #E8D5A3 !important; }
-
         @media (prefers-reduced-motion: reduce) {
           .hero-animate, .card-animate, .overlay-content-animate, .overlay-img-animate {
             animation: none !important; opacity: 1 !important; transform: none !important;
@@ -303,22 +308,21 @@ export default function OurWorkContent({ rows = [] }: { rows?: ContentRow[] }) {
 
       {/* §1 — HERO */}
       <section style={{ backgroundImage: "url('/HeroBlockHome.png')", backgroundSize: "cover", backgroundPosition: "right center", backgroundRepeat: "no-repeat", position: "relative", overflow: "hidden" }} className="min-h-[45vh] flex items-center">
-        {/* Gradient overlay */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(13,30,61,0.92) 0%, rgba(13,30,61,0.80) 40%, rgba(13,30,61,0.40) 70%, rgba(13,30,61,0.10) 100%)", zIndex: 0, pointerEvents: "none" }} />
         <div className="hero-animate" style={{ maxWidth: "1200px", margin: "0 auto", padding: "120px 64px 64px", width: "100%", position: "relative", zIndex: 1 }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
                 <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
-                <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.18em", color: "#E8D5A3" }}>{heroBadge}</span>
+                <span style={{ fontSize: hBadge.fontSize, textTransform: "uppercase", letterSpacing: "0.18em", color: hBadge.color }}>{heroBadge}</span>
               </div>
-              <h1 style={{ fontSize: "40px", fontWeight: 400, color: "#FFFFFF", lineHeight: 1.05, letterSpacing: "-0.02em", fontFamily: "Georgia, serif", marginBottom: "28px" }}>
-                <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
+              <h1 style={{ fontWeight: 400, lineHeight: 1.05, letterSpacing: "-0.02em", fontFamily: "Georgia, serif", marginBottom: "28px" }}>
+                <span style={{ position: "relative", display: "inline-block", marginBottom: "4px", fontSize: hHead.fontSize, color: hHead.color }}>
                   {heroHeading}
                   <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />
                 </span>
                 <br />
-                <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>{heroHeadingItalic}</em>
+                <em style={{ fontStyle: "italic", color: hHeadIt.color, fontSize: hHeadIt.fontSize }}>{heroHeadingItalic}</em>
               </h1>
               <div style={{ display: "flex" }}>
                 {STATS.map((s, i) => (
@@ -343,72 +347,71 @@ export default function OurWorkContent({ rows = [] }: { rows?: ContentRow[] }) {
 
       <GoldDivider />
 
-      {/* §2 — FILTER BAR */}
-      <div style={{ background: "#1C2951", borderBottom: "0.5px solid rgba(232,213,163,0.12)", position: "sticky", top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "10px 64px", display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#F0DC9A", marginRight: "6px" }}>Filter:</span>
-          {CLIENT_TAGS.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => handleFilter(tag)}
-              className={`filter-btn${activeTag === tag ? " filter-active" : ""}`}
-              style={{
-                fontSize: "10px",
-                fontWeight: activeTag === tag ? 600 : 400,
-                color: activeTag === tag ? "#1C2951" : "#F5EDD8",
-                background: activeTag === tag ? "#E8D5A3" : "rgba(255,255,255,0.06)",
-                border: activeTag === tag ? "none" : "0.5px solid rgba(232,213,163,0.35)",
-                padding: "5px 14px", borderRadius: "4px",
-              }}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <GoldDivider />
-
       {/* §3 — MASONRY GALLERY */}
       <section style={{ background: "#F8F6F1" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 64px" }}>
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-            {filteredProjects.map((p, i) => (
+            {projects.map((p, i) => (
               <div
-                key={p.n}
+                key={p.id}
                 className={`break-inside-avoid mb-4 card-animate ${cardAspectClass(p.aspect)} rounded-2xl overflow-hidden relative cursor-pointer group`}
                 style={{ animationDelay: `${i * 50}ms` }}
-                onClick={() => openOverlay(p.n)}
+                onClick={() => openOverlay(i)}
               >
-                {/* Placeholder */}
-                <div style={{ position: "absolute", inset: 0, background: "#2E3D73", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <i className={`ti ${p.icon}`} style={{ fontSize: "40px", color: "#E8D5A3", opacity: 0.15 }} />
-                </div>
+                {/* Background: photo or colour placeholder */}
+                {p.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={p.image_url}
+                    alt={p.title}
+                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <div style={{ position: "absolute", inset: 0, background: "#2E3D73", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <i className={`ti ${p.icon}`} style={{ fontSize: "40px", color: "#E8D5A3", opacity: 0.15 }} />
+                  </div>
+                )}
 
-                {/* Hover overlay */}
-                <div
-                  className="absolute inset-0 flex flex-col justify-between p-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: "rgba(0,0,0,0.65)" }}
-                >
+                {/* Always-visible gradient overlay */}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(13,30,61,0.92) 0%, rgba(13,30,61,0.45) 45%, rgba(13,30,61,0.10) 100%)", pointerEvents: "none" }} />
+
+                {/* Card content — always visible */}
+                <div className="absolute inset-0 flex flex-col justify-between p-5">
+                  {/* Top: client badge */}
                   <div>
-                    <span style={{ fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: "#E8D5A3" }}>
-                      {p.n} — {p.client}
+                    <span style={{ fontSize: "10px", padding: "3px 9px", borderRadius: "3px", background: "rgba(13,30,61,0.55)", color: "#E8D5A3", border: "0.5px solid rgba(232,213,163,0.25)", backdropFilter: "blur(4px)" }}>
+                      {p.client}
                     </span>
                   </div>
-                  <div style={{ textAlign: "center" }}>
-                    <h3 style={{ fontSize: "13px", fontWeight: 500, color: "#FFFFFF", lineHeight: 1.4 }}>{p.title}</h3>
-                  </div>
-                  <div style={{ textAlign: "center" }}>
-                    <span style={{ fontSize: "11px", color: "#E8D5A3" }}>View Project →</span>
+
+                  {/* Bottom: title + description + CTA */}
+                  <div>
+                    <h3 style={{ fontSize: "13px", fontWeight: 500, color: "#FFFFFF", lineHeight: 1.4, marginBottom: p.description ? "5px" : "8px" }}>
+                      {lang === "th" ? (p.title_th || p.title) : p.title}
+                    </h3>
+                    {p.description && (
+                      <p style={{
+                        fontSize: "11px", color: "rgba(255,255,255,0.75)", lineHeight: 1.55, marginBottom: "8px",
+                        display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+                      }}>
+                        {p.description}
+                      </p>
+                    )}
+                    <span
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      style={{ fontSize: "11px", color: "#E8D5A3" }}
+                    >
+                      {lang === "th" ? "ดูโปรเจกต์ →" : "View Project →"}
+                    </span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {filteredProjects.length === 0 && (
+          {projects.length === 0 && (
             <p style={{ textAlign: "center", padding: "60px 0", color: "#4A5568", fontSize: "13px" }}>
-              No projects found for this filter.
+              No projects yet.
             </p>
           )}
         </div>
@@ -420,13 +423,14 @@ export default function OurWorkContent({ rows = [] }: { rows?: ContentRow[] }) {
       {overlayProject && (
         <ProjectOverlay
           project={overlayProject}
+          orderNum={String((overlayIdx ?? 0) + 1).padStart(2, "0")}
           visible={overlayVisible}
           transKey={transKey}
           onClose={closeOverlay}
           onPrev={goPrev}
           onNext={goNext}
-          hasPrev={overlayIdx > 0}
-          hasNext={overlayIdx < filteredProjects.length - 1}
+          hasPrev={(overlayIdx ?? 0) > 0}
+          hasNext={(overlayIdx ?? 0) < projects.length - 1}
         />
       )}
 
@@ -435,19 +439,21 @@ export default function OurWorkContent({ rows = [] }: { rows?: ContentRow[] }) {
       {/* §5 — CTA STRIP */}
       <section style={{ background: "#1C2951" }} className="py-24">
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 64px", textAlign: "center" }}>
-          <SectionLabel text="Start a Project" />
+          <SectionLabel text={lang === "th" ? "เริ่มโปรเจกต์" : "Start a Project"} />
           <h2 style={{ fontSize: "28px", fontWeight: 400, color: "#FFFFFF", letterSpacing: "-0.02em", fontFamily: "Georgia,serif", marginTop: "16px", marginBottom: "10px" }}>
-            Ready to Create Something <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>Remarkable?</em>
+            {lang === "th"
+              ? <>พร้อมสร้างสิ่งที่ <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>น่าจดจำ?</em></>
+              : <>Ready to Create Something <em style={{ fontStyle: "italic", color: "#E8D5A3" }}>Remarkable?</em></>}
           </h2>
           <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.90)", lineHeight: 1.75, maxWidth: "420px", margin: "0 auto 28px" }}>
-            Let&apos;s build your next premium campaign together.
+            {lang === "th" ? "ร่วมสร้างแคมเปญพรีเมียมของคุณกับเรา" : "Let’s build your next premium campaign together."}
           </p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/contact" style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#E8D5A3", color: "#1C2951", fontSize: "13px", fontWeight: 500, padding: "12px 24px", borderRadius: "5px", whiteSpace: "nowrap" }}>
-              Get a Quote <i className="ti ti-arrow-right" style={{ fontSize: "13px" }} />
+              {lang === "th" ? "ขอใบเสนอราคา" : "Get a Quote"} <i className="ti ti-arrow-right" style={{ fontSize: "13px" }} />
             </Link>
             <Link href="/services" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", color: "#E8D5A3", fontSize: "13px", border: "0.5px solid rgba(255,255,255,0.15)", padding: "11px 22px", borderRadius: "5px", whiteSpace: "nowrap" }}>
-              Browse Services
+              {lang === "th" ? "ดูบริการของเรา" : "Browse Services"}
             </Link>
           </div>
         </div>

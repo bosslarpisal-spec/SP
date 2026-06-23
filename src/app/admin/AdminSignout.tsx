@@ -13,7 +13,7 @@ export default function AdminSignOut() {
       onClick={handleSignOut}
       className="px-3 py-1.5 text-sm font-medium text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
     >
-      Sign Out
+      ออกจากระบบ
     </button>
   );
 }

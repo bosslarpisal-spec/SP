@@ -5,6 +5,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { addAdmin, removeAdmin, changeAdminEmail, changeAdminPassword } from "./actions";
 import { useToast } from "../components/Toast";
+import { th } from "@/app/admin/lib/admin-th";
 
 type Admin = {
   id: number;
@@ -56,9 +57,9 @@ export default function AdminProfileClient({
       const data = await addAdmin(newEmail);
       setAdmins((prev) => [...prev, data]);
       setNewEmail("");
-      toast.success(`${data.email} added as admin`);
+      toast.success(th.toastAdminAdded(data.email));
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to add admin";
+      const msg = err instanceof Error ? err.message : th.toastAdminAddFail;
       setAddError(msg);
       toast.error(msg);
     }
@@ -71,9 +72,9 @@ export default function AdminProfileClient({
     try {
       await removeAdmin(admin.id);
       setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
-      toast.success(`${admin.email} removed`);
+      toast.success(th.toastAdminRemoved(admin.email));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : `Failed to remove ${admin.email}`);
+      toast.error(err instanceof Error ? err.message : th.toastAdminRemoveFail(admin.email));
     }
     setRemovingId(null);
   }
@@ -83,12 +84,10 @@ export default function AdminProfileClient({
     setChangingEmail(true);
     try {
       await changeAdminEmail(newAuthEmail);
-      toast.success(
-        `Confirmation sent to ${newAuthEmail.trim()}. Click the link in that inbox.`
-      );
+      toast.success(th.toastEmailSent(newAuthEmail.trim()));
       setNewAuthEmail("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update email");
+      toast.error(err instanceof Error ? err.message : th.toastEmailFail);
     }
     setChangingEmail(false);
   }
@@ -96,21 +95,21 @@ export default function AdminProfileClient({
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast.error("Passwords don't match");
+      toast.error(th.toastPwMismatch);
       return;
     }
     if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+      toast.error(th.toastPwTooShort);
       return;
     }
     setChangingPw(true);
     try {
       await changeAdminPassword(newPassword);
-      toast.success("Password updated successfully");
+      toast.success(th.toastPwUpdated);
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update password");
+      toast.error(err instanceof Error ? err.message : th.toastPwFail);
     }
     setChangingPw(false);
   }
@@ -154,7 +153,7 @@ export default function AdminProfileClient({
                   fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 99,
                 }}
               >
-                Admin
+                {th.profileRoleBadge}
               </span>
             </div>
             <p style={{ fontSize: 12, color: "#aaa", margin: "2px 0 0" }}>{currentUserEmail}</p>
@@ -163,7 +162,7 @@ export default function AdminProfileClient({
 
         <form onSubmit={handleChangeEmail} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
           <div style={{ flex: 1 }}>
-            <SLabel>New Email Address</SLabel>
+            <SLabel>{th.profileNewEmail}</SLabel>
             <input
               type="email"
               required
@@ -174,22 +173,22 @@ export default function AdminProfileClient({
             />
           </div>
           <PrimaryButton type="submit" disabled={changingEmail}>
-            {changingEmail ? "Sending…" : "Save"}
+            {changingEmail ? th.profileSending : th.profileSave}
           </PrimaryButton>
         </form>
       </div>
 
       {/* Password + Session */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <SettingsCard title="Password">
+        <SettingsCard title={th.profilePwCard}>
           <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div>
-              <SLabel>New Password</SLabel>
+              <SLabel>{th.profileNewPw}</SLabel>
               <div style={{ position: "relative" }}>
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  placeholder="Min. 6 characters"
+                  placeholder={th.profilePwPlaceholder}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   style={{ ...inputStyle, paddingRight: 36 }}
@@ -217,11 +216,11 @@ export default function AdminProfileClient({
               </div>
             </div>
             <div>
-              <SLabel>Confirm Password</SLabel>
+              <SLabel>{th.profileConfirmPw}</SLabel>
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                placeholder="Repeat password"
+                placeholder={th.profilePwRepeat}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 style={inputStyle}
@@ -229,14 +228,14 @@ export default function AdminProfileClient({
             </div>
             <div>
               <PrimaryButton type="submit" disabled={changingPw}>
-                {changingPw ? "Saving…" : "Update Password"}
+                {changingPw ? th.profileSavingPw : th.profileUpdatePw}
               </PrimaryButton>
             </div>
           </form>
         </SettingsCard>
 
-        <SettingsCard title="Session">
-          <p style={{ fontSize: 12, color: "#aaa", marginBottom: 4 }}>Signed in as</p>
+        <SettingsCard title={th.profileSessionCard}>
+          <p style={{ fontSize: 12, color: "#aaa", marginBottom: 4 }}>{th.profileSignedAs}</p>
           <p style={{ fontSize: 13, color: "#333", fontWeight: 500, marginBottom: 16 }}>{currentUserEmail}</p>
           <button
             onClick={handleSignOut}
@@ -252,11 +251,9 @@ export default function AdminProfileClient({
               cursor: "pointer",
             }}
           >
-            Sign Out
+            {th.profileSignOut}
           </button>
-          <p style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
-            Signs you out of all devices.
-          </p>
+          <p style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>{th.profileSignOutDesc}</p>
         </SettingsCard>
       </div>
 
@@ -279,7 +276,7 @@ export default function AdminProfileClient({
           }}
         >
           <p style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>
-            Admin Accounts
+            {th.profileAdminAccounts}
           </p>
           <span
             style={{
@@ -354,7 +351,7 @@ export default function AdminProfileClient({
                         borderRadius: 4,
                       }}
                     >
-                      You
+                      {th.profileYouBadge}
                     </span>
                   )}
                 </div>
@@ -377,7 +374,7 @@ export default function AdminProfileClient({
                         cursor: "pointer",
                       }}
                     >
-                      Remove
+                      {th.profileRemove}
                     </button>
                     <button
                       onClick={() => setConfirmRemoveId(null)}
@@ -391,14 +388,14 @@ export default function AdminProfileClient({
                         cursor: "pointer",
                       }}
                     >
-                      Cancel
+                      {th.profileCancel}
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={() => setConfirmRemoveId(a.id)}
                     disabled={removingId === a.id}
-                    title="Remove admin"
+                    title={th.profileRemoveTitle}
                     style={{
                       width: 26,
                       height: 26,
@@ -432,7 +429,7 @@ export default function AdminProfileClient({
               marginBottom: 10,
             }}
           >
-            Add Admin
+            {th.profileAddAdminLabel}
           </p>
           <form onSubmit={handleAddAdmin} style={{ display: "flex", gap: 8 }}>
             <input
@@ -444,7 +441,7 @@ export default function AdminProfileClient({
               style={{ ...inputStyle, flex: 1 }}
             />
             <PrimaryButton type="submit" disabled={adding}>
-              {adding ? "Adding…" : "Add Admin"}
+              {adding ? th.profileAdding : th.profileAddBtn}
             </PrimaryButton>
           </form>
           {addError && (

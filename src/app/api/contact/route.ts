@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 <div class="card">
   <div class="header">
     <h1>New Contact Form Submission</h1>
-    <p>Received via siampremium.com/contact</p>
+    <p>Received via siampremium.co.th/contact</p>
   </div>
   <div class="body">
     <div class="row">

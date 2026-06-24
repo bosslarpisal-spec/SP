@@ -235,6 +235,15 @@ export default function AboutContent({ rows = [] }: { rows?: ContentRow[] }) {
           .timeline-outer-grid { grid-template-columns: 1fr; }
           .timeline-photo-mobile-first { order: -1; }
           .photo-frame-mobile { max-height: 200px; }
+          .story-outer-grid { padding-left: 20px !important; padding-right: 20px !important; padding-top: 40px !important; padding-bottom: 40px !important; }
+          .timeline-outer-grid { padding-left: 20px !important; padding-right: 20px !important; padding-top: 32px !important; padding-bottom: 32px !important; }
+          .stats-strip { padding-left: 20px !important; padding-right: 20px !important; }
+          .story-inner-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+        }
+        @media (min-width: 769px) and (max-width: 1023px) {
+          .story-outer-grid { padding-left: 32px !important; padding-right: 32px !important; }
+          .timeline-outer-grid { padding-left: 32px !important; padding-right: 32px !important; }
+          .stats-strip { padding-left: 32px !important; padding-right: 32px !important; }
         }
       `}</style>
 
@@ -320,7 +329,7 @@ export default function AboutContent({ rows = [] }: { rows?: ContentRow[] }) {
           </div>
 
           {/* Story copy + checklist — RIGHT (65%) */}
-          <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "72px", alignItems: "start" }}>
+          <div className="story-inner-grid" style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: "72px", alignItems: "start" }}>
             {/* Left — story copy */}
             <div style={{ position: "relative" }}>
               <div aria-hidden="true" style={{ position: "absolute", top: "-0.5rem", left: "-1rem", fontSize: "6rem", fontWeight: 700, color: "#E8D5A3", opacity: 0.15, lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>01</div>

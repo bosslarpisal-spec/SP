@@ -300,12 +300,25 @@ export default function OurWorkContent({
             animation: none !important; opacity: 1 !important; transform: none !important;
           }
         }
+        .ow-hero-inner  { padding: 120px 64px 64px; }
+        .ow-section-pad { padding: 40px 64px; }
+        .ow-cta-pad     { padding: 0 64px; text-align: center; }
+        @media (max-width: 767px) {
+          .ow-hero-inner  { padding: 100px 20px 40px !important; }
+          .ow-section-pad { padding: 32px 20px !important; }
+          .ow-cta-pad     { padding: 0 20px !important; }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .ow-hero-inner  { padding: 100px 32px 48px !important; }
+          .ow-section-pad { padding: 36px 32px !important; }
+          .ow-cta-pad     { padding: 0 32px !important; }
+        }
       `}</style>
 
       {/* §1 — HERO */}
       <section style={{ backgroundImage: "url('/HeroBlockHome.png')", backgroundSize: "cover", backgroundPosition: "right center", backgroundRepeat: "no-repeat", position: "relative", overflow: "hidden" }} className="min-h-[45vh] flex items-center">
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(13,30,61,0.92) 0%, rgba(13,30,61,0.80) 40%, rgba(13,30,61,0.40) 70%, rgba(13,30,61,0.10) 100%)", zIndex: 0, pointerEvents: "none" }} />
-        <div className="hero-animate" style={{ maxWidth: "1200px", margin: "0 auto", padding: "120px 64px 64px", width: "100%", position: "relative", zIndex: 1 }}>
+        <div className="hero-animate ow-hero-inner" style={{ maxWidth: "1200px", margin: "0 auto", width: "100%", position: "relative", zIndex: 1 }}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-end">
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
@@ -345,7 +358,7 @@ export default function OurWorkContent({
 
       {/* §3 — MASONRY GALLERY */}
       <section style={{ background: "#F8F6F1" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 64px" }}>
+        <div className="ow-section-pad" style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div className="columns-1 sm:columns-2 lg:columns-3" style={{ gap: "16px" }}>
             {projects.map((p, i) => {
               const isNavy = i % 2 === 0;
@@ -481,7 +494,7 @@ export default function OurWorkContent({
 
       {/* §5 — CTA STRIP */}
       <section style={{ background: "#1C2951" }} className="py-24">
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 64px", textAlign: "center" }}>
+        <div className="ow-cta-pad" style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <SectionLabel text={lang === "th" ? "เริ่มโปรเจกต์" : "Start a Project"} />
           <h2 style={{ fontSize: "28px", fontWeight: 400, color: "#FFFFFF", letterSpacing: "-0.02em", fontFamily: "Georgia,serif", marginTop: "16px", marginBottom: "10px" }}>
             {lang === "th"

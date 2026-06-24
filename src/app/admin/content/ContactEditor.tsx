@@ -47,7 +47,7 @@ const DEFAULTS: Record<string, string> = {
   info_phone1:      "02 555 1234",
   info_phone2:      "02 555 5678",
   info_mobile:      "086 999 0000",
-  info_email:       "info@siampremium.com",
+  info_email:       "spproduce.dist@gmail.com",
   info_address:     "88 Sukhumvit Road, Khlong Toei, Bangkok 10110",
   info_address_th:  "88 ถนนสุขุมวิท แขวงคลองเตย กรุงเทพมหานคร 10110",
   info_hours:       "Mon – Fri  09.00 – 18.00",
@@ -210,7 +210,7 @@ export default function ContactEditor() {
 
           {/* Email */}
           <div>
-            <CF label={th.ctEmail} value={fields.info_email} type="email" onChange={v => u("info_email", v)} max={60} placeholder="info@siampremium.com" />
+            <CF label={th.ctEmail} value={fields.info_email} type="email" onChange={v => u("info_email", v)} max={60} placeholder="spproduce.dist@gmail.com" />
             <StyleOverride blockKey="email_value" label="Email text" allStyles={infoSt} onChange={handleInfoStyle} defaults={INFO_STYLE_DEF.email_value} fontSizeRange={INFO_STYLE_RANGE} />
           </div>
 

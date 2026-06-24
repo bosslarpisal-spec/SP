@@ -24,7 +24,7 @@ export default async function ContactPage() {
       phone1         ={gv(rows, "info",   "phone1",      "02 555 1234")}
       phone2         ={gv(rows, "info",   "phone2",      "02 555 5678")}
       mobile         ={gv(rows, "info",   "mobile",      "086 999 0000")}
-      email          ={gv(rows, "info",   "email",       "info@siampremium.com")}
+      email          ={gv(rows, "info",   "email",       "spproduce.dist@gmail.com")}
       address        ={gv(rows, "info",   "address",     "88 Sukhumvit Road, Khlong Toei, Bangkok 10110")}
       addressTh      ={gv(rows, "info",   "address_th",  "88 ถนนสุขุมวิท แขวงคลองเตย กรุงเทพมหานคร 10110")}
       hours          ={gv(rows, "info",   "hours",       "Mon – Fri  09.00 – 18.00")}

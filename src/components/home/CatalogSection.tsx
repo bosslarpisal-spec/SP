@@ -464,13 +464,24 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
 
   return (
     <div style={{ background: "#F8F6F1" }}>
+      <style>{`
+        .cat-intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: end; }
+        @media (max-width: 767px) { .cat-intro-grid { grid-template-columns: 1fr; gap: 24px; } }
+
+        .cat-layout { display: grid; grid-template-columns: 180px 1fr; }
+        @media (max-width: 767px) { .cat-layout { grid-template-columns: 1fr; } }
+
+        .cat-product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+        @media (max-width: 767px) { .cat-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (min-width: 768px) and (max-width: 1023px) { .cat-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+      `}</style>
 
       {selected && <QuickViewPopup product={selected} onClose={() => setSelected(null)} />}
 
       {/* ── Editorial intro ── */}
       <div style={{ background: "#F8F6F1" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 40px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "48px", alignItems: "end" }}>
+          <div className="cat-intro-grid">
             <div>
               <span style={{ display: "block", fontSize: "120px", fontWeight: 400, color: "rgba(28,41,81,0.04)", lineHeight: 1, marginBottom: "-16px" }}>SP</span>
               <div className="flex items-center gap-[7px]" style={{ marginBottom: "10px" }}>
@@ -580,7 +591,7 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
       </div>
 
       {/* ── Main body: sidebar + content ── */}
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 40px", display: "grid", gridTemplateColumns: "180px 1fr" }}>
+      <div className="cat-layout" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 40px" }}>
 
         {/* Sidebar */}
         <div style={{ background: "#F0EEE8", borderRight: "0.5px solid rgba(13,30,61,0.08)" }}>
@@ -637,7 +648,7 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
           ) : (
             <>
               {viewMode === "grid" ? (
-                <div key={`g-${filterKey}`} style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "12px" }}>
+                <div key={`g-${filterKey}`} className="cat-product-grid">
                   {paginated.map((p, i) => <GridCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 25, 80)} />)}
                 </div>
               ) : (

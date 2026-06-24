@@ -161,9 +161,43 @@ export default function HomeClient({
 
   return (
     <>
+      <style>{`
+        .hero-padded {
+          padding-top: 260px;
+          padding-left: 140px;
+          padding-right: 80px;
+        }
+        @media (max-width: 1023px) {
+          .hero-padded { padding-top: 180px; padding-left: 64px; padding-right: 40px; }
+        }
+        @media (max-width: 767px) {
+          .hero-padded { padding-top: 120px; padding-left: 24px; padding-right: 24px; }
+        }
+        .process-section-pad { padding: 48px 40px; }
+        @media (max-width: 767px) {
+          .process-section-pad { padding: 40px 20px; }
+        }
+        .process-flex-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-end;
+          margin-bottom: 28px;
+        }
+        @media (max-width: 767px) {
+          .process-flex-header { flex-direction: column; align-items: flex-start; gap: 6px; }
+        }
+        .process-grid { display: grid; grid-template-columns: repeat(5, 1fr); position: relative; }
+        @media (max-width: 767px) {
+          .process-grid { grid-template-columns: 1fr; gap: 12px; }
+          .process-connector { display: none; }
+          .process-step-row { flex-direction: row !important; text-align: left !important; align-items: center !important; gap: 12px; }
+        }
+      `}</style>
+
       {/* ── HERO ────────────────────────────────────────────── */}
       {visible("hero") && (
         <section
+          className="hero-padded"
           onMouseEnter={() => setIsHeroPaused(true)}
           onMouseLeave={() => setIsHeroPaused(false)}
           style={{
@@ -171,14 +205,11 @@ export default function HomeClient({
             position: 'relative',
             overflow: 'hidden',
             marginTop: '-72px',
-            paddingTop: '260px',
             paddingBottom: '80px',
             minHeight: '580px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'flex-start',
-            paddingLeft: '140px',
-            paddingRight: '80px',
           }}>
           {/* Per-slide full-width backgrounds — push with the transition */}
           <div style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}>
@@ -401,8 +432,8 @@ export default function HomeClient({
       {visible("process") && (
         <>
           <div style={{ width: '100%', background: '#F8F6F1' }}>
-            <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px 40px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '28px' }}>
+            <div className="process-section-pad" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+              <div className="process-flex-header">
                 <div>
                   <SectionLabel text={t("วิธีการทำงานของเรา", "HOW WE WORK")} />
                   <h2 style={{ fontSize: '18px', fontWeight: 400, color: '#0D1E3D', letterSpacing: '-0.02em', marginTop: '4px', ...(processStyles.heading as React.CSSProperties) }}>
@@ -414,8 +445,8 @@ export default function HomeClient({
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '20px', left: '10%', right: '10%', height: '1px', pointerEvents: 'none', background: processStyles.stepAccent?.background ?? 'rgba(28,41,81,0.1)' }} />
+              <div className="process-grid">
+                <div className="process-connector" style={{ position: 'absolute', top: '20px', left: '10%', right: '10%', height: '1px', pointerEvents: 'none', background: processStyles.stepAccent?.background ?? 'rgba(28,41,81,0.1)' }} />
                 {PROCESS_STEPS.map(step => (
                   <div key={step.n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '0 8px' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '6px', position: 'relative', zIndex: 10, background: step.active ? (processStyles.stepAccent?.background ?? '#1C2951') : 'rgba(28,41,81,0.08)', border: step.active ? 'none' : '0.5px solid rgba(28,41,81,0.15)' }}>

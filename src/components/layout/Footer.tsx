@@ -143,10 +143,13 @@ export default function Footer() {
         .ft-link:hover { color: #E8D5A3; }
         .ft-social { color: #E8D5A3; opacity: 0.75; text-decoration: none; transition: opacity 0.15s ease; display: flex; align-items: center; }
         .ft-social:hover { opacity: 1; }
+        .ft-outer-pad { padding: 52px 64px 0; }
+        @media (max-width: 767px) { .ft-outer-pad { padding: 40px 20px 0; } }
+        @media (min-width: 768px) and (max-width: 1023px) { .ft-outer-pad { padding: 48px 32px 0; } }
       `}</style>
 
       <footer style={{ background: "#0D1E3D", borderTop: "0.5px solid rgba(232,213,163,0.1)" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "52px 64px 0" }}>
+        <div className="ft-outer-pad" style={{ maxWidth: "1200px", margin: "0 auto" }}>
 
           {/* ── 4-column grid ── */}
           <div className="ft-grid" style={{ paddingBottom: "48px", borderBottom: "0.5px solid rgba(255,255,255,0.06)" }}>

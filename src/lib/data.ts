@@ -9,7 +9,7 @@ export const BRAND = {
   fullName:  "Siam Premium Product",
   tagline:   "Total Premiums & Promotion Solution",
   taglineTH: "ผู้เชี่ยวชาญด้านของพรีเมียมและโปรโมชั่นครบวงจร",
-  email:     "info@siampremium.com",
+  email:     "spproduce.dist@gmail.com",
   phone1:    "02 555 1234",
   phone2:    "02 555 5678",
   mobile:    "086 999 0000",

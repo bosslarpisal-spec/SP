@@ -446,6 +446,8 @@ export const th = {
   ctSecInfoDesc:       "โทรศัพท์ อีเมล ที่อยู่ เวลาทำการ",
   ctSecSocial:         "โซเชียลมีเดีย",
   ctSecSocialDesc:     "URL โซเชียลมีเดีย",
+  ctSecMap:            "แผนที่",
+  ctSecMapDesc:        "ป้ายกำกับ หัวข้อ และปุ่มส่วนแผนที่",
   ctHeroBadge:         "ป้ายกำกับ / ข้อความบน",
   ctHeroHead:          "หัวเรื่อง",
   ctHeroSubtext:       "ข้อความภาษาไทย",

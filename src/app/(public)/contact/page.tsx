@@ -33,6 +33,10 @@ export default async function ContactPage() {
       facebook       ={gv(rows, "social", "facebook",    "https://facebook.com")}
       instagram      ={gv(rows, "social", "instagram",   "https://instagram.com")}
       line           ={gv(rows, "social", "line",        "https://line.me")}
+      mapBadge       ={gv(rows, "map",    "badge",       "FIND US")}
+      mapHeading     ={gv(rows, "map",    "heading",     "Visit Our Office")}
+      mapBtn         ={gv(rows, "map",    "btn_label",   "Get Directions →")}
+      mapStylesJson  ={gv(rows, "map",    "_styles",     "{}")}
     />
   );
 }

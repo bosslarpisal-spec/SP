@@ -202,6 +202,7 @@ export default function FooterEditor() {
           fields={SVC_FIELDS}
           defaultItem={SVC_DEFAULT}
           addLabel={th.ftAddService}
+          maxItems={10}
         />
       </div>
     );
@@ -217,6 +218,7 @@ export default function FooterEditor() {
           fields={QL_FIELDS}
           defaultItem={QL_DEFAULT}
           addLabel={th.ftAddLink}
+          maxItems={10}
         />
       </div>
     );

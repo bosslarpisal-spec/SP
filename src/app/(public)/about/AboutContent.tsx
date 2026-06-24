@@ -96,8 +96,8 @@ function StatCard({ value, suffix, label, inView }: {
 }) {
   const count = useCountUp(value, inView);
   const display = value >= 1000 ? count.toLocaleString() : String(count);
-  // Ghost derived directly from value+suffix — never mismatches the foreground
-  const ghost = String(value) + suffix;
+  // Ghost uses same formatting as the foreground count — never mismatches
+  const ghost = (value >= 1000 ? value.toLocaleString() : String(value)) + suffix;
   return (
     <div style={{ textAlign: "center", position: "relative", padding: "40px 16px", overflow: "hidden" }}>
       <div aria-hidden="true" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", pointerEvents: "none", userSelect: "none" }}>
@@ -180,7 +180,7 @@ export default function AboutContent({ rows = [] }: { rows?: ContentRow[] }) {
 
   return (
     <>
-      <style>{`
+      <style suppressHydrationWarning>{`
         @keyframes hero-fade-in { from { opacity: 0; } to { opacity: 1; } }
         .hero-content { animation: hero-fade-in 0.8s ease 0.15s both; }
 

@@ -334,6 +334,7 @@ export default function ServicesEditor() {
             fields={SERVICE_FIELDS}
             defaultItem={{ n:"07", feat:false, icon:"ti-star", title:"", th:"", desc:"" }}
             addLabel={th.svAddService}
+            maxItems={6}
           />
         </div>
       </div>
@@ -360,6 +361,7 @@ export default function ServicesEditor() {
               fields={WHY_FIELDS}
               defaultItem={{ n:"05", icon:"ti-star", title:"", title_th:"", desc:"", desc_th:"" }}
               addLabel={th.svAddReason}
+              maxItems={8}
             />
           </div>
         </div>
@@ -387,6 +389,7 @@ export default function ServicesEditor() {
               fields={PROCESS_FIELDS}
               defaultItem={{ n:"05", icon:"ti-star", title:"", title_th:"", desc:"", desc_th:"", active:false }}
               addLabel={th.svAddStep}
+              maxItems={4}
             />
           </div>
         </div>

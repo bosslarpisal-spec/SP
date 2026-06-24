@@ -6,6 +6,7 @@ import AdminSlidesClient from "./AdminSlidesClient";
 import { th } from "@/app/admin/lib/admin-th";
 
 export const dynamic = "force-dynamic";
+const MAX_SLIDES = 7;
 
 export type HeroSlide = {
   id: number;
@@ -64,24 +65,36 @@ export default async function SlidesPage() {
             {th.slidesSubtitle((data ?? []).length)}
           </p>
         </div>
-        <Link
-          href="/admin/slides/new"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "8px 16px",
-            background: "#0D1E3D",
-            color: "#E8D5A3",
-            borderRadius: 7,
-            fontSize: 13,
-            fontWeight: 500,
-            textDecoration: "none",
-          }}
-        >
-          <i className="ti ti-plus" style={{ fontSize: 14 }} />
-          {th.slidesAddBtn}
-        </Link>
+        {(data ?? []).length >= MAX_SLIDES ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", background: "#F5F4F1", color: "#aaa", borderRadius: 7, fontSize: 13, fontWeight: 500, border: "0.5px solid #E8E6E0", cursor: "not-allowed", opacity: 0.6 }}>
+              <i className="ti ti-plus" style={{ fontSize: 14 }} />
+              {th.slidesAddBtn}
+            </div>
+            <span style={{ fontSize: 11, color: "#D97706", fontWeight: 500 }}>
+              สูงสุด {MAX_SLIDES} สไลด์ / Max {MAX_SLIDES} slides
+            </span>
+          </div>
+        ) : (
+          <Link
+            href="/admin/slides/new"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              background: "#0D1E3D",
+              color: "#E8D5A3",
+              borderRadius: 7,
+              fontSize: 13,
+              fontWeight: 500,
+              textDecoration: "none",
+            }}
+          >
+            <i className="ti ti-plus" style={{ fontSize: 14 }} />
+            {th.slidesAddBtn}
+          </Link>
+        )}
       </div>
 
       <AdminSlidesClient slides={(data ?? []) as HeroSlide[]} />

@@ -74,6 +74,10 @@ interface ContactClientProps {
   facebook: string;
   instagram: string;
   line: string;
+  mapBadge: string;
+  mapHeading: string;
+  mapBtn: string;
+  mapStylesJson: string;
 }
 
 /* ── Component ───────────────────────────────────────────── */
@@ -81,6 +85,7 @@ export default function ContactClient({
   heroBadge, heroHeading, heroSubtextTh, heroDescription, heroStylesJson,
   phone1, phone2, mobile, email, address, addressTh, hours, hoursTh, infoStylesJson,
   facebook, instagram, line,
+  mapBadge, mapHeading, mapBtn, mapStylesJson,
 }: ContactClientProps) {
   const { lang } = useLang();
   const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", interest: "", message: "" });
@@ -100,6 +105,7 @@ export default function ContactClient({
   /* ── Resolve styles ─── */
   const heroSt: Record<string, BS> = (() => { try { return JSON.parse(heroStylesJson); } catch { return {}; } })();
   const infoSt: Record<string, BS> = (() => { try { return JSON.parse(infoStylesJson); } catch { return {}; } })();
+  const mapSt:  Record<string, BS> = (() => { try { return JSON.parse(mapStylesJson);  } catch { return {}; } })();
 
   const hBadge = gs(heroSt, "badge",       { color: "#E8D5A3",                fontSize: "10px" });
   const hHead  = gs(heroSt, "heading",     { color: "#FFFFFF",                fontSize: "48px" });
@@ -110,6 +116,10 @@ export default function ContactClient({
   const iEmail = gs(infoSt, "email_value",   { color: "#0D1E3D", fontSize: "14px" });
   const iHours = gs(infoSt, "hours_value",   { color: "#0D1E3D", fontSize: "14px" });
   const iAddr  = gs(infoSt, "address_value", { color: "#0D1E3D", fontSize: "14px" });
+
+  const mBadge = gs(mapSt, "badge",   { color: "#F0DC9A",  fontSize: "10px" });
+  const mHead  = gs(mapSt, "heading", { color: "#FFFFFF",  fontSize: "30px" });
+  const mBtn   = gs(mapSt, "btn",     { color: "#E8D5A3",  fontSize: "14px" });
 
   const displayAddress = lang === "th" && addressTh ? addressTh : address;
   const displayHours   = lang === "th" && hoursTh   ? hoursTh   : hours;
@@ -292,15 +302,15 @@ export default function ContactClient({
         <div className="max-w-7xl mx-auto px-6 md:px-12 text-center">
           <div className="flex items-center justify-center gap-3 mb-5">
             <GoldLine width={24} />
-            <span className="text-xs tracking-[0.2em] uppercase font-medium" style={{ color: "#F0DC9A" }}>Find Us</span>
+            <span className="tracking-[0.2em] uppercase font-medium" style={{ color: mBadge.color, fontSize: mBadge.fontSize }}>{mapBadge}</span>
             <GoldLine width={24} />
           </div>
-          <h2 className="text-3xl text-white mb-3" style={{ fontFamily: "Georgia, serif", fontWeight: 400 }}>Visit Our Office</h2>
-          <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.90)" }}>{displayAddress}</p>
+          <h2 className="mb-3" style={{ fontFamily: "Georgia, serif", fontWeight: 400, color: mHead.color, fontSize: mHead.fontSize }}>{mapHeading}</h2>
+          <p className="mb-6" style={{ color: "rgba(255,255,255,0.90)", fontSize: "14px" }}>{displayAddress}</p>
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-80 mb-10"
-            style={{ border: "1px solid rgba(232,213,163,0.5)", color: "#E8D5A3" }}>
-            Get Directions →
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-opacity hover:opacity-80 mb-10"
+            style={{ border: "1px solid rgba(232,213,163,0.5)", color: mBtn.color, fontSize: mBtn.fontSize }}>
+            {mapBtn}
           </a>
           <div className="rounded-xl overflow-hidden" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
             <iframe width="100%" height="300" style={{ border: "none", display: "block" }} src={embedUrl}

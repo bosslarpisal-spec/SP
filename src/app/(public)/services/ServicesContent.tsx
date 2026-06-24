@@ -43,9 +43,12 @@ export default function ServicesContent({
   whyBadge, whyHeading, whyStylesJson,
   procBadge, procHeading, procStylesJson,
   serviceImage1, serviceImage2,
-  services: SERVICES, why: WHY, process: PROCESS,
+  services: rawServices, why: rawWhy, process: rawProcess,
 }: Props) {
   const { lang } = useLang();
+  const SERVICES = rawServices.filter(s => s.title?.trim());
+  const WHY      = rawWhy.filter(w => w.title?.trim());
+  const PROCESS  = rawProcess.filter(p => p.title?.trim());
 
   const heroSt: Record<string, BS> = (() => { try { return JSON.parse(heroStylesJson); } catch { return {}; } })();
   const whySt:  Record<string, BS> = (() => { try { return JSON.parse(whyStylesJson);  } catch { return {}; } })();
@@ -137,44 +140,58 @@ export default function ServicesContent({
             </div>
           </div>
 
-          {/* ROW 2 — 02 Flipped ──────────── */}
-          <div className="flex flex-col md:flex-row">
-            <div className="w-full h-[200px] md:h-auto md:w-1/2 md:min-h-[220px] flex items-center justify-center" style={{ background: "#F0EEE8", overflow: "hidden" }}>
-              {serviceImage2
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={serviceImage2} alt={SERVICES[1].title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <i className={`ti ${SERVICES[1].icon}`} style={{ fontSize: "80px", color: "#1C2951", opacity: 0.12 }} />
-              }
-            </div>
-            <div className="w-full md:w-1/2 p-6 md:px-[60px] md:py-[48px] flex flex-col justify-center" style={{ background: "#FFFFFF" }}>
-              <div style={{ fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: "12px" }}>02</div>
-              <h2 style={{ fontSize: "28px", fontWeight: 400, color: "#0D1E3D", fontFamily: "Georgia, serif", lineHeight: 1.1, marginBottom: "8px" }}>
-                {svcTitle(SERVICES[1], lang)}
-              </h2>
-              <p style={{ fontSize: "13px", color: "#4A5568", lineHeight: 1.7 }}>{lang === "th" ? (SERVICES[1].desc_th || SERVICES[1].desc) : SERVICES[1].desc}</p>
-            </div>
-          </div>
-
-          {/* BOTTOM ROW — 03 · 04 · 05 · 06 ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4">
-            {([2, 3, 4] as const).map((idx) => (
-              <div key={idx} style={{ background: "#FFFFFF", borderRight: "0.5px solid rgba(28,41,81,0.1)", padding: "28px 24px", display: "flex", flexDirection: "column", minHeight: "200px" }}>
-                <div style={{ fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: "10px" }}>0{idx + 1}</div>
-                <i className={`ti ${SERVICES[idx].icon}`} style={{ fontSize: "28px", color: "#1C2951", opacity: 0.4, marginBottom: "12px" }} />
-                <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#0D1E3D", marginBottom: "4px" }}>{svcTitle(SERVICES[idx], lang)}</h3>
-                <p style={{ fontSize: "12px", color: "#4A5568", lineHeight: 1.6 }}>{lang === "th" ? (SERVICES[idx].desc_th || SERVICES[idx].desc) : SERVICES[idx].desc}</p>
+          {/* ROW 2 — 02 Flipped ─ only if ≥ 2 services ── */}
+          {SERVICES.length >= 2 && (
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full h-[200px] md:h-auto md:w-1/2 md:min-h-[220px] flex items-center justify-center" style={{ background: "#F0EEE8", overflow: "hidden" }}>
+                {serviceImage2
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={serviceImage2} alt={SERVICES[1].title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <i className={`ti ${SERVICES[1].icon}`} style={{ fontSize: "80px", color: "#1C2951", opacity: 0.12 }} />
+                }
               </div>
-            ))}
-            <div style={{ background: "#1C2951", padding: "28px 24px", display: "flex", flexDirection: "column", minHeight: "200px" }}>
-              <div style={{ fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#E8D5A3", marginBottom: "10px" }}>06</div>
-              <i className={`ti ${SERVICES[5].icon}`} style={{ fontSize: "28px", color: "#E8D5A3", opacity: 0.5, marginBottom: "12px" }} />
-              <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#FFFFFF", marginBottom: "4px" }}>{svcTitle(SERVICES[5], lang)}</h3>
-              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, flex: 1 }}>{lang === "th" ? (SERVICES[5].desc_th || SERVICES[5].desc) : SERVICES[5].desc}</p>
-              <Link href="/contact" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 500, color: "#E8D5A3", textDecoration: "none", marginTop: "12px" }}>
-                → {lang === "th" ? "เรียนรู้เพิ่มเติม" : "Learn more"}
-              </Link>
+              <div className="w-full md:w-1/2 p-6 md:px-[60px] md:py-[48px] flex flex-col justify-center" style={{ background: "#FFFFFF" }}>
+                <div style={{ fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: "12px" }}>02</div>
+                <h2 style={{ fontSize: "28px", fontWeight: 400, color: "#0D1E3D", fontFamily: "Georgia, serif", lineHeight: 1.1, marginBottom: "8px" }}>
+                  {svcTitle(SERVICES[1], lang)}
+                </h2>
+                <p style={{ fontSize: "13px", color: "#4A5568", lineHeight: 1.7 }}>{lang === "th" ? (SERVICES[1].desc_th || SERVICES[1].desc) : SERVICES[1].desc}</p>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* BOTTOM ROW — 03 … N ─ only if ≥ 3 services ──────── */}
+          {SERVICES.length >= 3 && (() => {
+            const bottomCards = SERVICES.slice(2);
+            return (
+              <div className="grid grid-cols-2 md:grid-cols-4">
+                {bottomCards.slice(0, -1).map((svc, i) => (
+                  <div key={svc.n} style={{ background: "#FFFFFF", borderRight: "0.5px solid rgba(28,41,81,0.1)", padding: "28px 24px", display: "flex", flexDirection: "column", minHeight: "200px" }}>
+                    <div style={{ fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#9CA3AF", marginBottom: "10px" }}>0{i + 3}</div>
+                    <i className={`ti ${svc.icon}`} style={{ fontSize: "28px", color: "#1C2951", opacity: 0.4, marginBottom: "12px" }} />
+                    <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#0D1E3D", marginBottom: "4px" }}>{svcTitle(svc, lang)}</h3>
+                    <p style={{ fontSize: "12px", color: "#4A5568", lineHeight: 1.6 }}>{lang === "th" ? (svc.desc_th || svc.desc) : svc.desc}</p>
+                  </div>
+                ))}
+                {/* Last card is always dark navy */}
+                {(() => {
+                  const last = bottomCards[bottomCards.length - 1];
+                  const lastNum = String(SERVICES.length).padStart(2, "0");
+                  return (
+                    <div style={{ background: "#1C2951", padding: "28px 24px", display: "flex", flexDirection: "column", minHeight: "200px" }}>
+                      <div style={{ fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "#E8D5A3", marginBottom: "10px" }}>{lastNum}</div>
+                      <i className={`ti ${last.icon}`} style={{ fontSize: "28px", color: "#E8D5A3", opacity: 0.5, marginBottom: "12px" }} />
+                      <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#FFFFFF", marginBottom: "4px" }}>{svcTitle(last, lang)}</h3>
+                      <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, flex: 1 }}>{lang === "th" ? (last.desc_th || last.desc) : last.desc}</p>
+                      <Link href="/contact" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "12px", fontWeight: 500, color: "#E8D5A3", textDecoration: "none", marginTop: "12px" }}>
+                        → {lang === "th" ? "เรียนรู้เพิ่มเติม" : "Learn more"}
+                      </Link>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })()}
 
           <GoldDivider />
 

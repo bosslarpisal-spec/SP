@@ -384,7 +384,8 @@ export default function OurWorkEditor() {
           onChange={arr => setArr("ow_stats", arr)}
           fields={STAT_FIELDS}
           defaultItem={{ n: "0+", label: "" }}
-          addLabel={th.owStatsAdd} />
+          addLabel={th.owStatsAdd}
+          maxItems={4} />
       </div>
     );
 
@@ -450,12 +451,19 @@ export default function OurWorkEditor() {
                       </div>
                     </div>
 
-                    <CF label={th.owTitleEn} value={p.title} max={50}
-                      onChange={v => updateProj(p.id, "title", v)} />
-                    <CF label={th.owTitleTh} value={p.title_th} max={50}
-                      onChange={v => updateProj(p.id, "title_th", v)} />
-                    <CF label={th.owDesc} value={p.description} max={200} multiline
-                      onChange={v => updateProj(p.id, "description", v)} />
+                    <div>
+                      <label style={lSt}>{th.owTitleEn}</label>
+                      <input type="text" value={p.title} onChange={e => updateProj(p.id, "title", e.target.value)} style={iBase} />
+                    </div>
+                    <div>
+                      <label style={lSt}>{th.owTitleTh}</label>
+                      <input type="text" value={p.title_th} onChange={e => updateProj(p.id, "title_th", e.target.value)} style={iBase} />
+                    </div>
+                    <div>
+                      <label style={lSt}>{th.owDesc}</label>
+                      <textarea value={p.description} rows={4} onChange={e => updateProj(p.id, "description", e.target.value)}
+                        style={{ ...iBase, resize: "vertical", fontFamily: "inherit" }} />
+                    </div>
 
                     <ProjectImageUpload
                       projectId={p.id}

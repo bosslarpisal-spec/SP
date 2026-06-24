@@ -50,11 +50,6 @@ const DEFAULT_STATS = [
 ];
 
 /* ── Card aspect ──────────────────────────────────────────────── */
-function cardAspectClass(aspect: PortfolioProject["aspect"]) {
-  if (aspect === "tall")  return "aspect-[3/4]";
-  if (aspect === "wide")  return "aspect-[4/3]";
-  return "aspect-square";
-}
 
 /* ── OVERLAY ─────────────────────────────────────────────────── */
 interface OverlayProps {
@@ -223,7 +218,8 @@ export default function OurWorkContent({
   const heroBadge         = gv(rows, "hero",  "badge",          "PORTFOLIO");
   const heroHeading       = gv(rows, "hero",  "heading",        "Our Work &");
   const heroHeadingItalic = gv(rows, "hero",  "heading_italic", "Portfolio");
-  const STATS             = ga(rows, "stats", "items",          DEFAULT_STATS);
+  const STATS             = ga<{ n: string; label: string }>(rows, "stats", "items", DEFAULT_STATS)
+    .filter(s => s.n?.trim() && s.label?.trim());
 
   const heroSt: Record<string, BS> = (() => { try { return JSON.parse(gv(rows, "hero", "_styles", "{}")); } catch { return {}; } })();
   const hBadge    = gs(heroSt, "badge",         { color: "#E8D5A3", fontSize: "10px" });
@@ -354,11 +350,11 @@ export default function OurWorkContent({
             {projects.map((p, i) => (
               <div
                 key={p.id}
-                className={`break-inside-avoid mb-4 card-animate ${cardAspectClass(p.aspect)} rounded-2xl overflow-hidden relative cursor-pointer group`}
+                className="break-inside-avoid mb-4 card-animate rounded-2xl overflow-hidden relative cursor-pointer group"
                 style={{ animationDelay: `${i * 50}ms` }}
                 onClick={() => openOverlay(i)}
               >
-                {/* Background: photo or colour placeholder */}
+                {/* Background: photo or colour placeholder — absolutely positioned behind content */}
                 {p.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -375,8 +371,8 @@ export default function OurWorkContent({
                 {/* Always-visible gradient overlay */}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(13,30,61,0.92) 0%, rgba(13,30,61,0.45) 45%, rgba(13,30,61,0.10) 100%)", pointerEvents: "none" }} />
 
-                {/* Card content — always visible */}
-                <div className="absolute inset-0 flex flex-col justify-between p-5">
+                {/* Card content — in flow, drives card height */}
+                <div style={{ position: "relative", display: "flex", flexDirection: "column", padding: "20px", minHeight: "240px" }}>
                   {/* Top: client badge */}
                   <div>
                     <span style={{ fontSize: "10px", padding: "3px 9px", borderRadius: "3px", background: "rgba(13,30,61,0.55)", color: "#E8D5A3", border: "0.5px solid rgba(232,213,163,0.25)", backdropFilter: "blur(4px)" }}>
@@ -384,16 +380,16 @@ export default function OurWorkContent({
                     </span>
                   </div>
 
-                  {/* Bottom: title + description + CTA */}
+                  {/* Spacer — pushes title block toward bottom */}
+                  <div style={{ flex: 1, minHeight: "40px" }} />
+
+                  {/* Bottom: title + full description + CTA */}
                   <div>
                     <h3 style={{ fontSize: "13px", fontWeight: 500, color: "#FFFFFF", lineHeight: 1.4, marginBottom: p.description ? "5px" : "8px" }}>
                       {lang === "th" ? (p.title_th || p.title) : p.title}
                     </h3>
                     {p.description && (
-                      <p style={{
-                        fontSize: "11px", color: "rgba(255,255,255,0.75)", lineHeight: 1.55, marginBottom: "8px",
-                        display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-                      }}>
+                      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", lineHeight: 1.55, marginBottom: "8px" }}>
                         {p.description}
                       </p>
                     )}

@@ -25,12 +25,17 @@ const FIELD_META: Record<string, { section: string; key: string }> = {
   social_line:      { section: "social", key: "line" },
   social_youtube:   { section: "social", key: "youtube" },
   social_tiktok:    { section: "social", key: "tiktok" },
+  map_badge:        { section: "map",    key: "badge" },
+  map_heading:      { section: "map",    key: "heading" },
+  map_btn:          { section: "map",    key: "btn_label" },
+  map_styles:       { section: "map",    key: "_styles" },
 };
 
 const SECTION_FIELDS: Record<string, string[]> = {
   hero:   ["hero_badge", "hero_heading", "hero_subtext_th", "hero_description", "hero_styles"],
   info:   ["info_phone1", "info_phone2", "info_mobile", "info_email", "info_address", "info_address_th", "info_hours", "info_hours_th", "info_styles"],
   social: ["social_facebook", "social_instagram", "social_line", "social_youtube", "social_tiktok"],
+  map:    ["map_badge", "map_heading", "map_btn", "map_styles"],
 };
 
 const DEFAULTS: Record<string, string> = {
@@ -53,12 +58,17 @@ const DEFAULTS: Record<string, string> = {
   social_line:      "https://line.me",
   social_youtube:   "https://youtube.com",
   social_tiktok:    "https://tiktok.com",
+  map_badge:        "FIND US",
+  map_heading:      "Visit Our Office",
+  map_btn:          "Get Directions →",
+  map_styles:       "{}",
 };
 
 const SECTIONS = [
-  { id: "hero",   label: th.ctSecHero,   icon: "ti-sparkles",       fieldCount: 4, desc: th.ctSecHeroDesc },
-  { id: "info",   label: th.ctSecInfo,   icon: "ti-info-circle",    fieldCount: 8, desc: th.ctSecInfoDesc },
+  { id: "hero",   label: th.ctSecHero,   icon: "ti-sparkles",       fieldCount: 4, desc: th.ctSecHeroDesc   },
+  { id: "info",   label: th.ctSecInfo,   icon: "ti-info-circle",    fieldCount: 8, desc: th.ctSecInfoDesc   },
   { id: "social", label: th.ctSecSocial, icon: "ti-brand-facebook", fieldCount: 5, desc: th.ctSecSocialDesc },
+  { id: "map",    label: th.ctSecMap,    icon: "ti-map-pin",        fieldCount: 3, desc: th.ctSecMapDesc    },
 ];
 
 /* ── style defaults ─────────────────────────────────────────── */
@@ -83,13 +93,24 @@ const INFO_STYLE_DEF: Record<string, BlockStyles> = {
 };
 const INFO_STYLE_RANGE = { min: 10, max: 20 };
 
+const MAP_STYLE_DEF: Record<string, BlockStyles> = {
+  badge:   { color: "#F0DC9A", fontSize: "10px" },
+  heading: { color: "#FFFFFF", fontSize: "30px" },
+  btn:     { color: "#E8D5A3", fontSize: "14px" },
+};
+const MAP_STYLE_RANGE: Record<string, { min: number; max: number }> = {
+  badge:   { min: 8,  max: 14 },
+  heading: { min: 20, max: 48 },
+  btn:     { min: 11, max: 18 },
+};
+
 /* ── shared input styles ────────────────────────────────────── */
 const lSt: React.CSSProperties = { fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "#aaa", fontWeight: 500, display: "block", marginBottom: 5 };
 const iBase: React.CSSProperties = { background: "#FFFFFF", border: "0.5px solid #E8E6E0", borderRadius: 7, padding: "7px 9px", fontSize: 12, color: "#333", width: "100%", outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
 
 /* ── CF — counted field ─────────────────────────────────────── */
-function CF({ label, value, onChange, max, multiline = false, placeholder = "", type = "text" }: {
-  label: string; value: string; onChange: (v: string) => void;
+function CF({ label, value = "", onChange, max, multiline = false, placeholder = "", type = "text" }: {
+  label: string; value?: string; onChange: (v: string) => void;
   max: number; multiline?: boolean; placeholder?: string; type?: string;
 }) {
   const over = value.length > max;
@@ -133,6 +154,7 @@ export default function ContactEditor() {
   }
   const handleHeroStyle = makeStyleChange("hero_styles", "hero");
   const handleInfoStyle = makeStyleChange("info_styles",  "info");
+  const handleMapStyle  = makeStyleChange("map_styles",   "map");
 
   if (!loaded) return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, color: "#888", fontSize: 13, padding: "40px 0" }}>
@@ -233,6 +255,33 @@ export default function ContactEditor() {
         </div>
       </div>
     );
+
+    /* ── MAP ── */
+    if (activeSection === "map") {
+      const mapSt: Record<string, BlockStyles> = (() => { try { return JSON.parse(fields.map_styles || "{}"); } catch { return {}; } })();
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <CF label="Badge / ป้ายกำกับ" value={fields.map_badge} onChange={v => u("map_badge", v)} max={30} placeholder="FIND US" />
+            <StyleOverride blockKey="badge" label="Badge" allStyles={mapSt} onChange={handleMapStyle} defaults={MAP_STYLE_DEF.badge} fontSizeRange={MAP_STYLE_RANGE.badge} />
+          </div>
+          <div>
+            <CF label="หัวข้อ (EN)" value={fields.map_heading} onChange={v => u("map_heading", v)} max={60} placeholder="Visit Our Office" />
+            <StyleOverride blockKey="heading" label="Heading" allStyles={mapSt} onChange={handleMapStyle} defaults={MAP_STYLE_DEF.heading} fontSizeRange={MAP_STYLE_RANGE.heading} />
+          </div>
+          <div>
+            <CF label="ป้ายปุ่ม / Button Label" value={fields.map_btn} onChange={v => u("map_btn", v)} max={30} placeholder="Get Directions →" />
+            <StyleOverride blockKey="btn" label="Button" allStyles={mapSt} onChange={handleMapStyle} defaults={MAP_STYLE_DEF.btn} fontSizeRange={MAP_STYLE_RANGE.btn} />
+          </div>
+          <div style={{ marginTop: 6, padding: "12px 14px", background: "#F0F4FF", borderRadius: 8, border: "0.5px solid #BFC9E0" }}>
+            <div style={{ fontSize: 11, color: "#4A5E7A", fontWeight: 500, marginBottom: 4 }}>ℹ️ แผนที่ฝังตัว</div>
+            <div style={{ fontSize: 11, color: "#6A7A9A", lineHeight: 1.65 }}>
+              แผนที่และลิงก์ "Get Directions" ใช้<strong> ที่อยู่ </strong>จากส่วน<strong> ข้อมูลติดต่อ </strong>โดยอัตโนมัติ — ไม่จำเป็นต้องกรอก URL แผนที่แยกต่างหาก
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return null;
   }

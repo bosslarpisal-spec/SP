@@ -335,7 +335,7 @@ export default function HomeClient({
                   { num: stat1Num, label: stat1Label },
                   { num: stat2Num, label: stat2Label },
                   { num: stat3Num, label: stat3Label },
-                ].map((stat, i) => (
+                ].filter(stat => stat.num?.trim() && stat.label?.trim()).map((stat, i) => (
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 700, color: '#E8D5A3', fontFamily: 'Georgia, serif', lineHeight: 1, ...(statsStyles.statNumber as React.CSSProperties) }}>
                       {stat.num}

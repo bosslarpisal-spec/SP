@@ -242,6 +242,10 @@ export default function AdminShell({
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
+      <style>{`
+        .admin-main { margin-left: 0; }
+        @media (min-width: 768px) { .admin-main { margin-left: 220px; } }
+      `}</style>
       {/* Desktop sidebar */}
       <div
         className="hidden md:flex"
@@ -287,7 +291,7 @@ export default function AdminShell({
 
       {/* Main content */}
       <div
-        className="md:ml-[220px]"
+        className="admin-main"
         style={{ flex: 1, minHeight: "100vh", background: "#F7F6F3" }}
       >
         {/* Top bar */}

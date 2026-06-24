@@ -141,7 +141,7 @@ export default function Footer() {
         }
         .ft-link { color: #6A7A9A; text-decoration: none; transition: color 0.15s ease; }
         .ft-link:hover { color: #E8D5A3; }
-        .ft-social { color: #E8D5A3; opacity: 0.7; text-decoration: none; transition: opacity 0.15s ease; display: flex; align-items: center; }
+        .ft-social { color: #E8D5A3; opacity: 0.75; text-decoration: none; transition: opacity 0.15s ease; display: flex; align-items: center; }
         .ft-social:hover { opacity: 1; }
       `}</style>
 

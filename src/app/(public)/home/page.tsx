@@ -28,6 +28,8 @@ interface DbProduct {
   id: number;
   name: string;
   name_th: string;
+  description: string | null;
+  description_th: string | null;
   category: string;
   image_url: string;
   images: string[] | null;
@@ -45,7 +47,7 @@ export default async function HomePage() {
   const [productsResult, contentResult, categoriesResult, tagsResult, slidesResult] = await Promise.all([
     supabase
       .from("products")
-      .select("id,name,name_th,category,image_url,images,is_new,is_active,display_order,tags,moq,branding_methods")
+      .select("id,name,name_th,description,description_th,category,image_url,images,is_new,is_active,display_order,tags,moq,branding_methods")
       .eq("is_active", true)
       .order("display_order"),
     supabase
@@ -75,7 +77,10 @@ export default async function HomePage() {
   const products = (productsResult.data as DbProduct[] ?? []).map(p => ({
     id:          String(p.id),
     name:        p.name,
-    description: p.name_th,
+    nameTh:      p.name_th,
+    description: p.name_th,         // Thai name shown as bilingual subtitle in catalog card
+    descEn:      p.description ?? "",
+    descTh:      p.description_th ?? "",
     category:    p.category,
     is_visible:  p.is_active,
     is_new:      p.is_new,

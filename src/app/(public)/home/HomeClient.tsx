@@ -10,7 +10,10 @@ import type { HeroSlide } from "./page";
 interface CatalogProduct {
   id: string;
   name: string;
+  nameTh?: string;
   description: string;
+  descEn?: string;
+  descTh?: string;
   category: string;
   is_visible: boolean;
   is_new: boolean;
@@ -288,11 +291,14 @@ export default function HomeClient({
                         </a>
                       ) : (
                         <a key={ci} href={cta.href} style={{
-                          border: '1px solid rgba(255,255,255,0.35)',
                           color: '#FFFFFF', fontSize: '14px',
                           padding: '13px 24px', borderRadius: '6px',
                           textDecoration: 'none',
                           ...(slide.styles.btn2 as React.CSSProperties),
+                          borderTop:    '1px solid rgba(255,255,255,0.35)',
+                          borderRight:  '1px solid rgba(255,255,255,0.35)',
+                          borderBottom: '1px solid rgba(255,255,255,0.35)',
+                          borderLeft:   '1px solid rgba(255,255,255,0.35)',
                         }}>
                           {cta.label}
                         </a>

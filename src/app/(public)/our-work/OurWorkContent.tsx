@@ -49,8 +49,6 @@ const DEFAULT_STATS = [
   { n: "30+",    label: "Countries" },
 ];
 
-/* ── Card aspect ──────────────────────────────────────────────── */
-
 /* ── OVERLAY ─────────────────────────────────────────────────── */
 interface OverlayProps {
   project: PortfolioProject;
@@ -285,6 +283,8 @@ export default function OurWorkContent({
         @keyframes card-in { from { opacity: 0; } to { opacity: 1; } }
         .card-animate { animation: card-in 0.5s ease both; transition: transform 0.3s ease; }
         .card-animate:hover { transform: scale(1.02); }
+        .card-cta { opacity: 0; transition: opacity 0.2s ease; }
+        .card-animate:hover .card-cta { opacity: 1; }
 
         @keyframes overlay-content-in {
           from { opacity: 0; transform: translateY(20px); }
@@ -346,63 +346,110 @@ export default function OurWorkContent({
       {/* §3 — MASONRY GALLERY */}
       <section style={{ background: "#F8F6F1" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "40px 64px" }}>
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-            {projects.map((p, i) => (
-              <div
-                key={p.id}
-                className="break-inside-avoid mb-4 card-animate rounded-2xl overflow-hidden relative cursor-pointer group"
-                style={{ animationDelay: `${i * 50}ms` }}
-                onClick={() => openOverlay(i)}
-              >
-                {/* Background: photo or colour placeholder — absolutely positioned behind content */}
-                {p.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={p.image_url}
-                    alt={p.title}
-                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                ) : (
-                  <div style={{ position: "absolute", inset: 0, background: "#2E3D73", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <i className={`ti ${p.icon}`} style={{ fontSize: "40px", color: "#E8D5A3", opacity: 0.15 }} />
-                  </div>
-                )}
+          <div className="columns-1 sm:columns-2 lg:columns-3" style={{ gap: "16px" }}>
+            {projects.map((p, i) => {
+              const isNavy = i % 2 === 0;
+              return (
+                <div
+                  key={p.id}
+                  className="break-inside-avoid mb-4 card-animate"
+                  style={{
+                    position: "relative",
+                    overflow: "hidden",
+                    borderRadius: "16px",
+                    cursor: "pointer",
+                    animationDelay: `${i * 50}ms`,
+                    border: isNavy ? "1.5px solid #E8D5A3" : "1.5px solid #B8973A",
+                  }}
+                  onClick={() => openOverlay(i)}
+                >
+                  {/* Background: photo or flat colour placeholder */}
+                  {p.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={p.image_url}
+                      alt={p.title}
+                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      background: isNavy ? "#2E3D73" : "#EDE8DF",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      <i className={`ti ${p.icon}`} style={{
+                        fontSize: "40px",
+                        color: isNavy ? "#E8D5A3" : "#0D1E3D",
+                        opacity: 0.15,
+                      }} />
+                    </div>
+                  )}
 
-                {/* Always-visible gradient overlay */}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(13,30,61,0.92) 0%, rgba(13,30,61,0.45) 45%, rgba(13,30,61,0.10) 100%)", pointerEvents: "none" }} />
+                  {/* Gradient overlay — dark navy from bottom on navy cards, warm cream from bottom on light cards */}
+                  <div style={{
+                    position: "absolute", inset: 0, pointerEvents: "none",
+                    background: isNavy
+                      ? "linear-gradient(to top, rgba(13,30,61,0.95) 0%, rgba(13,30,61,0.50) 45%, rgba(13,30,61,0.08) 100%)"
+                      : "linear-gradient(to top, rgba(245,242,236,0.97) 0%, rgba(245,242,236,0.78) 50%, rgba(245,242,236,0.10) 100%)",
+                  }} />
 
-                {/* Card content — in flow, drives card height */}
-                <div style={{ position: "relative", display: "flex", flexDirection: "column", padding: "20px", minHeight: "240px" }}>
-                  {/* Top: client badge */}
-                  <div>
-                    <span style={{ fontSize: "10px", padding: "3px 9px", borderRadius: "3px", background: "rgba(13,30,61,0.55)", color: "#E8D5A3", border: "0.5px solid rgba(232,213,163,0.25)", backdropFilter: "blur(4px)" }}>
-                      {p.client}
-                    </span>
-                  </div>
+                  {/* Card content */}
+                  <div style={{
+                    position: "relative", display: "flex", flexDirection: "column",
+                    padding: "20px", minHeight: i === 0 ? "320px" : "240px",
+                  }}>
+                    {/* Top: client badge + FEATURED pill on first card */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{
+                        fontSize: "10px", padding: "3px 9px", borderRadius: "3px",
+                        backdropFilter: "blur(4px)",
+                        background: isNavy ? "rgba(13,30,61,0.55)" : "rgba(255,255,255,0.90)",
+                        color: isNavy ? "#E8D5A3" : "#1C2951",
+                        border: isNavy ? "0.5px solid rgba(232,213,163,0.25)" : "0.5px solid rgba(13,30,61,0.12)",
+                      }}>
+                        {p.client}
+                      </span>
+                      {i === 0 && (
+                        <span style={{
+                          fontSize: "9px", padding: "3px 8px", borderRadius: "3px",
+                          background: "#E8D5A3", color: "#1C2951",
+                          fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+                        }}>
+                          FEATURED
+                        </span>
+                      )}
+                    </div>
 
-                  {/* Spacer — pushes title block toward bottom */}
-                  <div style={{ flex: 1, minHeight: "40px" }} />
+                    <div style={{ flex: 1, minHeight: "40px" }} />
 
-                  {/* Bottom: title + full description + CTA */}
-                  <div>
-                    <h3 style={{ fontSize: "13px", fontWeight: 500, color: "#FFFFFF", lineHeight: 1.4, marginBottom: p.description ? "5px" : "8px" }}>
-                      {lang === "th" ? (p.title_th || p.title) : p.title}
-                    </h3>
-                    {p.description && (
-                      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.75)", lineHeight: 1.55, marginBottom: "8px" }}>
-                        {p.description}
-                      </p>
-                    )}
-                    <span
-                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                      style={{ fontSize: "11px", color: "#E8D5A3" }}
-                    >
-                      {lang === "th" ? "ดูโปรเจกต์ →" : "View Project →"}
-                    </span>
+                    {/* Bottom: title + description + CTA */}
+                    <div>
+                      <h3 style={{
+                        fontSize: "13px", fontWeight: 500, lineHeight: 1.4,
+                        marginBottom: p.description ? "5px" : "8px",
+                        color: isNavy ? "#FFFFFF" : "#0D1E3D",
+                      }}>
+                        {lang === "th" ? (p.title_th || p.title) : p.title}
+                      </h3>
+                      {p.description && (
+                        <p style={{
+                          fontSize: "11px", lineHeight: 1.55, marginBottom: "8px",
+                          color: isNavy ? "rgba(255,255,255,0.75)" : "#5A6475",
+                        }}>
+                          {p.description}
+                        </p>
+                      )}
+                      <span
+                        className="card-cta"
+                        style={{ fontSize: "11px", color: isNavy ? "#E8D5A3" : "#8B6914" }}
+                      >
+                        {lang === "th" ? "ดูโปรเจกต์ →" : "View Project →"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {projects.length === 0 && (

@@ -276,7 +276,7 @@ export default function ContactEditor() {
           <div style={{ marginTop: 6, padding: "12px 14px", background: "#F0F4FF", borderRadius: 8, border: "0.5px solid #BFC9E0" }}>
             <div style={{ fontSize: 11, color: "#4A5E7A", fontWeight: 500, marginBottom: 4 }}>ℹ️ แผนที่ฝังตัว</div>
             <div style={{ fontSize: 11, color: "#6A7A9A", lineHeight: 1.65 }}>
-              แผนที่และลิงก์ "Get Directions" ใช้<strong> ที่อยู่ </strong>จากส่วน<strong> ข้อมูลติดต่อ </strong>โดยอัตโนมัติ — ไม่จำเป็นต้องกรอก URL แผนที่แยกต่างหาก
+              แผนที่และลิงก์ &ldquo;Get Directions&rdquo; ใช้<strong> ที่อยู่ </strong>จากส่วน<strong> ข้อมูลติดต่อ </strong>โดยอัตโนมัติ — ไม่จำเป็นต้องกรอก URL แผนที่แยกต่างหาก
             </div>
           </div>
         </div>

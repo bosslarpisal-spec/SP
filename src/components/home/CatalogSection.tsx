@@ -9,7 +9,10 @@ import { useWishlist } from "@/hooks/useWishlist";
 interface Product {
   id: string;
   name: string;
+  nameTh?: string;
   description: string;
+  descEn?: string;
+  descTh?: string;
   category: string;
   is_visible: boolean;
   is_new?: boolean;
@@ -69,7 +72,7 @@ function getPageNumbers(current: number, total: number): (number | "…")[] {
 
 /* ── QUICK-VIEW POPUP ─────────────────────────────────────── */
 function QuickViewPopup({ product: p, onClose }: { product: Product; onClose: () => void }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const icon = p.icon_name ?? ICON_MAP[p.category] ?? ICON_MAP["default"];
   const allImages = [p.image_url, ...(p.images ?? [])].filter(Boolean) as string[];
   const [imgIndex, setImgIndex] = useState(0);
@@ -210,13 +213,19 @@ function QuickViewPopup({ product: p, onClose }: { product: Product; onClose: ()
           <div style={{ padding: "24px" }}>
             <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.12em", color: "#8A6E00", marginBottom: "6px" }}>{p.category}</div>
             <h3 style={{ fontSize: "20px", fontWeight: 500, color: "#0D1E3D", lineHeight: 1.2, marginBottom: "4px" }}>{p.name}</h3>
-            <p style={{ fontSize: "13px", color: "#4A5568" }}>{p.description}</p>
+            {p.description && <p style={{ fontSize: "13px", color: "#4A5568", marginBottom: "4px" }}>{p.description}</p>}
 
             <div style={{ borderTop: "0.5px solid rgba(13,30,61,0.1)", margin: "16px 0" }} />
 
-            <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.75 }}>
-              A premium branded product crafted with precision by the SP team — designed to elevate your brand and leave a lasting impression.
-            </p>
+            {(p.descEn || p.descTh) ? (
+              <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.75 }}>
+                {lang === "th" ? (p.descTh || p.descEn) : (p.descEn || p.descTh)}
+              </p>
+            ) : (
+              <p style={{ fontSize: "13px", color: "#2C3E50", lineHeight: 1.75 }}>
+                A premium branded product crafted with precision by the SP team — designed to elevate your brand and leave a lasting impression.
+              </p>
+            )}
 
             {/* ── Product Details ── */}
             <div style={{ borderTop: "0.5px solid rgba(13,30,61,0.1)", margin: "16px 0" }} />
@@ -433,7 +442,7 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
     return products
       .filter(p => {
         const q           = debouncedSearch.toLowerCase();
-        const matchSearch = !q || p.name.toLowerCase().includes(q) || (p.description ?? "").toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q);
+        const matchSearch = !q || p.name.toLowerCase().includes(q) || (p.description ?? "").toLowerCase().includes(q) || (p.descEn ?? "").toLowerCase().includes(q) || (p.descTh ?? "").toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q);
         const matchCat    = activeCategories.length === 0 || activeCategories.includes(p.category);
         const matchTag    = activeTags.length === 0 || activeTags.some(t => p.tags?.includes(t));
         return matchSearch && matchCat && matchTag;

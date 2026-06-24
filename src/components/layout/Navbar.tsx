@@ -45,9 +45,11 @@ export default function Navbar() {
         .nav-quote-btn:hover { background: #E8D5A3 !important; color: #1C2951 !important; }
       `}</style>
     <header
-      className="fixed top-0 inset-x-0 z-50 flex items-stretch"
+      className="fixed top-0 inset-x-0 z-50"
       style={{
         minHeight: "72px",
+        display: "flex",
+        alignItems: "stretch",
         background: "#0D1E3D",
         borderBottom: "1px solid rgba(232,213,163,0.35)",
         paddingLeft: "40px",
@@ -61,8 +63,8 @@ export default function Navbar() {
         className="flex items-center gap-3 shrink-0"
       >
         <div
-          className="w-11 h-11 md:w-[52px] md:h-[52px]"
           style={{
+            width: "44px", height: "44px",
             borderRadius: "50%", overflow: "hidden",
             border: "1.5px solid rgba(232,213,163,0.5)",
             outline: "1px solid rgba(232,213,163,0.15)", outlineOffset: "3px",
@@ -74,7 +76,9 @@ export default function Navbar() {
           <img
             src={logoUrl}
             alt="Siam Premium logo"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            width={44}
+            height={44}
+            style={{ width: "44px", height: "44px", objectFit: "cover", display: "block" }}
           />
         </div>
         <div>

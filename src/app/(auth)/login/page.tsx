@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { checkIsAdmin } from "../actions";
 import { AuthSplitLayout } from "../AuthSplitLayout";
 
 /* ── input style for dark panel ──────────────────────────── */
@@ -52,17 +53,9 @@ export default function LoginPage() {
     }
 
     const userEmail = data.user?.email ?? "";
-    if (userEmail) {
-      const { data: adminRow } = await supabase
-        .from("admins")
-        .select("id")
-        .eq("email", userEmail)
-        .maybeSingle();
-
-      if (adminRow) {
-        router.push("/admin");
-        return;
-      }
+    if (userEmail && await checkIsAdmin(userEmail)) {
+      router.push("/admin");
+      return;
     }
 
     router.push("/home");

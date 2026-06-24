@@ -26,7 +26,7 @@ export default function Navbar() {
       setIsUser(!!u);
       if (u) {
         const { data: adminRow } = await supabase
-          .from("admins").select("id").eq("email", u.email ?? "").maybeSingle();
+          .from("admins").select("id").eq("email", (u.email ?? "").toLowerCase()).maybeSingle();
         setIsAdmin(!!adminRow);
       } else {
         setIsAdmin(false);

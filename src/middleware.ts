@@ -33,12 +33,20 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // ── Helper: check admins table ─────────────────────────────
+  // Must use service role to bypass RLS — the admins table SELECT policy
+  // restricts each authenticated user to their own row only, so the anon
+  // client would return nothing for users not yet recognized as admins.
   async function isAdmin() {
     if (!user) return false;
-    const { data } = await supabase
+    const serviceClient = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { cookies: { getAll: () => [], setAll: () => {} } }
+    );
+    const { data } = await serviceClient
       .from("admins")
       .select("id")
-      .eq("email", user.email ?? "")
+      .eq("email", (user.email ?? "").toLowerCase())
       .maybeSingle();
     return !!data;
   }

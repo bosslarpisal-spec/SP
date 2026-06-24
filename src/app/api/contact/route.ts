@@ -4,7 +4,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase-server";
 
 const resend   = new Resend(process.env.RESEND_API_KEY);
 const FROM     = "SP Contact Form <onboarding@resend.dev>";
-const FALLBACK = "bosslarpisal@gmail.com";
+const FALLBACK = "spproduce.dist@gmail.com";
 
 export async function POST(request: Request) {
   let body: Record<string, string>;

@@ -474,13 +474,42 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
         .cat-product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
         @media (max-width: 767px) { .cat-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (min-width: 768px) and (max-width: 1023px) { .cat-product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+        /* Responsive horizontal padding for all toolbar rows and body */
+        .cat-intro-pad  { padding: 48px 40px; }
+        .cat-bar-pad    { padding-left: 40px; padding-right: 40px; }
+        .cat-body-pad   { padding: 0 40px; }
+        @media (max-width: 767px) {
+          .cat-intro-pad  { padding: 32px 16px !important; }
+          .cat-bar-pad    { padding-left: 16px !important; padding-right: 16px !important; }
+          .cat-body-pad   { padding: 0 16px !important; }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .cat-intro-pad  { padding: 40px 24px !important; }
+          .cat-bar-pad    { padding-left: 24px !important; padding-right: 24px !important; }
+          .cat-body-pad   { padding: 0 24px !important; }
+        }
+
+        /* Header bar: wrap count/sort rows on mobile to prevent overflow */
+        .cat-header-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        @media (max-width: 767px) {
+          .cat-header-inner > span { flex: 1 0 100%; }
+          .cat-header-inner > div  { margin-left: auto; }
+        }
+
+        /* Search input: full-width on mobile; prevent iOS auto-zoom */
+        .cat-search-box { position: relative; width: 260px; flex-shrink: 0; }
+        @media (max-width: 767px) {
+          .cat-search-box { width: 100% !important; flex-shrink: 1 !important; }
+          .cat-search-box input { font-size: 16px !important; }
+        }
       `}</style>
 
       {selected && <QuickViewPopup product={selected} onClose={() => setSelected(null)} />}
 
       {/* ── Editorial intro ── */}
       <div style={{ background: "#F8F6F1" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 40px" }}>
+        <div className="cat-intro-pad" style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div className="cat-intro-grid">
             <div>
               <span style={{ display: "block", fontSize: "120px", fontWeight: 400, color: "rgba(28,41,81,0.04)", lineHeight: 1, marginBottom: "-16px" }}>SP</span>
@@ -507,7 +536,7 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
 
       {/* ── Header bar ── */}
       <div style={{ background: "#E8E4DC", borderBottom: "0.5px solid rgba(13,30,61,0.1)" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "10px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="cat-bar-pad cat-header-inner" style={{ maxWidth: "1200px", margin: "0 auto", padding: "10px 40px" }}>
           <span style={{ fontSize: "14px", color: "#0D1E3D" }}>
             {filtered.length} {t("รายการจาก", "results from")} {products.length} {t("สินค้า", "products")}
             {searchQuery && <em style={{ color: "#2C3E50" }}> for &ldquo;{searchQuery}&rdquo;</em>}
@@ -540,7 +569,7 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
       {/* ── Applied filters bar ── */}
       {isFiltered && (
         <div style={{ background: "#E8E4DC", borderBottom: "0.5px solid rgba(13,30,61,0.08)" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "6px 40px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+          <div className="cat-bar-pad" style={{ maxWidth: "1200px", margin: "0 auto", padding: "6px 40px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
             <span style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#4A5568", marginRight: "2px" }}>Applied</span>
             {activeCategories.map(cat => (
               <span key={cat} onClick={() => toggleCategory(cat)} className="flex items-center gap-1" style={{ fontSize: "12px", color: "#0D1E3D", background: "rgba(13,30,61,0.08)", border: "0.5px solid rgba(13,30,61,0.15)", padding: "4px 10px", borderRadius: "3px", cursor: "pointer" }}>
@@ -564,8 +593,8 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
 
       {/* ── Search + category pills ── */}
       <div style={{ background: "#E8E4DC", borderBottom: "0.5px solid rgba(13,30,61,0.08)" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "10px 40px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <div style={{ position: "relative", width: "260px", flexShrink: 0 }}>
+        <div className="cat-bar-pad" style={{ maxWidth: "1200px", margin: "0 auto", padding: "10px 40px", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div className="cat-search-box" style={{ position: "relative" }}>
             <i className="ti ti-search" style={{ position: "absolute", left: "9px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", color: "#4A5568", pointerEvents: "none" }} />
             <input
               type="text" value={searchQuery}
@@ -591,7 +620,7 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
       </div>
 
       {/* ── Main body: sidebar + content ── */}
-      <div className="cat-layout" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 40px" }}>
+      <div className="cat-layout cat-body-pad" style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 40px" }}>
 
         {/* Sidebar */}
         <div style={{ background: "#F0EEE8", borderRight: "0.5px solid rgba(13,30,61,0.08)" }}>

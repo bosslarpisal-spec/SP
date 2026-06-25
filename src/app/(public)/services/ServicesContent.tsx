@@ -72,10 +72,16 @@ export default function ServicesContent({
         .svc-hero { padding: 120px 80px 60px; }
         .svc-hero-bottom { display: flex; gap: 20px; align-items: flex-start; }
         .svc-hero-vdivider { width: 1px; background: rgba(232,213,163,0.2); align-self: stretch; min-height: 40px; flex-shrink: 0; }
+        .svc-subtext-th { white-space: nowrap; flex-shrink: 0; padding-top: 3px; }
         @media (max-width: 768px) {
           .svc-hero { padding: 100px 24px 60px !important; }
           .svc-hero-bottom { flex-direction: column; gap: 10px; }
           .svc-hero-vdivider { display: none; }
+          .svc-subtext-th { white-space: normal !important; flex-shrink: unset !important; }
+          .svc-hero-heading { font-size: clamp(22px, 7vw, 32px) !important; }
+        }
+        @media (min-width: 769px) and (max-width: 1023px) {
+          .svc-hero { padding: 100px 40px 60px !important; }
         }
       `}</style>
 
@@ -93,14 +99,14 @@ export default function ServicesContent({
             <span style={{ fontSize: hBadge.fontSize, letterSpacing: "0.18em", color: hBadge.color, textTransform: "uppercase", fontFamily: "sans-serif" }}>{heroBadge}</span>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "12px", flexWrap: "wrap", marginBottom: "4px" }}>
-            <span style={{ fontSize: hHead.fontSize, color: hHead.color, fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.05 }}>{heroHeading}</span>
-            <span style={{ fontSize: hHeadIt.fontSize, color: hHeadIt.color, fontFamily: "Georgia, serif", fontStyle: "italic", lineHeight: 1.05 }}>{heroHeadingIt}</span>
+            <span className="svc-hero-heading" style={{ fontSize: hHead.fontSize, color: hHead.color, fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.05 }}>{heroHeading}</span>
+            <span className="svc-hero-heading" style={{ fontSize: hHeadIt.fontSize, color: hHeadIt.color, fontFamily: "Georgia, serif", fontStyle: "italic", lineHeight: 1.05 }}>{heroHeadingIt}</span>
           </div>
           <div style={{ width: "100%", height: "1px", background: "linear-gradient(to right, #C9A84C, rgba(201,168,76,0.1))", margin: "10px 0 14px" }} />
           <div className="svc-hero-bottom">
             {lang === "th" && (
               <>
-                <div style={{ fontSize: hSubTh.fontSize, color: hSubTh.color, fontFamily: "sans-serif", whiteSpace: "nowrap", paddingTop: "3px", flexShrink: 0 }}>{heroSubtextTh}</div>
+                <div className="svc-subtext-th" style={{ fontSize: hSubTh.fontSize, color: hSubTh.color, fontFamily: "sans-serif" }}>{heroSubtextTh}</div>
                 <div className="svc-hero-vdivider" />
               </>
             )}

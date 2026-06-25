@@ -313,6 +313,17 @@ export default function OurWorkContent({
           .ow-section-pad { padding: 36px 32px !important; }
           .ow-cta-pad     { padding: 0 32px !important; }
         }
+        /* Masonry: CSS grid at mobile/tablet avoids Safari WebKit bug where
+           position:absolute children inside CSS columns break-inside-avoid items
+           escape their containing block and float to incorrect page positions. */
+        .masonry-rsp { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .masonry-rsp { grid-template-columns: repeat(2, 1fr); align-items: start; }
+          .masonry-rsp > * { margin-bottom: 0 !important; }
+        }
+        @media (min-width: 1024px) {
+          .masonry-rsp { display: block; column-count: 3; column-gap: 16px; }
+        }
       `}</style>
 
       {/* §1 — HERO */}
@@ -359,7 +370,7 @@ export default function OurWorkContent({
       {/* §3 — MASONRY GALLERY */}
       <section style={{ background: "#F8F6F1" }}>
         <div className="ow-section-pad" style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div className="columns-1 sm:columns-2 lg:columns-3" style={{ gap: "16px" }}>
+          <div className="masonry-rsp">
             {projects.map((p, i) => {
               const isNavy = i % 2 === 0;
               return (

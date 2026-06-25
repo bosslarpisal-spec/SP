@@ -37,7 +37,7 @@ function gs(obj: Record<string, BS>, key: string, def: BS): BS {
 
 const inputBase: React.CSSProperties = {
   background: "#F8F6F1", border: "1px solid rgba(13,30,61,0.15)",
-  borderRadius: 8, padding: "10px 16px", fontSize: 14, color: "#0D1E3D", width: "100%", outline: "none",
+  borderRadius: 8, padding: "10px 16px", fontSize: 16, color: "#0D1E3D", width: "100%", outline: "none",
 };
 const labelStyle: React.CSSProperties = {
   display: "block", fontSize: 11, textTransform: "uppercase",
@@ -142,6 +142,11 @@ export default function ContactClient({
 
   return (
     <div style={{ background: "#1C2951" }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .contact-hero-h1 { font-size: clamp(26px, 8vw, 38px) !important; }
+        }
+      `}</style>
 
       {/* § HERO ──────────────────────────────────── */}
       <section className="relative flex items-center justify-center"
@@ -151,7 +156,7 @@ export default function ContactClient({
             <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
             <span style={{ letterSpacing: "0.18em", textTransform: "uppercase", color: hBadge.color, fontSize: hBadge.fontSize }}>{heroBadge}</span>
           </div>
-          <h1 className="mb-4" style={{ fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.1, color: hHead.color, fontSize: hHead.fontSize }}>
+          <h1 className="mb-4 contact-hero-h1" style={{ fontFamily: "Georgia, serif", fontWeight: 400, lineHeight: 1.1, color: hHead.color, fontSize: hHead.fontSize }}>
             <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
               {heroHeading}
               <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />

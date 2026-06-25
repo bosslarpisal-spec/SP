@@ -245,6 +245,10 @@ export default function AboutContent({ rows = [] }: { rows?: ContentRow[] }) {
           .timeline-outer-grid { padding-left: 32px !important; padding-right: 32px !important; }
           .stats-strip { padding-left: 32px !important; padding-right: 32px !important; }
         }
+        @media (max-width: 767px) {
+          .hero-content { padding-left: 20px !important; padding-right: 20px !important; }
+          .about-hero-h1 { font-size: clamp(24px, 8vw, 36px) !important; }
+        }
       `}</style>
 
       {/* §1 — HERO ──────────────────────────────────────── */}
@@ -264,7 +268,7 @@ export default function AboutContent({ rows = [] }: { rows?: ContentRow[] }) {
             <div style={{ width: "24px", height: "1.5px", background: "#E8D5A3", flexShrink: 0 }} />
             <span style={{ fontSize: hBadge.fontSize, letterSpacing: "0.18em", textTransform: "uppercase", color: hBadge.color }}>{heroBadge}</span>
           </div>
-          <h1 style={{ fontSize: hHead.fontSize, fontWeight: 400, color: hHead.color, lineHeight: 1.05, letterSpacing: "-0.02em", margin: "0 0 18px 0", fontFamily: "Georgia, serif" }}>
+          <h1 className="about-hero-h1" style={{ fontSize: hHead.fontSize, fontWeight: 400, color: hHead.color, lineHeight: 1.05, letterSpacing: "-0.02em", margin: "0 0 18px 0", fontFamily: "Georgia, serif" }}>
             <span style={{ position: "relative", display: "inline-block", marginBottom: "4px" }}>
               {heroHeading}
               <span style={{ position: "absolute", bottom: "-4px", left: 0, height: "2px", width: "100%", background: "linear-gradient(to right, #E8D5A3, transparent)", display: "block" }} />

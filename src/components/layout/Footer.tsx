@@ -146,6 +146,8 @@ export default function Footer() {
         .ft-outer-pad { padding: 52px 64px 0; }
         @media (max-width: 767px) { .ft-outer-pad { padding: 40px 20px 0; } }
         @media (min-width: 768px) and (max-width: 1023px) { .ft-outer-pad { padding: 48px 32px 0; } }
+        /* Prevent iOS Safari CSS Grid align-self:start misplacement in 2-col tablet layout */
+        @media (min-width: 768px) and (max-width: 1023px) { .ft-git-box { align-self: stretch !important; } }
       `}</style>
 
       <footer style={{ background: "#0D1E3D", borderTop: "0.5px solid rgba(232,213,163,0.1)" }}>
@@ -235,7 +237,7 @@ export default function Footer() {
             </div>
 
             {/* COL 4 — Get in Touch (translucent gold-tint box) */}
-            <div style={{
+            <div className="ft-git-box" style={{
               background: "rgba(232,213,163,0.07)",
               border: "0.5px solid rgba(232,213,163,0.14)",
               borderRadius: "12px",

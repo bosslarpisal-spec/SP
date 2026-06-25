@@ -285,6 +285,8 @@ export default function OurWorkContent({
         .card-animate:hover { transform: scale(1.02); }
         .card-cta { opacity: 0; transition: opacity 0.2s ease; }
         .card-animate:hover .card-cta { opacity: 1; }
+        /* Touch devices have no hover — keep CTA always visible on mobile/tablet */
+        @media (max-width: 1023px) { .card-cta { opacity: 1 !important; } }
 
         @keyframes overlay-content-in {
           from { opacity: 0; transform: translateY(20px); }
@@ -313,6 +315,9 @@ export default function OurWorkContent({
           .ow-section-pad { padding: 36px 32px !important; }
           .ow-cta-pad     { padding: 0 32px !important; }
         }
+        /* Hero stats row: allow wrap on very narrow screens */
+        .ow-stats-row { display: flex; flex-wrap: nowrap; }
+        @media (max-width: 479px) { .ow-stats-row { flex-wrap: wrap; row-gap: 12px; } }
         /* Masonry: CSS grid at mobile/tablet avoids Safari WebKit bug where
            position:absolute children inside CSS columns break-inside-avoid items
            escape their containing block and float to incorrect page positions. */
@@ -344,7 +349,7 @@ export default function OurWorkContent({
                 <br />
                 <em style={{ fontStyle: "italic", color: hHeadIt.color, fontSize: hHeadIt.fontSize }}>{heroHeadingItalic}</em>
               </h1>
-              <div style={{ display: "flex" }}>
+              <div className="ow-stats-row">
                 {STATS.map((s, i) => (
                   <div key={s.n} style={{ paddingRight: "28px", marginRight: "28px", borderRight: i < STATS.length - 1 ? "0.5px solid rgba(232,213,163,0.2)" : "none" }}>
                     <div style={{ fontSize: "20px", fontWeight: 400, color: "#E8D5A3", letterSpacing: "-0.02em" }}>{s.n}</div>

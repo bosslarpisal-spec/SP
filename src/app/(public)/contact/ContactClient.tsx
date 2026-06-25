@@ -145,6 +145,7 @@ export default function ContactClient({
       <style>{`
         @media (max-width: 767px) {
           .contact-hero-h1 { font-size: clamp(26px, 8vw, 38px) !important; }
+          .contact-form-card { padding: 20px !important; }
         }
       `}</style>
 
@@ -230,7 +231,7 @@ export default function ContactClient({
             {/* RIGHT: Contact Form */}
             <div>
               {status === "ok" ? (
-                <div className="rounded-2xl p-10 text-center" style={{ background: "#fff", boxShadow: "0 4px 40px rgba(0,0,0,0.25)" }}>
+                <div className="contact-form-card rounded-2xl p-10 text-center" style={{ background: "#fff", boxShadow: "0 4px 40px rgba(0,0,0,0.25)" }}>
                   <div className="flex justify-center mb-4"><IconCheckCircle className="w-14 h-14 text-green-500" /></div>
                   <h3 className="text-xl mb-2" style={{ fontFamily: "Georgia, serif", color: "#1C2951" }}>Message Sent!</h3>
                   <p className="text-sm mb-6" style={{ color: "#4A5568" }}>
@@ -244,7 +245,7 @@ export default function ContactClient({
                   </button>
                 </div>
               ) : (
-                <div className="rounded-2xl p-8" style={{ background: "#fff", boxShadow: "0 4px 40px rgba(0,0,0,0.25)" }}>
+                <div className="contact-form-card rounded-2xl p-8" style={{ background: "#fff", boxShadow: "0 4px 40px rgba(0,0,0,0.25)" }}>
                   <h3 className="text-xl font-medium" style={{ fontFamily: "Georgia, serif", color: "#1C2951" }}>Send Us a Message</h3>
                   <p className="text-sm mt-1" style={{ color: "#4A5568" }}>ส่งข้อความถึงเรา — เราจะติดต่อกลับภายใน 1 วันทำการ</p>
                   <div className="mt-4 mb-6" style={{ borderTop: "1px solid rgba(13,30,61,0.1)" }} />

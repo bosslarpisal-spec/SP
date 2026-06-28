@@ -20,7 +20,14 @@ export async function addAdmin(email: string) {
       error.code === "23505" ? th.errEmailExists : error.message
     );
   }
-  return data as { id: number; email: string; created_at: string };
+
+  // Send an invitation email so the new admin can create their Supabase Auth account
+  // and log in. If they already have an account the invite returns an error — that is
+  // expected; they can already sign in, so we just suppress it.
+  const { error: inviteError } = await service.auth.admin.inviteUserByEmail(clean);
+  const invited = !inviteError;
+
+  return { ...(data as { id: number; email: string; created_at: string }), invited };
 }
 
 export async function removeAdmin(id: number) {

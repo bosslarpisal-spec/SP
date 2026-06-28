@@ -54,10 +54,12 @@ export default function AdminProfileClient({
     setAdding(true);
     setAddError(null);
     try {
-      const data = await addAdmin(newEmail);
-      setAdmins((prev) => [...prev, data]);
+      const { invited, ...adminRow } = await addAdmin(newEmail);
+      setAdmins((prev) => [...prev, adminRow]);
       setNewEmail("");
-      toast.success(th.toastAdminAdded(data.email));
+      toast.success(
+        invited ? th.toastAdminInvited(adminRow.email) : th.toastAdminAdded(adminRow.email)
+      );
     } catch (err) {
       const msg = err instanceof Error ? err.message : th.toastAdminAddFail;
       setAddError(msg);

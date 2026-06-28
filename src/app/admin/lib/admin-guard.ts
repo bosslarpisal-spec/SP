@@ -17,7 +17,7 @@ export async function assertAdmin() {
   const { data: adminRow } = await service
     .from("admins")
     .select("id")
-    .eq("email", user.email)
+    .eq("email", (user.email ?? "").toLowerCase())
     .maybeSingle();
 
   if (!adminRow) throw new Error("Not authorized");

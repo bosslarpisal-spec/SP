@@ -592,6 +592,7 @@ export const th = {
   profileAddBtn:       "เพิ่มแอดมิน",
   profileRemoveTitle:  "นำแอดมินออก",
   toastAdminAdded:     (email: string) => `${email} ถูกเพิ่มเป็นแอดมินแล้ว`,
+  toastAdminInvited:   (email: string) => `ส่งคำเชิญไปยัง ${email} แล้ว — กรุณาตรวจสอบอีเมล`,
   toastAdminRemoved:   (email: string) => `${email} ถูกนำออกแล้ว`,
   toastEmailSent:      (email: string) => `ส่งการยืนยันไปที่ ${email} แล้ว กรุณาคลิกลิงก์ในกล่องจดหมาย`,
   toastPwUpdated:      "อัปเดตรหัสผ่านสำเร็จ",

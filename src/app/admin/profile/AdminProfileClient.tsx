@@ -54,16 +54,18 @@ export default function AdminProfileClient({
     setAdding(true);
     setAddError(null);
     try {
-      const { invited, ...adminRow } = await addAdmin(newEmail);
-      setAdmins((prev) => [...prev, adminRow]);
-      setNewEmail("");
-      toast.success(
-        invited ? th.toastAdminInvited(adminRow.email) : th.toastAdminAdded(adminRow.email)
-      );
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : th.toastAdminAddFail;
-      setAddError(msg);
-      toast.error(msg);
+      const result = await addAdmin(newEmail);
+      if (!result.ok) {
+        setAddError(result.error);
+        toast.error(result.error);
+      } else {
+        const { ok: _ok, ...adminRow } = result;
+        setAdmins((prev) => [...prev, adminRow]);
+        setNewEmail("");
+        toast.success(th.toastAdminAdded(adminRow.email));
+      }
+    } catch {
+      toast.error(th.toastAdminAddFail);
     }
     setAdding(false);
   }
@@ -72,11 +74,15 @@ export default function AdminProfileClient({
     setRemovingId(admin.id);
     setConfirmRemoveId(null);
     try {
-      await removeAdmin(admin.id);
-      setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
-      toast.success(th.toastAdminRemoved(admin.email));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : th.toastAdminRemoveFail(admin.email));
+      const result = await removeAdmin(admin.id);
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
+        toast.success(th.toastAdminRemoved(admin.email));
+      }
+    } catch {
+      toast.error(th.toastAdminRemoveFail(admin.email));
     }
     setRemovingId(null);
   }
@@ -85,11 +91,15 @@ export default function AdminProfileClient({
     e.preventDefault();
     setChangingEmail(true);
     try {
-      await changeAdminEmail(newAuthEmail);
-      toast.success(th.toastEmailSent(newAuthEmail.trim()));
-      setNewAuthEmail("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : th.toastEmailFail);
+      const result = await changeAdminEmail(newAuthEmail);
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        toast.success(th.toastEmailSent(newAuthEmail.trim()));
+        setNewAuthEmail("");
+      }
+    } catch {
+      toast.error(th.toastEmailFail);
     }
     setChangingEmail(false);
   }
@@ -106,12 +116,16 @@ export default function AdminProfileClient({
     }
     setChangingPw(true);
     try {
-      await changeAdminPassword(newPassword);
-      toast.success(th.toastPwUpdated);
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : th.toastPwFail);
+      const result = await changeAdminPassword(newPassword);
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        toast.success(th.toastPwUpdated);
+        setNewPassword("");
+        setConfirmPassword("");
+      }
+    } catch {
+      toast.error(th.toastPwFail);
     }
     setChangingPw(false);
   }

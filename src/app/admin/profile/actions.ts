@@ -5,10 +5,20 @@ import { assertAdmin } from "../lib/admin-guard";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import { th } from "@/app/admin/lib/admin-th";
 
-export async function addAdmin(email: string) {
+// Server Actions that throw have their Error.message redacted by Next.js in
+// production builds (replaced with a generic "Server Components render" message +
+// digest). Returning a { ok, error } result instead avoids that entirely and lets
+// the real, translated message reach the toast.
+
+type Result<T = object> = { ok: false; error: string } | ({ ok: true } & T);
+
+export async function addAdmin(
+  email: string
+): Promise<Result<{ id: number; email: string; created_at: string }>> {
   await assertAdmin();
   const clean = email.trim().toLowerCase();
-  if (!clean) throw new Error(th.errEmailRequired);
+  if (!clean) return { ok: false, error: th.errEmailRequired };
+
   const service = createSupabaseServiceClient();
   const { data, error } = await service
     .from("admins")
@@ -16,33 +26,20 @@ export async function addAdmin(email: string) {
     .select()
     .single();
   if (error) {
-    throw new Error(
-      error.code === "23505" ? th.errEmailExists : error.message
-    );
+    return { ok: false, error: error.code === "23505" ? th.errEmailExists : error.message };
   }
 
-  // Send an invitation email so the new admin can create their Supabase Auth account
-  // and log in. If they already have an account the invite errors with "already
-  // registered" — that's expected, they can already sign in. Any other error means
-  // no auth account was created, so the row we just inserted would be an admin with
-  // no way to ever log in — roll it back and surface the failure instead of reporting
-  // success.
-  const { error: inviteError } = await service.auth.admin.inviteUserByEmail(clean);
-  const alreadyRegistered =
-    inviteError?.code === "email_exists" ||
-    /already registered|already exists/i.test(inviteError?.message ?? "");
+  // Invite email is intentionally disabled for now — Supabase's Auth "Site URL" still
+  // points at the vercel.app preview domain, so invite links are broken. New admins
+  // get an account via the normal public /signup form instead (any email that
+  // already has an admins row is recognized automatically by middleware.ts). Once the
+  // Site URL is fixed this can be re-enabled with
+  // service.auth.admin.inviteUserByEmail(clean).
 
-  if (inviteError && !alreadyRegistered) {
-    await service.from("admins").delete().eq("id", (data as { id: number }).id);
-    throw new Error(`${th.errInviteFailed}: ${inviteError.message}`);
-  }
-
-  const invited = !alreadyRegistered;
-
-  return { ...(data as { id: number; email: string; created_at: string }), invited };
+  return { ok: true, ...(data as { id: number; email: string; created_at: string }) };
 }
 
-export async function removeAdmin(id: number) {
+export async function removeAdmin(id: number): Promise<Result> {
   const user = await assertAdmin();
   const service = createSupabaseServiceClient();
   const { data: target } = await service
@@ -51,21 +48,22 @@ export async function removeAdmin(id: number) {
     .eq("id", id)
     .single();
   if (target?.email === (user.email ?? "").toLowerCase()) {
-    throw new Error(th.errCannotRemoveSelf);
+    return { ok: false, error: th.errCannotRemoveSelf };
   }
   const { error } = await service.from("admins").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
-export async function changeAdminEmail(newEmail: string) {
+export async function changeAdminEmail(newEmail: string): Promise<Result> {
   const user = await assertAdmin();
   const clean = newEmail.trim().toLowerCase();
-  if (!clean) throw new Error(th.errEmailRequired);
+  if (!clean) return { ok: false, error: th.errEmailRequired };
 
   // Update Supabase Auth (sends confirmation to new address)
   const sessionClient = await createSupabaseServerClient();
   const { error: authError } = await sessionClient.auth.updateUser({ email: clean });
-  if (authError) throw new Error(authError.message);
+  if (authError) return { ok: false, error: authError.message };
 
   // Keep admins table in sync
   const service = createSupabaseServiceClient();
@@ -74,16 +72,18 @@ export async function changeAdminEmail(newEmail: string) {
     .update({ email: clean })
     .eq("email", user.email);
   if (dbError) {
-    throw new Error(`Auth email queued but admins table sync failed: ${dbError.message}`);
+    return { ok: false, error: `Auth email queued but admins table sync failed: ${dbError.message}` };
   }
+  return { ok: true };
 }
 
-export async function changeAdminPassword(newPassword: string) {
+export async function changeAdminPassword(newPassword: string): Promise<Result> {
   const user = await assertAdmin();
-  if (newPassword.length < 6) throw new Error(th.errPwTooShort);
+  if (newPassword.length < 6) return { ok: false, error: th.errPwTooShort };
   const service = createSupabaseServiceClient();
   const { error } = await service.auth.admin.updateUserById(user.id, {
     password: newPassword,
   });
-  if (error) throw new Error(error.message);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }

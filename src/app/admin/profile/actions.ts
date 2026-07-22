@@ -22,10 +22,22 @@ export async function addAdmin(email: string) {
   }
 
   // Send an invitation email so the new admin can create their Supabase Auth account
-  // and log in. If they already have an account the invite returns an error — that is
-  // expected; they can already sign in, so we just suppress it.
+  // and log in. If they already have an account the invite errors with "already
+  // registered" — that's expected, they can already sign in. Any other error means
+  // no auth account was created, so the row we just inserted would be an admin with
+  // no way to ever log in — roll it back and surface the failure instead of reporting
+  // success.
   const { error: inviteError } = await service.auth.admin.inviteUserByEmail(clean);
-  const invited = !inviteError;
+  const alreadyRegistered =
+    inviteError?.code === "email_exists" ||
+    /already registered|already exists/i.test(inviteError?.message ?? "");
+
+  if (inviteError && !alreadyRegistered) {
+    await service.from("admins").delete().eq("id", (data as { id: number }).id);
+    throw new Error(`${th.errInviteFailed}: ${inviteError.message}`);
+  }
+
+  const invited = !alreadyRegistered;
 
   return { ...(data as { id: number; email: string; created_at: string }), invited };
 }
@@ -38,7 +50,7 @@ export async function removeAdmin(id: number) {
     .select("email")
     .eq("id", id)
     .single();
-  if (target?.email === user.email) {
+  if (target?.email === (user.email ?? "").toLowerCase()) {
     throw new Error(th.errCannotRemoveSelf);
   }
   const { error } = await service.from("admins").delete().eq("id", id);

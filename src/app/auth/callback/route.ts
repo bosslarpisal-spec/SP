@@ -2,6 +2,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { createSupabaseServiceClient } from '@/lib/supabase-server'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -39,10 +40,14 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user?.email) {
-        const { data: adminRow, error: adminErr } = await supabase
+        // Service-role client — the admins table's SELECT policy only allows a user
+        // to read their own row by exact (lowercased) email match; using the session
+        // client here would silently miss rows whose stored casing differs.
+        const service = createSupabaseServiceClient()
+        const { data: adminRow, error: adminErr } = await service
           .from('admins')
           .select('id')
-          .eq('email', user.email)
+          .eq('email', user.email.toLowerCase())
           .maybeSingle()
 
         if (adminErr) {

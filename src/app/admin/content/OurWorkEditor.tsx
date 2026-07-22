@@ -290,9 +290,14 @@ export default function OurWorkEditor() {
     if (!p) return;
     setProjects(ps => ps.map(pr => pr.id === id ? { ...pr, _saving: true } : pr));
     try {
-      await upsertPortfolioProject(toData(p));
-      setProjects(ps => ps.map(pr => pr.id === id ? { ...pr, _dirty: false, _saving: false } : pr));
-      toast.success(th.toastProjectSaved);
+      const result = await upsertPortfolioProject(toData(p));
+      if (!result.ok) {
+        toast.error(th.owErrSave(result.error));
+        setProjects(ps => ps.map(pr => pr.id === id ? { ...pr, _saving: false } : pr));
+      } else {
+        setProjects(ps => ps.map(pr => pr.id === id ? { ...pr, _dirty: false, _saving: false } : pr));
+        toast.success(th.toastProjectSaved);
+      }
     } catch (err) {
       toast.error(th.owErrSave(String(err)));
       setProjects(ps => ps.map(pr => pr.id === id ? { ...pr, _saving: false } : pr));
@@ -302,13 +307,17 @@ export default function OurWorkEditor() {
   async function removeProject(id: string) {
     if (!confirm(th.owDeleteConfirm)) return;
     try {
-      await deletePortfolioProject(id);
-      setProjects(ps => {
-        const next = ps.filter(p => p.id !== id);
-        setOpenProjIdx(null);
-        return next;
-      });
-      toast.success(th.toastProjectDeleted);
+      const result = await deletePortfolioProject(id);
+      if (!result.ok) {
+        toast.error(th.owErrDelete(result.error));
+      } else {
+        setProjects(ps => {
+          const next = ps.filter(p => p.id !== id);
+          setOpenProjIdx(null);
+          return next;
+        });
+        toast.success(th.toastProjectDeleted);
+      }
     } catch (err) {
       toast.error(th.owErrDelete(String(err)));
     }
@@ -316,10 +325,14 @@ export default function OurWorkEditor() {
 
   async function handleAddProject() {
     try {
-      const newId = await insertPortfolioProject();
+      const result = await insertPortfolioProject();
+      if (!result.ok) {
+        toast.error(th.owErrAdd(result.error));
+        return;
+      }
       const newOrder = ((projects[projects.length - 1]?.display_order ?? 0) + 10);
       const newProj: PL = {
-        id: newId, title: "New Project", title_th: "", description: "",
+        id: result.id, title: "New Project", title_th: "", description: "",
         client: "Client", image_url: "", project_link: "", tags: "",
         metrics: "[]", icon: "ti-star", aspect: "square",
         display_order: newOrder, visible: true,
@@ -338,16 +351,25 @@ export default function OurWorkEditor() {
   async function moveProject(i: number, dir: -1 | 1) {
     const j = i + dir;
     if (j < 0 || j >= projects.length) return;
+    const previous = projects;
     const updated = [...projects];
     [updated[i], updated[j]] = [updated[j], updated[i]];
     const reordered = updated.map((p, idx) => ({ ...p, display_order: (idx + 1) * 10 }));
     setProjects(reordered);
+    const previousOpenIdx = openProjIdx;
     if (openProjIdx === i) setOpenProjIdx(j);
     else if (openProjIdx === j) setOpenProjIdx(i);
     try {
-      await savePortfolioOrder(reordered.map(p => ({ id: p.id, display_order: p.display_order })));
+      const result = await savePortfolioOrder(reordered.map(p => ({ id: p.id, display_order: p.display_order })));
+      if (!result.ok) {
+        toast.error(th.owErrReorder(result.error));
+        setProjects(previous);
+        setOpenProjIdx(previousOpenIdx);
+      }
     } catch (err) {
       toast.error(th.owErrReorder(String(err)));
+      setProjects(previous);
+      setOpenProjIdx(previousOpenIdx);
     }
   }
 

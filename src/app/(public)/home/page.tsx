@@ -39,6 +39,7 @@ interface DbProduct {
   tags: string[];
   moq: number | null;
   branding_methods: string[] | null;
+  created_at: string;
 }
 
 export default async function HomePage() {
@@ -47,7 +48,7 @@ export default async function HomePage() {
   const [productsResult, contentResult, categoriesResult, tagsResult, slidesResult] = await Promise.all([
     supabase
       .from("products")
-      .select("id,name,name_th,description,description_th,category,image_url,images,is_new,is_active,display_order,tags,moq,branding_methods")
+      .select("id,name,name_th,description,description_th,category,image_url,images,is_new,is_active,display_order,tags,moq,branding_methods,created_at")
       .eq("is_active", true)
       .order("display_order"),
     supabase
@@ -89,6 +90,7 @@ export default async function HomePage() {
     branding_methods: p.branding_methods ?? [],
     image_url:   p.image_url ?? "",
     images:      p.images ?? [],
+    created_at:  p.created_at,
   }));
 
   const contentMap: ContentMap = {};

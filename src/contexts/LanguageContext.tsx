@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 
 type Lang = "th" | "en";
 interface LangContextType {
@@ -24,20 +24,22 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
-  function toggleLang() {
+  const toggleLang = useCallback(() => {
     setLang(prev => {
       const next = prev === "th" ? "en" : "th";
       localStorage.setItem("sp-lang", next);
       return next;
     });
-  }
+  }, []);
 
-  function t(th: string, en: string) {
-    return lang === "th" ? th : en;
-  }
+  const t = useCallback((th: string, en: string) => (lang === "th" ? th : en), [lang]);
+  const tPreMount = useCallback((th: string) => th, []);
 
   // Use default "th" until mounted to match SSR output and avoid hydration mismatch
-  const value = mounted ? { lang, toggleLang, t } : { lang: "th" as Lang, toggleLang, t: (th: string) => th };
+  const value = useMemo(
+    () => (mounted ? { lang, toggleLang, t } : { lang: "th" as Lang, toggleLang, t: tPreMount }),
+    [mounted, lang, toggleLang, t, tPreMount]
+  );
 
   return (
     <LanguageContext.Provider value={value}>

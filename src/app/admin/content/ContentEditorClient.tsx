@@ -335,7 +335,11 @@ export default function ContentEditorClient({
     try {
       for (const fieldKey of SECTION_FIELDS[section]) {
         const { section: s, key } = FIELD_META[fieldKey];
-        await saveContentField("home", s, key, snapshot[fieldKey]);
+        const result = await saveContentField("home", s, key, snapshot[fieldKey]);
+        if (!result.ok) {
+          alert(th.saveFail);
+          return;
+        }
       }
       setDirty(p => ({ ...p, [section]: false }));
       setSaved(p => ({ ...p, [section]: true }));
@@ -370,7 +374,11 @@ export default function ContentEditorClient({
   async function toggleVisibility(section: string, value: boolean) {
     setVis(p => ({ ...p, [section]: value }));
     try {
-      await saveVisibility("home", section, value);
+      const result = await saveVisibility("home", section, value);
+      if (!result.ok) {
+        setVis(p => ({ ...p, [section]: !value }));
+        alert(th.saveFail);
+      }
     } catch (err) {
       console.error(err);
       setVis(p => ({ ...p, [section]: !value }));

@@ -21,11 +21,13 @@ export function useWishlist() {
   // ── 1. Load user & their wishlist on mount ──────────────────
   useEffect(() => {
     let active = true;
+    let requestSeq = 0;
 
     async function init() {
+      const seq = ++requestSeq;
       const { data: { session } } = await supabase.auth.getSession();
       const user = session?.user ?? null;
-      if (!active) return;
+      if (!active || seq !== requestSeq) return;
 
       if (!user) {
         setLoading(false);
@@ -39,16 +41,20 @@ export function useWishlist() {
         .select("product_id")
         .eq("user_id", user.id);
 
-      if (active && data) {
+      if (active && seq === requestSeq && data) {
         setIds(new Set(data.map((row: { product_id: number }) => row.product_id)));
       }
-      setLoading(false);
+      if (active && seq === requestSeq) setLoading(false);
     }
 
     init();
 
-    // Re-sync on auth change (sign-in / sign-out)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+    // Re-sync on real sign-in/sign-out transitions. Skip INITIAL_SESSION — it fires
+    // synchronously right after subscribing and would otherwise duplicate the
+    // mount-time init() call above for an already-signed-in user.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION") return;
+      requestSeq++; // invalidate any in-flight init() from a previous auth state
       if (!session) {
         setIds(new Set());
         setUserId(null);

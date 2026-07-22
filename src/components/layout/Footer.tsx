@@ -82,11 +82,22 @@ export default function Footer() {
   const [rows, setRows] = useState<FR[]>([]);
 
   useEffect(() => {
+    let active = true;
     supabase
       .from("page_content")
       .select("page, section, key, value")
       .in("page", ["site", "contact"])
-      .then(({ data }) => setRows(data ?? []));
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          console.error("[Footer] fetch failed:", error.message);
+          return;
+        }
+        setRows(data ?? []);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   /* ── Content ─── */
@@ -230,8 +241,8 @@ export default function Footer() {
                 {t("บริการ", "Services")}
               </div>
               <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "11px" }}>
-                {services.map(s => (
-                  <li key={s.label} style={{ fontSize: "12px", color: "#6A7A9A" }}>{s.label}</li>
+                {services.map((s, i) => (
+                  <li key={`${i}-${s.label}`} style={{ fontSize: "12px", color: "#6A7A9A" }}>{s.label}</li>
                 ))}
               </ul>
             </div>

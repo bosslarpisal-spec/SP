@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase-server";
+import { isRateLimited, clientIp } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
-  const { email } = await req.json();
-  if (!email || !email.includes("@")) {
+  if (isRateLimited(`newsletter:${clientIp(req)}`, 5, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
+  let email: unknown;
+  try {
+    ({ email } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  if (typeof email !== "string" || !email.includes("@")) {
     return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
   }
 

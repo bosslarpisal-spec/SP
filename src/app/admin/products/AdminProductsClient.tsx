@@ -43,7 +43,7 @@ export default function AdminProductsClient({
   const router = useRouter();
   const toast = useToast();
   const [products, setProducts] = useState(initial);
-  const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
 
@@ -77,36 +77,44 @@ export default function AdminProductsClient({
   const paginated = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   async function toggleActive(product: Product) {
-    setLoadingId(product.id);
+    setLoadingIds((p) => new Set(p).add(product.id));
     try {
-      await toggleProductActive(product.id, product.is_active);
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === product.id ? { ...p, is_active: !p.is_active } : p
-        )
-      );
-      toast.success(
-        product.is_active ? th.productsHiddenToast(product.name) : th.productsVisibleToast(product.name)
-      );
-      router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : th.productsUpdateFail);
+      const result = await toggleProductActive(product.id, product.is_active);
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === product.id ? { ...p, is_active: !p.is_active } : p
+          )
+        );
+        toast.success(
+          product.is_active ? th.productsHiddenToast(product.name) : th.productsVisibleToast(product.name)
+        );
+        router.refresh();
+      }
+    } catch {
+      toast.error(th.productsUpdateFail);
     }
-    setLoadingId(null);
+    setLoadingIds((p) => { const n = new Set(p); n.delete(product.id); return n; });
   }
 
   async function handleDelete(product: Product) {
-    setLoadingId(product.id);
+    setLoadingIds((p) => new Set(p).add(product.id));
     setConfirmDeleteId(null);
     try {
-      await deleteProductAction(product.id);
-      setProducts((prev) => prev.filter((p) => p.id !== product.id));
-      toast.success(th.productsDeleted);
-      router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : th.productsDeleteFail);
+      const result = await deleteProductAction(product.id);
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+        toast.success(th.productsDeleted);
+        router.refresh();
+      }
+    } catch {
+      toast.error(th.productsDeleteFail);
     }
-    setLoadingId(null);
+    setLoadingIds((p) => { const n = new Set(p); n.delete(product.id); return n; });
   }
 
   const inputStyle: React.CSSProperties = {
@@ -368,7 +376,7 @@ export default function AdminProductsClient({
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
                       <button
                         onClick={() => toggleActive(p)}
-                        disabled={loadingId === p.id}
+                        disabled={loadingIds.has(p.id)}
                         title={p.is_active ? th.productsClickHide : th.productsClickShow}
                         style={{
                           position: "relative",
@@ -378,8 +386,8 @@ export default function AdminProductsClient({
                           borderRadius: 99,
                           background: p.is_active ? "#0D1E3D" : "#E8E6E0",
                           border: "none",
-                          cursor: loadingId === p.id ? "not-allowed" : "pointer",
-                          opacity: loadingId === p.id ? 0.5 : 1,
+                          cursor: loadingIds.has(p.id) ? "not-allowed" : "pointer",
+                          opacity: loadingIds.has(p.id) ? 0.5 : 1,
                           transition: "background 0.2s",
                           padding: 0,
                         }}
@@ -417,7 +425,7 @@ export default function AdminProductsClient({
                         <span style={{ fontSize: 11, color: "#555" }}>{th.productsDeleteQ}</span>
                         <button
                           onClick={() => handleDelete(p)}
-                          disabled={loadingId === p.id}
+                          disabled={loadingIds.has(p.id)}
                           style={{
                             padding: "4px 10px",
                             background: "#A32D2D",
@@ -474,7 +482,7 @@ export default function AdminProductsClient({
                         </Link>
                         <button
                           onClick={() => setConfirmDeleteId(p.id)}
-                          disabled={loadingId === p.id}
+                          disabled={loadingIds.has(p.id)}
                           title={th.productsDelete}
                           style={{
                             width: 28,

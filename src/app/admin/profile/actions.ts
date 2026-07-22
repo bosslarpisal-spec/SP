@@ -87,7 +87,7 @@ export async function changeAdminEmail(newEmail: string): Promise<Result> {
     const { error: dbError } = await service
       .from("admins")
       .update({ email: clean })
-      .eq("email", user.email);
+      .eq("email", (user.email ?? "").toLowerCase());
     if (dbError) {
       return { ok: false, error: `Auth email queued but admins table sync failed: ${dbError.message}` };
     }

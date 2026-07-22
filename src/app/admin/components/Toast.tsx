@@ -37,9 +37,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) =>
       prev.map((t) => (t.id === id ? { ...t, visible: false } : t))
     );
-    setTimeout(() => {
+    const removeTimer = setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 300);
+    timers.current.set(id, removeTimer);
   }, []);
 
   const add = useCallback(

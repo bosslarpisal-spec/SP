@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 
 export async function POST() {
   const supabase = await createSupabaseServerClient();
@@ -10,10 +10,14 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: adminRow } = await supabase
+  // Service-role client — the admins table's SELECT policy only allows a user to
+  // read their own row; using the anon/session client here can silently 403 a
+  // legitimate admin. Lowercase to match how emails are always stored.
+  const service = createSupabaseServiceClient();
+  const { data: adminRow } = await service
     .from("admins")
     .select("id")
-    .eq("email", user.email ?? "")
+    .eq("email", (user.email ?? "").toLowerCase())
     .maybeSingle();
 
   if (!adminRow) {

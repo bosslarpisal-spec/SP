@@ -21,7 +21,9 @@ export default function Navbar() {
   ];
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_e, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Skip TOKEN_REFRESHED — same user, no need to re-query admin status.
+      if (event === "TOKEN_REFRESHED") return;
       const u = session?.user ?? null;
       setIsUser(!!u);
       if (u) {

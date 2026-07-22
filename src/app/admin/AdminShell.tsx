@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { th } from "@/app/admin/lib/admin-th";
+import { nameFromEmail } from "@/app/admin/lib/format";
 
 const NAV_GROUPS = [
   {
@@ -32,11 +33,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/slides":   th.navSlides,
   "/admin/profile":  th.navProfile,
 };
-
-function nameFromEmail(email: string): string {
-  const local = email.split("@")[0] ?? "Admin";
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
 
 export default function AdminShell({
   adminEmail,
@@ -137,8 +133,7 @@ export default function AdminShell({
             {group.items.map((item) => {
               const isActive =
                 pathname === item.href ||
-                (item.href !== "/admin" && pathname.startsWith(item.href + "/")) ||
-                (item.href === "/admin/products" && pathname.startsWith("/admin/products"));
+                (item.href !== "/admin" && pathname.startsWith(item.href + "/"));
               return (
                 <Link
                   key={item.href}

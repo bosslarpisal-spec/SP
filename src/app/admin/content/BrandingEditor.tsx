@@ -50,11 +50,15 @@ export default function BrandingEditor() {
     setUploading(false);
     setSaving(true);
     try {
-      await saveContentField("site", "branding", "logo_url", publicUrl);
-      setCurrentUrl(publicUrl);
-      toast.success(th.toastLogoUpdated);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : th.toastLogoSaveFail);
+      const result = await saveContentField("site", "branding", "logo_url", publicUrl);
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        setCurrentUrl(publicUrl);
+        toast.success(th.toastLogoUpdated);
+      }
+    } catch {
+      toast.error(th.toastLogoSaveFail);
     } finally {
       setSaving(false);
     }
@@ -64,11 +68,15 @@ export default function BrandingEditor() {
     if (!confirm(th.brandingRevertConfirm)) return;
     setSaving(true);
     try {
-      await saveContentField("site", "branding", "logo_url", "");
-      setCurrentUrl(FALLBACK);
-      toast.success(th.toastLogoReverted);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : th.toastLogoSaveFail);
+      const result = await saveContentField("site", "branding", "logo_url", "");
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        setCurrentUrl(FALLBACK);
+        toast.success(th.toastLogoReverted);
+      }
+    } catch {
+      toast.error(th.toastLogoSaveFail);
     } finally {
       setSaving(false);
     }

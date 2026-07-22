@@ -275,5 +275,5 @@ const SERVICE_ICONS: Record<string, (p: P) => JSX.Element> = {
 
 export function ServiceIcon({ name, className = "w-10 h-10" }: { name: string; className?: string }) {
   const Icon = SERVICE_ICONS[name];
-  return Icon ? Icon({ className }) : null;
+  return Icon ? <Icon className={className} /> : null;
 }

@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useLang } from "@/contexts/LanguageContext";
 import { useWishlist } from "@/hooks/useWishlist";
 
+type WishlistProps = { isWished: (id: number) => boolean; toggle: (id: number) => void };
+
 interface Product {
   id: string;
   name: string;
@@ -22,6 +24,7 @@ interface Product {
   icon_name?: string;
   image_url?: string;
   images?: string[];
+  created_at?: string;
 }
 
 interface Props {
@@ -270,9 +273,8 @@ function QuickViewPopup({ product: p, onClose }: { product: Product; onClose: ()
 }
 
 /* ── GRID CARD ────────────────────────────────────────────── */
-function GridCard({ p, setSelected, animDelay = 0 }: { p: Product; setSelected: (p: Product) => void; animDelay?: number }) {
+function GridCard({ p, setSelected, animDelay = 0, isWished, toggle }: { p: Product; setSelected: (p: Product) => void; animDelay?: number } & WishlistProps) {
   const { t } = useLang();
-  const { isWished, toggle } = useWishlist();
   const wished = isWished(Number(p.id));
   const icon = p.icon_name ?? ICON_MAP[p.category] ?? ICON_MAP["default"];
   return (
@@ -334,8 +336,9 @@ function GridCard({ p, setSelected, animDelay = 0 }: { p: Product; setSelected: 
 }
 
 /* ── LIST CARD ────────────────────────────────────────────── */
-function ListCard({ p, setSelected, animDelay = 0 }: { p: Product; setSelected: (p: Product) => void; animDelay?: number }) {
+function ListCard({ p, setSelected, animDelay = 0, isWished, toggle }: { p: Product; setSelected: (p: Product) => void; animDelay?: number } & WishlistProps) {
   const { t } = useLang();
+  const wished = isWished(Number(p.id));
   const icon = p.icon_name ?? ICON_MAP[p.category] ?? ICON_MAP["default"];
   return (
     <div
@@ -372,7 +375,14 @@ function ListCard({ p, setSelected, animDelay = 0 }: { p: Product; setSelected: 
           </div>
         )}
       </div>
-      <div style={{ padding: "0 12px", flexShrink: 0 }}>
+      <div style={{ padding: "0 12px", flexShrink: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+        <button
+          onClick={e => { e.stopPropagation(); toggle(Number(p.id)); }}
+          aria-label={wished ? "Remove from wishlist" : "Save to wishlist"}
+          style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(28,41,81,0.06)", border: "0.5px solid rgba(28,41,81,0.15)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+        >
+          <i className={`ti ${wished ? "ti-heart-filled" : "ti-heart"}`} style={{ fontSize: "13px", color: wished ? "#C9A84C" : "#8A9AB8" }} />
+        </button>
         <button
           onClick={e => { e.stopPropagation(); setSelected(p); }}
           className="flex items-center gap-1"
@@ -404,6 +414,7 @@ function SideSection({ title, open, onToggle, children }: { title: string; open:
 /* ── MAIN EXPORT ──────────────────────────────────────────── */
 export default function CatalogSection({ products, categoryOrder = [], allTags: allTagsProp, label, heading, headingTh, description, quote, btn1Text, btn2Text, styles = {} }: Props) {
   const { t, lang } = useLang();
+  const { isWished, toggle } = useWishlist();
   const [searchQuery,      setSearchQuery]      = useState("");
   const [debouncedSearch,  setDebouncedSearch]  = useState("");
   const [activeCategories, setActiveCategories] = useState<string[]>([]);
@@ -447,7 +458,11 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
         const matchTag    = activeTags.length === 0 || activeTags.some(t => p.tags?.includes(t));
         return matchSearch && matchCat && matchTag;
       })
-      .sort((a, b) => sortBy === "az" ? a.name.localeCompare(b.name) : 0);
+      .sort((a, b) => {
+        if (sortBy === "az") return a.name.localeCompare(b.name);
+        if (sortBy === "newest") return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+        return 0;
+      });
   }, [products, debouncedSearch, activeCategories, activeTags, sortBy]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
@@ -678,11 +693,11 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
             <>
               {viewMode === "grid" ? (
                 <div key={`g-${filterKey}`} className="cat-product-grid">
-                  {paginated.map((p, i) => <GridCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 25, 80)} />)}
+                  {paginated.map((p, i) => <GridCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 25, 80)} isWished={isWished} toggle={toggle} />)}
                 </div>
               ) : (
                 <div key={`l-${filterKey}`} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {paginated.map((p, i) => <ListCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 25, 80)} />)}
+                  {paginated.map((p, i) => <ListCard key={p.id} p={p} setSelected={setSelected} animDelay={Math.min(i * 25, 80)} isWished={isWished} toggle={toggle} />)}
                 </div>
               )}
 

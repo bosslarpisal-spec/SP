@@ -12,7 +12,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
   const router = useRouter();
   const toast = useToast();
   const [slides, setSlides] = useState(initial);
-  const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [loadingIds, setLoadingIds] = useState<Set<number>>(new Set());
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [reordering, setReordering] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
@@ -48,9 +48,14 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
 
     setReordering(true);
     try {
-      await reorderSlides(next.map((s) => s.id));
-      toast.success(th.toastOrderSaved);
-      router.refresh();
+      const result = await reorderSlides(next.map((s) => s.id));
+      if (!result.ok) {
+        toast.error(result.error);
+        setSlides(slides);
+      } else {
+        toast.success(th.toastOrderSaved);
+        router.refresh();
+      }
     } catch {
       toast.error(th.toastOrderFail);
       setSlides(slides);
@@ -61,33 +66,42 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
 
   // ── Toggle active ───────────────────────────────────────────────────────
   async function handleToggle(slide: HeroSlide) {
-    setLoadingId(slide.id);
+    setLoadingIds((p) => new Set(p).add(slide.id));
     try {
-      await toggleSlideActive(slide.id, slide.is_active);
-      setSlides((prev) =>
-        prev.map((s) => (s.id === slide.id ? { ...s, is_active: !s.is_active } : s))
-      );
-      toast.success(slide.is_active ? th.toastSlideHidden(slide.heading) : th.toastSlideVisible(slide.heading));
-      router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : th.toastSlideFail);
+      const result = await toggleSlideActive(slide.id, slide.is_active);
+      if (!result.ok) {
+        toast.error(result.error);
+      } else {
+        setSlides((prev) =>
+          prev.map((s) => (s.id === slide.id ? { ...s, is_active: !s.is_active } : s))
+        );
+        toast.success(slide.is_active ? th.toastSlideHidden(slide.heading) : th.toastSlideVisible(slide.heading));
+        router.refresh();
+      }
+    } catch {
+      toast.error(th.toastSlideFail);
     } finally {
-      setLoadingId(null);
+      setLoadingIds((p) => { const n = new Set(p); n.delete(slide.id); return n; });
     }
   }
 
   // ── Delete ──────────────────────────────────────────────────────────────
   async function handleDelete(slide: HeroSlide) {
-    setLoadingId(slide.id);
+    setLoadingIds((p) => new Set(p).add(slide.id));
     setConfirmDeleteId(null);
     try {
-      await deleteSlide(slide.id);
-      setSlides((prev) => prev.filter((s) => s.id !== slide.id));
-      toast.success(th.toastSlideDeleted);
-      router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : th.toastSlideDeleteFail);
-      setLoadingId(null);
+      const result = await deleteSlide(slide.id);
+      if (!result.ok) {
+        toast.error(result.error);
+        setLoadingIds((p) => { const n = new Set(p); n.delete(slide.id); return n; });
+      } else {
+        setSlides((prev) => prev.filter((s) => s.id !== slide.id));
+        toast.success(th.toastSlideDeleted);
+        router.refresh();
+      }
+    } catch {
+      toast.error(th.toastSlideDeleteFail);
+      setLoadingIds((p) => { const n = new Set(p); n.delete(slide.id); return n; });
     }
   }
 
@@ -150,7 +164,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
             display: "flex",
             alignItems: "center",
             gap: 12,
-            opacity: loadingId === slide.id ? 0.5 : 1,
+            opacity: loadingIds.has(slide.id) ? 0.5 : 1,
             cursor: "grab",
             transition: "border-color 0.1s, opacity 0.15s",
           }}
@@ -256,7 +270,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
           {/* Active toggle */}
           <button
             onClick={() => handleToggle(slide)}
-            disabled={loadingId === slide.id}
+            disabled={loadingIds.has(slide.id)}
             title={slide.is_active ? th.slidesClickHide : th.slidesClickShow}
             style={{
               position: "relative",
@@ -265,7 +279,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
               borderRadius: 99,
               background: slide.is_active ? "#0D1E3D" : "#E8E6E0",
               border: "none",
-              cursor: loadingId === slide.id ? "not-allowed" : "pointer",
+              cursor: loadingIds.has(slide.id) ? "not-allowed" : "pointer",
               transition: "background 0.2s",
               flexShrink: 0,
               padding: 0,
@@ -294,7 +308,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
               <span style={{ fontSize: 11, color: "#555" }}>{th.slidesDeleteQ}</span>
               <button
                 onClick={() => handleDelete(slide)}
-                disabled={loadingId === slide.id}
+                disabled={loadingIds.has(slide.id)}
                 style={{
                   padding: "4px 10px",
                   background: "#A32D2D",
@@ -345,7 +359,7 @@ export default function AdminSlidesClient({ slides: initial }: { slides: HeroSli
               </Link>
               <button
                 onClick={() => setConfirmDeleteId(slide.id)}
-                disabled={loadingId === slide.id}
+                disabled={loadingIds.has(slide.id)}
                 title={th.slidesDelete}
                 style={{
                   width: 30,

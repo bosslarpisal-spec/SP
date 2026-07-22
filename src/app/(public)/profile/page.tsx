@@ -71,6 +71,7 @@ export default function ProfilePage() {
   const [loading, setLoading]             = useState(true);
   const [name, setName]                   = useState("");
   const [nameSaved, setNameSaved]         = useState(false);
+  const [nameSaving, setNameSaving]       = useState(false);
   const [pwSaved, setPwSaved]             = useState(false);
   const [pwError, setPwError]             = useState("");
   const [pwSaving, setPwSaving]           = useState(false);
@@ -110,7 +111,9 @@ export default function ProfilePage() {
   if (loading || !user) return null;
 
   async function saveName() {
+    setNameSaving(true);
     await supabase.auth.updateUser({ data: { full_name: name } });
+    setNameSaving(false);
     setNameSaved(true);
     setTimeout(() => setNameSaved(false), 2000);
   }
@@ -336,8 +339,13 @@ export default function ProfilePage() {
                     placeholder="Your name"
                     style={inputStyle}
                   />
-                  <button className="gold-btn" onClick={saveName} style={goldBtn}>
-                    {nameSaved ? "Saved ✓" : "Save"}
+                  <button
+                    className="gold-btn"
+                    onClick={saveName}
+                    disabled={nameSaving}
+                    style={{ ...goldBtn, opacity: nameSaving ? 0.6 : 1, cursor: nameSaving ? "not-allowed" : "pointer" }}
+                  >
+                    {nameSaving ? "Saving…" : nameSaved ? "Saved ✓" : "Save"}
                   </button>
                 </div>
 

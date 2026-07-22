@@ -49,8 +49,15 @@ export default function SignUpPage() {
       options: { data: { full_name: name } },
     });
     setLoading(false);
-    if (error) setError(error.message);
-    else router.push("/home");
+    if (error) {
+      setError(
+        /already registered|already exists/i.test(error.message)
+          ? 'An account with this email already exists. Try "Log in" instead, or use "Continue with Google" if you signed up that way.'
+          : "Something went wrong creating your account. Please try again."
+      );
+    } else {
+      router.push("/home");
+    }
   }
 
   async function handleGoogleSignup() {

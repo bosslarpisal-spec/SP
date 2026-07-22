@@ -6,17 +6,13 @@ import { supabase } from "@/lib/supabase";
 import { addAdmin, removeAdmin, changeAdminEmail, changeAdminPassword } from "./actions";
 import { useToast } from "../components/Toast";
 import { th } from "@/app/admin/lib/admin-th";
+import { nameFromEmail } from "@/app/admin/lib/format";
 
 type Admin = {
   id: number;
   email: string;
   created_at: string;
 };
-
-function nameFromEmail(email: string): string {
-  const local = email.split("@")[0] ?? "Admin";
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
 
 export default function AdminProfileClient({
   currentUserEmail,

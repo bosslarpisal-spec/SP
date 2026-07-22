@@ -236,17 +236,25 @@ export default function SlideForm({ mode, slideId, initial, nextDisplayOrder = 1
     setSaving(true);
     try {
       if (mode === "new") {
-        await createSlide(form);
-        toast.success(th.toastSlideCreated);
-        router.push("/admin/slides");
+        const result = await createSlide(form);
+        if (!result.ok) {
+          toast.error(result.error);
+        } else {
+          toast.success(th.toastSlideCreated);
+          router.push("/admin/slides");
+        }
       } else {
-        await updateSlide(slideId!, form);
-        toast.success(th.toastChangesSaved);
-        setDirty(false);
-        router.refresh();
+        const result = await updateSlide(slideId!, form);
+        if (!result.ok) {
+          toast.error(result.error);
+        } else {
+          toast.success(th.toastChangesSaved);
+          setDirty(false);
+          router.refresh();
+        }
       }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : th.toastSaveFail);
+    } catch {
+      toast.error(th.toastSaveFail);
     } finally {
       setSaving(false);
     }

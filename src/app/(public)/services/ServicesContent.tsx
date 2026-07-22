@@ -123,28 +123,30 @@ export default function ServicesContent({
       <section style={{ background: "#F8F6F1" }}>
         <div className="overflow-hidden" style={{ maxWidth: "100%", margin: "0", borderRadius: "0", border: "none", boxShadow: "none" }}>
 
-          {/* ROW 1 — 01 Featured ──────────── */}
-          <div className="flex flex-col md:flex-row">
-            <div className="w-full md:w-1/2 p-6 md:px-[60px] md:py-[48px] flex flex-col justify-center" style={{ background: "#1C2951" }}>
-              <div style={{ fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(232,213,163,0.6)", marginBottom: "12px" }}>
-                01 — {lang === "th" ? "แนะนำ" : "Featured"}
+          {/* ROW 1 — 01 Featured ─ only if ≥ 1 service ──────── */}
+          {SERVICES.length >= 1 && (
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full md:w-1/2 p-6 md:px-[60px] md:py-[48px] flex flex-col justify-center" style={{ background: "#1C2951" }}>
+                <div style={{ fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(232,213,163,0.6)", marginBottom: "12px" }}>
+                  01 — {lang === "th" ? "แนะนำ" : "Featured"}
+                </div>
+                <h2 style={{ fontSize: "28px", fontWeight: 400, color: "#FFFFFF", fontFamily: "Georgia, serif", lineHeight: 1.1, marginBottom: "8px" }}>
+                  {svcTitle(SERVICES[0], lang)}
+                </h2>
+                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: "16px" }}>{lang === "th" ? (SERVICES[0].desc_th || SERVICES[0].desc) : SERVICES[0].desc}</p>
+                <Link href="/contact" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 500, color: "#E8D5A3", textDecoration: "none" }}>
+                  → {lang === "th" ? "เรียนรู้เพิ่มเติม" : "Learn more"}
+                </Link>
               </div>
-              <h2 style={{ fontSize: "28px", fontWeight: 400, color: "#FFFFFF", fontFamily: "Georgia, serif", lineHeight: 1.1, marginBottom: "8px" }}>
-                {svcTitle(SERVICES[0], lang)}
-              </h2>
-              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: "16px" }}>{lang === "th" ? (SERVICES[0].desc_th || SERVICES[0].desc) : SERVICES[0].desc}</p>
-              <Link href="/contact" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: 500, color: "#E8D5A3", textDecoration: "none" }}>
-                → {lang === "th" ? "เรียนรู้เพิ่มเติม" : "Learn more"}
-              </Link>
+              <div className="w-full h-[200px] md:h-auto md:w-1/2 md:min-h-[280px] flex items-center justify-center" style={{ background: "#243160", overflow: "hidden" }}>
+                {serviceImage1
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={serviceImage1} alt={SERVICES[0].title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <i className={`ti ${SERVICES[0].icon}`} style={{ fontSize: "80px", color: "#E8D5A3", opacity: 0.2 }} />
+                }
+              </div>
             </div>
-            <div className="w-full h-[200px] md:h-auto md:w-1/2 md:min-h-[280px] flex items-center justify-center" style={{ background: "#243160", overflow: "hidden" }}>
-              {serviceImage1
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={serviceImage1} alt={SERVICES[0].title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <i className={`ti ${SERVICES[0].icon}`} style={{ fontSize: "80px", color: "#E8D5A3", opacity: 0.2 }} />
-              }
-            </div>
-          </div>
+          )}
 
           {/* ROW 2 — 02 Flipped ─ only if ≥ 2 services ── */}
           {SERVICES.length >= 2 && (

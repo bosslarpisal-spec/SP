@@ -88,7 +88,7 @@ export default function ContactClient({
   mapBadge, mapHeading, mapBtn, mapStylesJson,
 }: ContactClientProps) {
   const { lang } = useLang();
-  const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", interest: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", company: "", interest: "", message: "", website: "" });
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">("idle");
 
   function update(k: string, v: string) { setForm(f => ({ ...f, [k]: v })); }
@@ -238,7 +238,7 @@ export default function ContactClient({
                     Thank you! We&apos;ll get back to you within 1 business day.<br />
                     ขอบคุณที่ติดต่อเรา เราจะตอบกลับภายใน 1 วันทำการ
                   </p>
-                  <button onClick={() => { setStatus("idle"); setForm({ name:"",email:"",phone:"",company:"",interest:"",message:"" }); }}
+                  <button onClick={() => { setStatus("idle"); setForm({ name:"",email:"",phone:"",company:"",interest:"",message:"",website:"" }); }}
                     className="px-6 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-80"
                     style={{ border: "1px solid rgba(13,30,61,0.25)", color: "#0D1E3D", background: "transparent" }}>
                     Send Another Message
@@ -250,6 +250,17 @@ export default function ContactClient({
                   <p className="text-sm mt-1" style={{ color: "#4A5568" }}>ส่งข้อความถึงเรา — เราจะติดต่อกลับภายใน 1 วันทำการ</p>
                   <div className="mt-4 mb-6" style={{ borderTop: "1px solid rgba(13,30,61,0.1)" }} />
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Honeypot — hidden from real users, only bots fill this in */}
+                    <input
+                      type="text"
+                      name="website"
+                      value={form.website}
+                      onChange={e => update("website", e.target.value)}
+                      tabIndex={-1}
+                      autoComplete="off"
+                      aria-hidden="true"
+                      style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
+                    />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label style={labelStyle}>Full Name *</label>

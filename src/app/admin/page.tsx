@@ -2,6 +2,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { th } from "@/app/admin/lib/admin-th";
+import { nameFromEmail } from "@/app/admin/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -14,11 +15,6 @@ type ProductRow = {
   is_new: boolean;
   created_at: string;
 };
-
-function nameFromEmail(email: string): string {
-  const local = email.split("@")[0] ?? "Admin";
-  return local.charAt(0).toUpperCase() + local.slice(1);
-}
 
 function greeting(): string {
   const hour = new Date().getHours();

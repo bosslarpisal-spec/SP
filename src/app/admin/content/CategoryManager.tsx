@@ -25,7 +25,7 @@ export default function CategoryManager({
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [adding, setAdding] = useState(false);
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -46,15 +46,19 @@ export default function CategoryManager({
     setAdding(true);
     const displayOrder = categories.length + 1;
     try {
-      const row = await addCategory(name, displayOrder);
-      setCategories(p => [...p, {
-        id: row.id, name: row.name, display_order: row.display_order, is_visible: row.is_visible,
-      }]);
-      setCounts(p => ({ ...p, [name]: 0 }));
-      setNewCategoryName("");
-      flashSuccess(th.catAddedMsg(name));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : th.catAddFail);
+      const result = await addCategory(name, displayOrder);
+      if (!result.ok) {
+        setError(result.error);
+      } else {
+        setCategories(p => [...p, {
+          id: result.id, name: result.name, display_order: result.display_order, is_visible: result.is_visible,
+        }]);
+        setCounts(p => ({ ...p, [name]: 0 }));
+        setNewCategoryName("");
+        flashSuccess(th.catAddedMsg(name));
+      }
+    } catch {
+      setError(th.catAddFail);
     } finally {
       setAdding(false);
     }
@@ -85,17 +89,22 @@ export default function CategoryManager({
     setRenamingId(cat.id);
     try {
       const result = await renameCategory(cat.id, cat.name, newName);
-      setCategories(p => p.map(c => c.id === cat.id ? { ...c, name: newName } : c));
-      setCounts(p => {
-        const next = { ...p };
-        next[newName] = next[cat.name] ?? 0;
-        delete next[cat.name];
-        return next;
-      });
-      flashSuccess(th.catRenamedMsg(result.productsUpdated));
-      cancelEdit();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : th.catRenameFail);
+      if (!result.ok) {
+        setError(result.error);
+        setEditingName(cat.name);
+      } else {
+        setCategories(p => p.map(c => c.id === cat.id ? { ...c, name: newName } : c));
+        setCounts(p => {
+          const next = { ...p };
+          next[newName] = next[cat.name] ?? 0;
+          delete next[cat.name];
+          return next;
+        });
+        flashSuccess(th.catRenamedMsg(result.productsUpdated));
+        cancelEdit();
+      }
+    } catch {
+      setError(th.catRenameFail);
       setEditingName(cat.name);
     } finally {
       setRenamingId(null);
@@ -107,15 +116,19 @@ export default function CategoryManager({
     if (count > 0) return;
     if (!confirm(th.catDeleteConfirm(cat.name))) return;
     setError(null);
-    setLoading(cat.id);
+    setLoadingIds(p => new Set(p).add(cat.id));
     try {
-      await deleteCategory(cat.id, cat.name);
-      setCategories(p => p.filter(c => c.id !== cat.id));
-      flashSuccess(th.catDeletedMsg(cat.name));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : th.catDeleteFail);
+      const result = await deleteCategory(cat.id, cat.name);
+      if (!result.ok) {
+        setError(result.error);
+      } else {
+        setCategories(p => p.filter(c => c.id !== cat.id));
+        flashSuccess(th.catDeletedMsg(cat.name));
+      }
+    } catch {
+      setError(th.catDeleteFail);
     } finally {
-      setLoading(null);
+      setLoadingIds(p => { const n = new Set(p); n.delete(cat.id); return n; });
     }
   }
 
@@ -123,10 +136,14 @@ export default function CategoryManager({
     const nextVisible = !cat.is_visible;
     setCategories(p => p.map(c => c.id === cat.id ? { ...c, is_visible: nextVisible } : c));
     try {
-      await toggleCategoryVisibility(cat.id, nextVisible);
-    } catch (err) {
+      const result = await toggleCategoryVisibility(cat.id, nextVisible);
+      if (!result.ok) {
+        setCategories(p => p.map(c => c.id === cat.id ? { ...c, is_visible: !nextVisible } : c));
+        setError(result.error);
+      }
+    } catch {
       setCategories(p => p.map(c => c.id === cat.id ? { ...c, is_visible: !nextVisible } : c));
-      setError(err instanceof Error ? err.message : th.catVisFail);
+      setError(th.catVisFail);
     }
   }
 
@@ -141,16 +158,19 @@ export default function CategoryManager({
       setDraggingId(null);
       return;
     }
+    const previous = categories;
     const reordered = [...categories];
     const [moved] = reordered.splice(fromIndex, 1);
     reordered.splice(toIndex, 0, moved);
     const renumbered = reordered.map((c, i) => ({ ...c, display_order: i + 1 }));
     setCategories(renumbered);
     setDraggingId(null);
-    renumbered.forEach(c => {
-      updateCategoryOrder(c.id, c.display_order).catch(err => {
-        setError(err instanceof Error ? err.message : th.catOrderFail);
-      });
+    Promise.all(renumbered.map(c => updateCategoryOrder(c.id, c.display_order))).then(results => {
+      const failed = results.find(r => !r.ok);
+      if (failed && !failed.ok) {
+        setCategories(previous);
+        setError(failed.error);
+      }
     });
   }
 
@@ -231,7 +251,7 @@ export default function CategoryManager({
                 gap: 12, padding: "12px 18px",
                 borderBottom: "0.5px solid #F0EDE6",
                 background: draggingId === cat.id ? "#FAFAF8" : "#FFFFFF",
-                opacity: isRenaming || loading === cat.id ? 0.6 : 1,
+                opacity: isRenaming || loadingIds.has(cat.id) ? 0.6 : 1,
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
@@ -321,7 +341,7 @@ export default function CategoryManager({
                 <button
                   type="button"
                   onClick={() => handleDelete(cat)}
-                  disabled={count > 0 || loading === cat.id}
+                  disabled={count > 0 || loadingIds.has(cat.id)}
                   title={count > 0 ? th.catHasProducts : th.catDeleteTitle}
                   style={{
                     background: "none", border: "none", fontSize: 14, padding: 4,

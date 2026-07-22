@@ -155,20 +155,31 @@ export default function ProductForm({ mode, productId, initial, categories, avai
 
     try {
       if (mode === "new") {
-        await createProduct(payload);
+        const result = await createProduct(payload);
+        if (!result.ok) {
+          setError(result.error);
+          toast.error(result.error);
+          setSaving(false);
+          return;
+        }
         toast.success(th.toastProductCreated);
       } else {
-        await updateProduct(productId!, payload);
+        const result = await updateProduct(productId!, payload);
+        if (!result.ok) {
+          setError(result.error);
+          toast.error(result.error);
+          setSaving(false);
+          return;
+        }
         toast.success(th.toastProductSaved);
         setLastSaved(new Date());
         setDirty(false);
         setSaving(false);
         return;
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : th.toastProductFail;
-      setError(msg);
-      toast.error(msg);
+    } catch {
+      setError(th.toastProductFail);
+      toast.error(th.toastProductFail);
       setSaving(false);
       return;
     }

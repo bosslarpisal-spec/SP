@@ -19,7 +19,7 @@ export default function TagManager({
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [newTagName, setNewTagName] = useState("");
   const [adding, setAdding] = useState(false);
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -38,13 +38,17 @@ export default function TagManager({
     setError(null);
     setAdding(true);
     try {
-      const row = await addTag(name);
-      setTags(p => [...p, { id: row.id, name: row.name }]);
-      setCounts(p => ({ ...p, [name]: 0 }));
-      setNewTagName("");
-      flashSuccess(th.tagAddedMsg(name));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : th.tagAddFail);
+      const result = await addTag(name);
+      if (!result.ok) {
+        setError(result.error);
+      } else {
+        setTags(p => [...p, { id: result.id, name: result.name }]);
+        setCounts(p => ({ ...p, [name]: 0 }));
+        setNewTagName("");
+        flashSuccess(th.tagAddedMsg(name));
+      }
+    } catch {
+      setError(th.tagAddFail);
     } finally {
       setAdding(false);
     }
@@ -75,17 +79,22 @@ export default function TagManager({
     setRenamingId(tag.id);
     try {
       const result = await renameTag(tag.id, tag.name, newName);
-      setTags(p => p.map(t => t.id === tag.id ? { ...t, name: newName } : t));
-      setCounts(p => {
-        const next = { ...p };
-        next[newName] = next[tag.name] ?? 0;
-        delete next[tag.name];
-        return next;
-      });
-      flashSuccess(th.tagRenamedMsg(result.productsUpdated));
-      cancelEdit();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : th.tagRenameFail);
+      if (!result.ok) {
+        setError(result.error);
+        setEditingName(tag.name);
+      } else {
+        setTags(p => p.map(t => t.id === tag.id ? { ...t, name: newName } : t));
+        setCounts(p => {
+          const next = { ...p };
+          next[newName] = next[tag.name] ?? 0;
+          delete next[tag.name];
+          return next;
+        });
+        flashSuccess(th.tagRenamedMsg(result.productsUpdated));
+        cancelEdit();
+      }
+    } catch {
+      setError(th.tagRenameFail);
       setEditingName(tag.name);
     } finally {
       setRenamingId(null);
@@ -97,15 +106,19 @@ export default function TagManager({
     if (count > 0) return;
     if (!confirm(th.tagDeleteConfirm(tag.name))) return;
     setError(null);
-    setLoading(tag.id);
+    setLoadingIds(p => new Set(p).add(tag.id));
     try {
-      await deleteTag(tag.id, tag.name);
-      setTags(p => p.filter(t => t.id !== tag.id));
-      flashSuccess(th.tagDeletedMsg(tag.name));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : th.tagDeleteFail);
+      const result = await deleteTag(tag.id, tag.name);
+      if (!result.ok) {
+        setError(result.error);
+      } else {
+        setTags(p => p.filter(t => t.id !== tag.id));
+        flashSuccess(th.tagDeletedMsg(tag.name));
+      }
+    } catch {
+      setError(th.tagDeleteFail);
     } finally {
-      setLoading(null);
+      setLoadingIds(p => { const n = new Set(p); n.delete(tag.id); return n; });
     }
   }
 
@@ -181,7 +194,7 @@ export default function TagManager({
                 gap: 12, padding: "12px 18px",
                 borderBottom: "0.5px solid #F0EDE6",
                 background: "#FFFFFF",
-                opacity: isRenaming || loading === tag.id ? 0.6 : 1,
+                opacity: isRenaming || loadingIds.has(tag.id) ? 0.6 : 1,
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
@@ -249,7 +262,7 @@ export default function TagManager({
                 <button
                   type="button"
                   onClick={() => handleDelete(tag)}
-                  disabled={count > 0 || loading === tag.id}
+                  disabled={count > 0 || loadingIds.has(tag.id)}
                   title={count > 0 ? th.tagHasProducts : th.tagDeleteTitle}
                   style={{
                     background: "none", border: "none", fontSize: 14, padding: 4,

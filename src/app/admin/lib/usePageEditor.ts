@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { saveContentField } from "@/app/admin/content/actions";
+import { th } from "@/app/admin/lib/admin-th";
 
 type FieldMeta = Record<string, { section: string; key: string }>;
 
@@ -51,7 +52,11 @@ export function usePageEditor(
     try {
       for (const k of sectionFields[section]) {
         const { section: s, key } = fieldMeta[k];
-        await saveContentField(page, s, key, snap[k] ?? "");
+        const result = await saveContentField(page, s, key, snap[k] ?? "");
+        if (!result.ok) {
+          alert(th.saveFail);
+          return;
+        }
       }
       setDirty(p => ({ ...p, [section]: false }));
       setSaved(p => ({ ...p, [section]: true }));
@@ -63,7 +68,7 @@ export function usePageEditor(
       setTimeout(() => setSaved(p => ({ ...p, [section]: false })), 3000);
     } catch (err) {
       console.error(err);
-      alert("Failed to save. Please try again.");
+      alert(th.saveFail);
     } finally {
       setSaving(p => ({ ...p, [section]: false }));
     }

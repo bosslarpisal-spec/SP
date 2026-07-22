@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createSupabaseServiceClient } from "@/lib/supabase-server";
+import { isRateLimited, clientIp } from "@/lib/rateLimit";
 
 const resend   = new Resend(process.env.RESEND_API_KEY);
 const FROM     = "SP Contact Form <onboarding@resend.dev>";
 const FALLBACK = "spproduce.dist@gmail.com";
 
 export async function POST(request: Request) {
+  if (isRateLimited(`contact:${clientIp(request)}`, 5, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   let body: Record<string, string>;
   try {
     body = await request.json();
@@ -14,7 +19,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { name, email, phone, company, interest, message } = body;
+  const { name, email, phone, company, interest, message, website } = body;
+
+  // Honeypot — a real browser never fills this hidden field in; only bots do.
+  if (typeof website === "string" && website.trim() !== "") {
+    return NextResponse.json({ ok: true });
+  }
+
+  for (const [key, value] of Object.entries({ name, email, phone, company, interest, message })) {
+    if (value !== undefined && typeof value !== "string") {
+      return NextResponse.json({ error: `Invalid value for field "${key}"` }, { status: 400 });
+    }
+  }
 
   if (!name?.trim() || !email?.trim() || !message?.trim()) {
     return NextResponse.json(

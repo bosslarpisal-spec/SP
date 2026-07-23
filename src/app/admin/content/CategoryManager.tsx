@@ -165,13 +165,18 @@ export default function CategoryManager({
     const renumbered = reordered.map((c, i) => ({ ...c, display_order: i + 1 }));
     setCategories(renumbered);
     setDraggingId(null);
-    Promise.all(renumbered.map(c => updateCategoryOrder(c.id, c.display_order))).then(results => {
-      const failed = results.find(r => !r.ok);
-      if (failed && !failed.ok) {
+    Promise.all(renumbered.map(c => updateCategoryOrder(c.id, c.display_order)))
+      .then(results => {
+        const failed = results.find(r => !r.ok);
+        if (failed && !failed.ok) {
+          setCategories(previous);
+          setError(failed.error);
+        }
+      })
+      .catch(() => {
         setCategories(previous);
-        setError(failed.error);
-      }
-    });
+        setError(th.catOrderFail);
+      });
   }
 
   return (

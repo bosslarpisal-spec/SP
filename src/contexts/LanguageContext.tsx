@@ -24,6 +24,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
+  // Keep the <html lang> attribute in sync with the active language, for
+  // screen readers and search engines — the root layout can't set this
+  // itself since the language is only known client-side.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
   const toggleLang = useCallback(() => {
     setLang(prev => {
       const next = prev === "th" ? "en" : "th";

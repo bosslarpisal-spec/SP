@@ -250,11 +250,15 @@ export default function OurWorkEditor() {
       .from("portfolio_projects")
       .select("*")
       .order("display_order")
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[OurWorkEditor] portfolio_projects fetch failed:", error.message);
+          toast.error(th.owLoadFail);
+        }
         setProjects((data ?? []).map(r => toLocal(r as Record<string, unknown>)));
         setProjectsLoaded(true);
       });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- toast isn't stable across ToastProvider renders; this is a mount-only fetch
 
   function u(k: string, v: string) { updateField(k, v, activeSection); }
 

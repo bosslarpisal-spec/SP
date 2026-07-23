@@ -23,7 +23,12 @@ export default function BrandingEditor() {
       .eq("section", "branding")
       .eq("key", "logo_url")
       .maybeSingle()
-      .then(({ data }) => setCurrentUrl(data?.value || FALLBACK));
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[BrandingEditor] logo fetch failed:", error.message);
+        }
+        setCurrentUrl(data?.value || FALLBACK);
+      });
   }, []);
 
   const isCustom  = !!currentUrl && currentUrl !== FALLBACK;

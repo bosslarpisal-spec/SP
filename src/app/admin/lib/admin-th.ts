@@ -388,6 +388,7 @@ export const th = {
   // ── Our Work editor ─────────────────────────────────────────────────────
   owLoading:           "กำลังโหลดหน้าผลงาน…",
   owLoadingProjects:   "กำลังโหลดผลงาน…",
+  owLoadFail:          "โหลดผลงานไม่สำเร็จ",
   owSecHero:           "ฮีโร่",
   owSecHeroDesc:       "ข้อความบนและหัวเรื่องหน้า",
   owSecStats:          "แถบสถิติ",

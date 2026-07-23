@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import SectionLabel from "@/components/ui/SectionLabel";
 import GoldDivider from "@/components/ui/GoldDivider";
 import { useLang } from "@/contexts/LanguageContext";
@@ -172,11 +173,12 @@ function ProjectOverlay({ project: p, orderNum, visible, transKey, onClose, onPr
           }}
         >
           {p.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={p.image_url}
               alt={p.title}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              fill
+              sizes="(max-width: 767px) 100vw, 55vw"
+              style={{ objectFit: "cover" }}
             />
           ) : (
             <i className={`ti ${p.icon}`} style={{ fontSize: "72px", color: "#E8D5A3", opacity: 0.12 }} />
@@ -394,11 +396,12 @@ export default function OurWorkContent({
                 >
                   {/* Background: photo or flat colour placeholder */}
                   {p.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       src={p.image_url}
                       alt={p.title}
-                      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                      fill
+                      sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                      style={{ objectFit: "cover" }}
                     />
                   ) : (
                     <div style={{

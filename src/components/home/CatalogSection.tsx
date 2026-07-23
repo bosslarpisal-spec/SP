@@ -130,17 +130,16 @@ function QuickViewPopup({ product: p, onClose }: { product: Product; onClose: ()
             background: "#C9A84C",
           }}>
             {allImages.length > 0 ? (
-              <img
+              <Image
                 key={imgIndex}
                 src={allImages[imgIndex]}
                 alt={p.name}
+                fill
+                sizes="(max-width: 767px) 100vw, 672px"
                 className="img-fade"
                 style={{
-                  width: "100%",
-                  height: "100%",
                   objectFit: "contain",
                   objectPosition: "center",
-                  display: "block",
                 }}
               />
             ) : (

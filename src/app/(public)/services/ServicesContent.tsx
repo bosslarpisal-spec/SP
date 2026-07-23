@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import GoldDivider from "@/components/ui/GoldDivider";
 import { useLang } from "@/contexts/LanguageContext";
 
@@ -138,10 +139,9 @@ export default function ServicesContent({
                   → {lang === "th" ? "เรียนรู้เพิ่มเติม" : "Learn more"}
                 </Link>
               </div>
-              <div className="w-full h-[200px] md:h-auto md:w-1/2 md:min-h-[280px] flex items-center justify-center" style={{ background: "#243160", overflow: "hidden" }}>
+              <div className="w-full h-[200px] md:h-auto md:w-1/2 md:min-h-[280px] flex items-center justify-center" style={{ background: "#243160", overflow: "hidden", position: "relative" }}>
                 {serviceImage1
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={serviceImage1} alt={SERVICES[0].title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ? <Image src={serviceImage1} alt={SERVICES[0].title} fill sizes="(max-width: 767px) 100vw, 50vw" style={{ objectFit: "cover" }} />
                   : <i className={`ti ${SERVICES[0].icon}`} style={{ fontSize: "80px", color: "#E8D5A3", opacity: 0.2 }} />
                 }
               </div>
@@ -151,10 +151,9 @@ export default function ServicesContent({
           {/* ROW 2 — 02 Flipped ─ only if ≥ 2 services ── */}
           {SERVICES.length >= 2 && (
             <div className="flex flex-col md:flex-row">
-              <div className="w-full h-[200px] md:h-auto md:w-1/2 md:min-h-[220px] flex items-center justify-center" style={{ background: "#F0EEE8", overflow: "hidden" }}>
+              <div className="w-full h-[200px] md:h-auto md:w-1/2 md:min-h-[220px] flex items-center justify-center" style={{ background: "#F0EEE8", overflow: "hidden", position: "relative" }}>
                 {serviceImage2
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={serviceImage2} alt={SERVICES[1].title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ? <Image src={serviceImage2} alt={SERVICES[1].title} fill sizes="(max-width: 767px) 100vw, 50vw" style={{ objectFit: "cover" }} />
                   : <i className={`ti ${SERVICES[1].icon}`} style={{ fontSize: "80px", color: "#1C2951", opacity: 0.12 }} />
                 }
               </div>

@@ -45,11 +45,14 @@ export default function ProductDetailClient({ product, related = [] }: Props) {
       <section className="section">
         <div className="container grid md:grid-cols-2 gap-12 items-start">
           {/* Image */}
-          <div className="relative">
-            <img
+          <div className="relative aspect-square w-full rounded-3xl shadow-xl overflow-hidden">
+            <Image
               src={product.image}
               alt={product.name}
-              className="w-full rounded-3xl shadow-xl object-cover aspect-square"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+              priority
             />
             {product.isNew && (
               <span className="absolute top-4 left-4 badge-new text-sm px-3 py-1">New</span>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useLang } from "@/contexts/LanguageContext";
@@ -74,8 +75,7 @@ export default function Navbar() {
             display: "flex", alignItems: "center", justifyContent: "center",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={logoUrl}
             alt="Siam Premium logo"
             width={44}

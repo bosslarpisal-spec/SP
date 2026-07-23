@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import Image from "next/image";
 import GoldDivider from "@/components/ui/GoldDivider";
 import { useLang } from "@/contexts/LanguageContext";
 
@@ -318,10 +319,10 @@ export default function AboutContent({ rows = [] }: { rows?: ContentRow[] }) {
           <div>
             <div
               className="photo-frame-mobile"
-              style={{ width: "100%", aspectRatio: "3/4", borderRadius: "12px", overflow: "hidden", border: "1.5px solid rgba(232,213,163,0.25)", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+              style={{ position: "relative", width: "100%", aspectRatio: "3/4", borderRadius: "12px", overflow: "hidden", border: "1.5px solid rgba(232,213,163,0.25)", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
             >
               {storyPhoto ? (
-                <img src={storyPhoto} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Our Team" />
+                <Image src={storyPhoto} alt="Our Team" fill sizes="(max-width: 767px) 100vw, 35vw" style={{ objectFit: "cover" }} />
               ) : (
                 <div style={{ background: "#1C2951", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px" }}>
                   <i className="ti ti-users" style={{ fontSize: "36px", color: "#E8D5A3", opacity: 0.4 }} />
@@ -453,10 +454,10 @@ export default function AboutContent({ rows = [] }: { rows?: ContentRow[] }) {
           <div className="timeline-photo-mobile-first" style={{ alignSelf: "center" }}>
             <div
               className="photo-frame-mobile"
-              style={{ width: "100%", aspectRatio: "4/3", borderRadius: "12px", overflow: "hidden", border: "1.5px solid rgba(232,154,91,0.25)", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
+              style={{ position: "relative", width: "100%", aspectRatio: "4/3", borderRadius: "12px", overflow: "hidden", border: "1.5px solid rgba(232,154,91,0.25)", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
             >
               {timelinePhoto ? (
-                <img src={timelinePhoto} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="Bangkok 2003" />
+                <Image src={timelinePhoto} alt="Bangkok 2003" fill sizes="(max-width: 767px) 100vw, 35vw" style={{ objectFit: "cover" }} />
               ) : (
                 <div style={{ background: "#1C2951", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "8px" }}>
                   <i className="ti ti-building" style={{ fontSize: "36px", color: "#E8D5A3", opacity: 0.4 }} />

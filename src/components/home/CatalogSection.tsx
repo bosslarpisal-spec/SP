@@ -479,7 +479,7 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
 
   return (
     <div style={{ background: "#F8F6F1" }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .cat-intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: end; }
         @media (max-width: 767px) { .cat-intro-grid { grid-template-columns: 1fr; gap: 24px; } }
 
@@ -518,7 +518,7 @@ export default function CatalogSection({ products, categoryOrder = [], allTags: 
           .cat-search-box { width: 100% !important; flex-shrink: 1 !important; }
           .cat-search-box input { font-size: 16px !important; }
         }
-      `}</style>
+      ` }} />
 
       {selected && <QuickViewPopup product={selected} onClose={() => setSelected(null)} />}
 

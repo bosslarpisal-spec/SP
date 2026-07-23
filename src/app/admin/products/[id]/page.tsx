@@ -1,6 +1,7 @@
 // src/app/admin/products/[id]/page.tsx
+import { assertAdmin } from "../../lib/admin-guard";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import ProductForm from "../ProductForm";
 
 export const dynamic = "force-dynamic";
@@ -10,17 +11,24 @@ export default async function EditProductPage({
 }: {
   params: { id: string };
 }) {
+  try {
+    await assertAdmin();
+  } catch {
+    redirect("/login");
+  }
+
   const supabase = await createSupabaseServerClient();
   const service = createSupabaseServiceClient();
 
-  // Products use the auth client (needs session to bypass inactive-product RLS).
-  // Tags/categories use the service client to bypass RLS on those lookup tables.
+  // Products and tags use the service client — this table's public RLS only
+  // allows reading active products, and this page needs to be able to edit
+  // hidden ones too. Categories still uses the session client.
   const [
     { data: product, error },
     { data: categories },
     { data: tags, error: tagsError },
   ] = await Promise.all([
-    supabase
+    service
       .from("products")
       .select("*")
       .eq("id", params.id)

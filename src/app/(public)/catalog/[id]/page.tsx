@@ -1,5 +1,5 @@
 // src/app/(public)/catalog/[id]/page.tsx
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-server";
 import { notFound } from "next/navigation";
 import ProductDetailClient from "./ProductDetailClient";
 
@@ -10,23 +10,29 @@ export default async function ProductDetailPage({
 }: {
   params: { id: string };
 }) {
-  const supabase = await createSupabaseServerClient();
+  // Service role — this table's public RLS only allows reading active
+  // products, so a plain anon-key query can no longer see hidden ones at
+  // all. We still need to distinguish "doesn't exist" from "hidden" to show
+  // the right message, so we bypass RLS here — but only fetch the minimal
+  // columns needed for that decision. The full record (name/description/
+  // images) is fetched separately, only once we know the product is active,
+  // so a hidden product's details are never held server-side — let alone
+  // reach the client — for longer than necessary.
+  const service = createSupabaseServiceClient();
 
-  // Fetch WITHOUT the is_active filter so we can distinguish
-  // "product doesn't exist" vs "product is hidden"
-  const { data: product, error } = await supabase
+  const { data: check, error: checkError } = await service
     .from("products")
-    .select("*")
+    .select("id, is_active")
     .eq("id", params.id)
     .single();
 
   // Product truly doesn't exist in the DB → real 404
-  if (error || !product) {
+  if (checkError || !check) {
     notFound();
   }
 
   // Product exists but admin has hidden it → friendly message
-  if (!product.is_active) {
+  if (!check.is_active) {
     return (
       <div className="section-sm">
         <div className="container max-w-2xl">
@@ -68,7 +74,17 @@ export default async function ProductDetailPage({
     );
   }
 
-  // Product is active → render normally
+  // Product is active → fetch the full record and render normally
+  const { data: product, error } = await service
+    .from("products")
+    .select("*")
+    .eq("id", params.id)
+    .single();
+
+  if (error || !product) {
+    notFound();
+  }
+
   const mapped = {
     id: product.id,
     name: product.name,

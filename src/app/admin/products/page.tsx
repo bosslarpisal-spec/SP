@@ -1,15 +1,25 @@
 // src/app/admin/products/page.tsx
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { assertAdmin } from "../lib/admin-guard";
+import { createSupabaseServiceClient } from "@/lib/supabase-server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import AdminProductsClient from "./AdminProductsClient";
 import { th } from "@/app/admin/lib/admin-th";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
-  const supabase = await createSupabaseServerClient();
+  try {
+    await assertAdmin();
+  } catch {
+    redirect("/login");
+  }
 
-  const { data: products, error } = await supabase
+  // Service role — this table's public RLS only allows reading active
+  // products; this admin list needs to see hidden ones too.
+  const service = createSupabaseServiceClient();
+
+  const { data: products, error } = await service
     .from("products")
     .select("id, name, name_th, category, image_url, is_active, is_new, display_order, tags")
     .order("display_order", { ascending: true });

@@ -1,10 +1,18 @@
 // src/app/admin/products/new/page.tsx
+import { assertAdmin } from "../../lib/admin-guard";
 import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
+import { redirect } from "next/navigation";
 import ProductForm from "../ProductForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewProductPage() {
+  try {
+    await assertAdmin();
+  } catch {
+    redirect("/login");
+  }
+
   const supabase = await createSupabaseServerClient();
   const service = createSupabaseServiceClient();
   const [{ data: categories }, { data: tags, error: tagsError }] = await Promise.all([

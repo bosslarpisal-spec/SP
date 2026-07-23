@@ -2,7 +2,7 @@
 "use server";
 
 import { assertAdmin } from "../lib/admin-guard";
-import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@/lib/supabase-server";
 import { th } from "@/app/admin/lib/admin-th";
 
 // Server Actions that throw have their Error.message redacted by Next.js in
@@ -65,32 +65,6 @@ export async function removeAdmin(id: number): Promise<Result> {
     }
     const { error } = await service.from("admins").delete().eq("id", id);
     if (error) return { ok: false, error: error.message };
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: toError(err) };
-  }
-}
-
-export async function changeAdminEmail(newEmail: string): Promise<Result> {
-  try {
-    const user = await assertAdmin();
-    const clean = newEmail.trim().toLowerCase();
-    if (!clean) return { ok: false, error: th.errEmailRequired };
-
-    // Update Supabase Auth (sends confirmation to new address)
-    const sessionClient = await createSupabaseServerClient();
-    const { error: authError } = await sessionClient.auth.updateUser({ email: clean });
-    if (authError) return { ok: false, error: authError.message };
-
-    // Keep admins table in sync
-    const service = createSupabaseServiceClient();
-    const { error: dbError } = await service
-      .from("admins")
-      .update({ email: clean })
-      .eq("email", (user.email ?? "").toLowerCase());
-    if (dbError) {
-      return { ok: false, error: `Auth email queued but admins table sync failed: ${dbError.message}` };
-    }
     return { ok: true };
   } catch (err) {
     return { ok: false, error: toError(err) };

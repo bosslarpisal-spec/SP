@@ -273,7 +273,7 @@ export default function OurWorkContent({
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes hero-fade {
           from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
@@ -329,7 +329,7 @@ export default function OurWorkContent({
         @media (min-width: 1024px) {
           .masonry-rsp { display: block; column-count: 3; column-gap: 16px; }
         }
-      `}</style>
+      ` }} />
 
       {/* §1 — HERO */}
       <section style={{ backgroundImage: "url('/HeroBlockHome.png')", backgroundSize: "cover", backgroundPosition: "right center", backgroundRepeat: "no-repeat", position: "relative", overflow: "hidden" }} className="min-h-[45vh] flex items-center">

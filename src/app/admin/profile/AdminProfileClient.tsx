@@ -1,9 +1,9 @@
 // src/app/admin/profile/AdminProfileClient.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { addAdmin, removeAdmin, changeAdminEmail, changeAdminPassword } from "./actions";
+import { addAdmin, removeAdmin, changeAdminPassword } from "./actions";
 import { useToast } from "../components/Toast";
 import { th } from "@/app/admin/lib/admin-th";
 import { nameFromEmail } from "@/app/admin/lib/format";
@@ -12,7 +12,63 @@ type Admin = {
   id: number;
   email: string;
   created_at: string;
+  hasAccount: boolean;
+  lastSignInAt: string | null;
 };
+
+const STALE_MS = 90 * 24 * 60 * 60 * 1000;
+
+// Supabase timestamps carry their own UTC offset, so diffing against Date.now()
+// (also UTC epoch ms) is timezone-safe on its own — no explicit +7 offset needed.
+function relativeTimeThai(iso: string): string {
+  const sec = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  const hour = Math.floor(sec / 3600);
+  if (hour < 1) return th.timeJustNow;
+  if (hour < 24) return th.timeHoursAgo(hour);
+  const day = Math.floor(sec / 86400);
+  if (day < 30) return th.timeDaysAgo(day);
+  const month = Math.floor(day / 30);
+  if (month < 12) return th.timeMonthsAgo(month);
+  const year = Math.floor(day / 365);
+  return th.timeYearsAgo(year);
+}
+
+// Renders email + "last used" text. Starts with no computed state so the
+// server-rendered HTML and the client's first paint are identical (both show
+// the plain, un-dimmed email and no "last used" line); the actual relative
+// time and staleness are filled in by this effect after mount, which is a
+// normal post-hydration update rather than a hydration mismatch.
+function AdminEmailRow({ email, lastSignInAt }: { email: string; lastSignInAt: string | null }) {
+  const [info, setInfo] = useState<{ text: string; stale: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!lastSignInAt) return;
+    const ms = Date.now() - new Date(lastSignInAt).getTime();
+    setInfo({ text: relativeTimeThai(lastSignInAt), stale: ms > STALE_MS });
+  }, [lastSignInAt]);
+
+  return (
+    <>
+      <p
+        style={{
+          fontSize: 13,
+          fontWeight: 500,
+          color: info?.stale ? "#aaa" : "#1a1a1a",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {email}
+      </p>
+      {info && (
+        <p style={{ fontSize: 11, color: "#aaa", margin: "2px 0 0" }}>
+          {th.profileLastSignIn(info.text)}
+        </p>
+      )}
+    </>
+  );
+}
 
 export default function AdminProfileClient({
   currentUserEmail,
@@ -33,10 +89,6 @@ export default function AdminProfileClient({
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<number | null>(null);
 
-  // ── Change own email ───────────────────────────────────────
-  const [newAuthEmail, setNewAuthEmail] = useState("");
-  const [changingEmail, setChangingEmail] = useState(false);
-
   // ── Change password ────────────────────────────────────────
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -56,7 +108,7 @@ export default function AdminProfileClient({
         toast.error(result.error);
       } else {
         const { ok: _ok, ...adminRow } = result;
-        setAdmins((prev) => [...prev, adminRow]);
+        setAdmins((prev) => [...prev, { ...adminRow, hasAccount: false, lastSignInAt: null }]);
         setNewEmail("");
         toast.success(th.toastAdminAdded(adminRow.email));
       }
@@ -81,23 +133,6 @@ export default function AdminProfileClient({
       toast.error(th.toastAdminRemoveFail(admin.email));
     }
     setRemovingId(null);
-  }
-
-  async function handleChangeEmail(e: React.FormEvent) {
-    e.preventDefault();
-    setChangingEmail(true);
-    try {
-      const result = await changeAdminEmail(newAuthEmail);
-      if (!result.ok) {
-        toast.error(result.error);
-      } else {
-        toast.success(th.toastEmailSent(newAuthEmail.trim()));
-        setNewAuthEmail("");
-      }
-    } catch {
-      toast.error(th.toastEmailFail);
-    }
-    setChangingEmail(false);
   }
 
   async function handleChangePassword(e: React.FormEvent) {
@@ -129,6 +164,17 @@ export default function AdminProfileClient({
   async function handleSignOut() {
     await supabase.auth.signOut();
     window.location.href = "/login";
+  }
+
+  async function handleCopyInstructions(email: string) {
+    const signupUrl = `${window.location.origin}/signup`;
+    const message = `คุณถูกเพิ่มเป็นแอดมินของ Siam Premium — กรุณาสมัครสมาชิกที่ ${signupUrl} โดยใช้อีเมลนี้: ${email}`;
+    try {
+      await navigator.clipboard.writeText(message);
+      toast.success(th.toastInstructionsCopied);
+    } catch {
+      toast.error(th.toastCopyFail);
+    }
   }
 
   const displayName = nameFromEmail(currentUserEmail);
@@ -171,23 +217,6 @@ export default function AdminProfileClient({
             <p style={{ fontSize: 12, color: "#aaa", margin: "2px 0 0" }}>{currentUserEmail}</p>
           </div>
         </div>
-
-        <form onSubmit={handleChangeEmail} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-          <div style={{ flex: 1 }}>
-            <SLabel>{th.profileNewEmail}</SLabel>
-            <input
-              type="email"
-              required
-              placeholder="new-email@example.com"
-              value={newAuthEmail}
-              onChange={(e) => setNewAuthEmail(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-          <PrimaryButton type="submit" disabled={changingEmail}>
-            {changingEmail ? th.profileSending : th.profileSave}
-          </PrimaryButton>
-        </form>
       </div>
 
       {/* Password + Session */}
@@ -335,18 +364,7 @@ export default function AdminProfileClient({
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: "#1a1a1a",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {a.email}
-                </p>
+                <AdminEmailRow email={a.email} lastSignInAt={a.lastSignInAt} />
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
                   <span style={{ fontSize: 11, color: "#aaa" }}>
                     {new Date(a.created_at).toLocaleDateString()}
@@ -366,8 +384,61 @@ export default function AdminProfileClient({
                       {th.profileYouBadge}
                     </span>
                   )}
+                  {!a.hasAccount && (
+                    <span
+                      title={th.profilePendingTitle(a.email)}
+                      style={{
+                        background: "#FEF3C7",
+                        color: "#92400E",
+                        border: "0.5px solid #FDE68A",
+                        fontSize: 10,
+                        fontWeight: 600,
+                        padding: "1px 6px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      {th.profilePendingBadge}
+                    </span>
+                  )}
+                  {a.hasAccount && !a.lastSignInAt && (
+                    <span
+                      style={{
+                        background: "#F5F3F0",
+                        color: "#888",
+                        border: "0.5px solid #E8E6E0",
+                        fontSize: 10,
+                        fontWeight: 600,
+                        padding: "1px 6px",
+                        borderRadius: 4,
+                      }}
+                    >
+                      {th.profileNeverSignedIn}
+                    </span>
+                  )}
                 </div>
               </div>
+
+              {!a.hasAccount && (
+                <button
+                  onClick={() => handleCopyInstructions(a.email)}
+                  title={th.profileCopyInstructions}
+                  style={{
+                    width: 26,
+                    height: 26,
+                    border: "0.5px solid #E8E6E0",
+                    borderRadius: 4,
+                    background: "#F5F3F0",
+                    color: "#555",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <i className="ti ti-copy" style={{ fontSize: 13 }} />
+                </button>
+              )}
 
               {a.email !== currentUserEmail && (
                 confirmRemoveId === a.id ? (

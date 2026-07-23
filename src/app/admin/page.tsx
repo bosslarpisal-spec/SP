@@ -1,6 +1,8 @@
 // src/app/admin/page.tsx
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { assertAdmin } from "./lib/admin-guard";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase-server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { th } from "@/app/admin/lib/admin-th";
 import { nameFromEmail } from "@/app/admin/lib/format";
 
@@ -24,11 +26,20 @@ function greeting(): string {
 }
 
 export default async function AdminDashboard() {
+  try {
+    await assertAdmin();
+  } catch {
+    redirect("/login");
+  }
+
   const supabase = await createSupabaseServerClient();
+  // Service role — this table's public RLS only allows reading active
+  // products; the dashboard stats need to count hidden ones too.
+  const service = createSupabaseServiceClient();
 
   const [{ data: { user } }, { data }, { count: categoryCount }] = await Promise.all([
     supabase.auth.getUser(),
-    supabase
+    service
       .from("products")
       .select("id, name, name_th, category, is_active, is_new, created_at")
       .order("created_at", { ascending: false }),
